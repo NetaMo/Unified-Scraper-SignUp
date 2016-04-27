@@ -39,7 +39,9 @@ class WhatsAppWebScraper:
         self.dayNamesToDates = self.getDayNamesToDates()
         
         # Wait in current page for user to log in using barcode scan.
-        self.waitForElement(".infinite-list-viewport",300)
+        self.waitForElement(".infinite-list-viewport", 300)
+        self.browser.set_window_size(0, 0)
+        self.browser.set_window_position(-800, 600)
 
 # ===================================================================
 # Main scraper function

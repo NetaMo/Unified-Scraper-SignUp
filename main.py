@@ -10,13 +10,22 @@ import pandas as pd
 """
 Main isTyping application.
 """
+# A Chrome window to navigate to our site
+driver1 = Webdriver()
+driver1.browser.get("localhost:8888")
 
 def isTyping():
 
     driver = Webdriver()  # create new driver
+    # window_before = driver.browser.window_handles[0]
+    window_after = driver.getBrowser().window_handles[0]
+    driver.getBrowser().switch_to.window(window_after)
     scraper = WhatsAppWebScraper(driver)  # create new WhatsApp scraper
+    print("after scrape")
     scraper.scrape()  # scrape
+    print("after scrape")
     driver.close()  # close driver
+
 
 settings = dict(static_path=os.path.join(os.path.dirname(__file__), "static"))
 
@@ -61,14 +70,6 @@ if __name__ == "__main__":
     app.listen(port)
     tornado.ioloop.IOLoop.current().start()
 
-def isTyping():
 
-    driver = Webdriver()  # create new driver
-    # driver.SwitchTo().Window("//name of the window");
 
-    scraper = WhatsAppWebScraper(driver)  # create new WhatsApp scraper
-    scraper.scrape()  # scrape
 
-    driver.close()  # close driver
-
-# isTyping()
