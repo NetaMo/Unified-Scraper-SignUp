@@ -34,6 +34,9 @@ class WhatsAppWebScraper:
         self.browser.set_page_load_timeout(150)  # Set timeout to 150 seconds
         self.browser.get("https://web.whatsapp.com/")  # Navigate browser to WhatsApp page
 
+        # Conversation table from day names to date for past week
+        self.dayNamesToDates = self.getDayNamesToDates()
+        
         # Wait in current page for user to log in using barcode scan.
         self.waitForElement(".infinite-list-viewport",300)
 
@@ -215,9 +218,12 @@ class WhatsAppWebScraper:
             # System date message
             elif self.getElement(".message-system", msg) is not None:
                 # If it is a date or a weekday name
-                if msg.text[-10] == '/' or msg.text in WEEKDAYS:
+                if (len(msg.text) > 13 and msg.text[-10] == '/'):
                     lastDay = str(msg.text).replace("\u2060","")
-                    print(msg.text)            
+                    # print(lastDay)
+                elif msg.text in self.dayNamesToDates:
+                    lastDay = self.dayNamesToDates[msg.text]
+                    # print(lastDay)     
 
             # Unsupported message type (image, video, audio...), we do not return these.
             else:
@@ -225,3 +231,23 @@ class WhatsAppWebScraper:
 
         return messages
 
+
+    def getDayNamesToDates(self):
+        """
+        Take care of cases where WhatsApp chat tells the date by day name, see examples below.
+        The function does a one time convertion of last week day names to date.
+        """
+        def getDateFromDayName(weekday):
+            daysBack = (datetime.date.today().weekday() - weekday) % 7
+            return datetime.date.fromordinal(datetime.date.today().toordinal()- daysBack).strftime("%m/%d/%Y")
+
+
+        return {"TODAY":datetime.date.today().strftime("%m/%d/%Y"),
+                  "YESTERDAY":datetime.date.fromordinal(datetime.date.today().toordinal()- 1).strftime("%m/%d/%Y"),
+                  "SUNDAY":getDateFromDayName(0),
+                  "MONDAY":getDateFromDayName(1),
+                  "TUESDAY":getDateFromDayName(2),
+                  "WEDNESDAY":getDateFromDayName(3),
+                  "THURSDAY":getDateFromDayName(4),
+                  "FRIDAY":getDateFromDayName(5),
+                  "SATURDAY":getDateFromDayName(6)}
