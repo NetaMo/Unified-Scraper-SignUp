@@ -1,3 +1,4 @@
+import os
 from Webdriver import Webdriver
 from WhatsAppWebScraper import WhatsAppWebScraper
 import tornado.ioloop
@@ -9,18 +10,20 @@ from pandas.tseries.frequencies import to_offset
 from datetime import date, datetime
 
 """
-Main isTyping application.
+Main "is typing" application.
 """
+# A Chrome window to navigate to our site TODO decide where to place in order to have good functionality
+driver1 = Webdriver()
+driver1.browser.get("localhost:8888")
 
 
-def isTyping():
-
+def is_typing():
     driver = Webdriver()  # create new driver
     # window_before = driver.browser.window_handles[0]
     window_after = driver.getBrowser().window_handles[0]
     driver.getBrowser().switch_to.window(window_after)
     scraper = WhatsAppWebScraper(driver)  # create new WhatsApp scraper
-    print("after scrape")
+    print("before scrape")
     scraper.scrape()  # scrape
     print("after scrape")
     driver.close()  # close driver
@@ -256,7 +259,7 @@ class DataAnalysisMethods:
 
 
 """""
-Site Handlers:
+web page handlers:
 """""
 
 class LandingHandler(tornado.web.RequestHandler):
@@ -273,6 +276,9 @@ class NameSubmitHandler(tornado.web.RequestHandler):
         lastName = self.get_argument("last")
         print(firstName)
         print(lastName)
+
+        global user_name
+        user_name = firstName  # TODO maybe ask for nickname for data analysis
         # now we can send a string to the front end with the following syntax:
         # self.write("string message")
         # self.finish()
@@ -283,18 +289,24 @@ class TermAgreeHandler(tornado.web.RequestHandler):
     def get(self):
         print("Stage 4: Agreed,Load whatssapp web")
         # Insert whats up web run here
-        isTyping()
+        is_typing()
 
 
 """""
-make_app, main, and init_df
+make_app, seetings, main, and init_df
 """""
+
+
 def init_df():
     print("initializing the DB")
     empty_df = pd.DataFrame(data=None, columns=["contactName", "contactType", "name", "text", "time"])
     empty_df.contactType.astype('category', categories=["person", "group"])
     empty_df.name.astype('category')
     return empty_df
+
+settings = dict(
+    static_path=os.path.join(os.path.dirname(__file__), "static")
+)
 
 def make_app():
     print("make_app")
@@ -303,8 +315,7 @@ def make_app():
         (r"/agree", TermAgreeHandler),
         (r"/namesubmit", NameSubmitHandler),
         (r"/chat", WhatsAppHandler),
-        (r"/chatFinished", FinishedWhatsAppHandler),
-    ], **settings)
+        (r"/chatFinished", FinishedWhatsAppHandler)], **settings)
 
 
 if __name__ == "__main__":
@@ -316,6 +327,4 @@ if __name__ == "__main__":
     app = make_app()
     app.listen(port)
     tornado.ioloop.IOLoop.current().start()
-    # A Chrome window to navigate to our site
-    driver1 = Webdriver()
-    driver1.browser.get("localhost:8888")
+

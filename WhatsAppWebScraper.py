@@ -1,7 +1,6 @@
 import requests
 import time
 import datetime
-
 from Webdriver import Webdriver
 from selenium.common.exceptions import TimeoutException, \
     StaleElementReferenceException, NoSuchElementException
@@ -21,7 +20,7 @@ SERVER_POST_HEADERS = {'Content-type': 'application/json', 'Accept': 'text/plain
 # Days of the week
 WEEKDAYS = ('MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY')
 
-# todo move to scripts!!
+# todo move to scripts
 # add jquery
 with open("jquery-2.2.3.min.js", 'r') as jquery_js:
     jquery = jquery_js.read()  # read the jquery from a file
@@ -66,7 +65,7 @@ class WhatsAppWebScraper:
 
         # Scrape each chat
         # TODO currently scrape limited amount of users for debugging
-        for i in range(1,5):
+        for i in range(1,2):
 
             loadStartTime = time.time()
             chat = self.loadChat()  # load all conversations for current open chat
@@ -87,15 +86,14 @@ class WhatsAppWebScraper:
             print("Got " + str(len(messages)) + " messages in " + str(totalMsgTime))
 
             # send to server
-            requests.post(SERVER_URL_CHAT, json=contactData, headers=SERVER_POST_HEADERS)
+            # requests.post(SERVER_URL_CHAT, json=contactData, headers=SERVER_POST_HEADERS)
 
             # go to next chat
             self.goToNextContact()
 
         print("done scraping")
-
         # send finished signal to server
-        requests.post(SERVER_URL_FINISHED, json={}, headers=SERVER_POST_HEADERS)
+        # requests.post(SERVER_URL_FINISHED, json={}, headers=SERVER_POST_HEADERS)
 
 # ===================================================================
 # Helper functions
@@ -143,20 +141,31 @@ class WhatsAppWebScraper:
         chat = self.waitForElement(".message-list")  # wait for chat to load
         actions.click(chat).perform()
 
-        counter = 0
-        # load previous messages until no "btn-more" exists
-        # TODO currently loads 10 previous message.
-        # while counter < 10:
-        while True:
-            counter += 1
-            btnMore = self.waitForElement(".btn-more", 2)
-            if btnMore is not None:
-                try:
-                    actions.click(btnMore).perform()
-                except StaleElementReferenceException as e:
-                    break
-            else:
-                break
+        # ----------a new faster way to load chats---------------------
+        # load the chat using javascript code.
+        iterations = 0
+        while len(self.browser.execute_script("return $('.btn-more').click();")) is not 0:
+            if iterations % 10 is 0:
+                self.browser.execute_script("$(\"#pane-side\").animate({scrollTop:  0});")
+            iterations += 1
+
+
+        # counter = 0
+        # # load previous messages until no "btn-more" exists
+        # # TODO currently loads 10 previous message.
+        # # while counter < 20:
+        # while True:
+        #     counter += 1
+        #     btnMore = self.waitForElement(".btn-more", 2)
+        #     if btnMore is not None:
+        #         try:
+        #             actions.click(btnMore).perform()
+        #         except StaleElementReferenceException as e:
+        #             break
+        #     else:
+        #         break
+
+
 
     def goToNextContact(self, isFirst = False):
         """
