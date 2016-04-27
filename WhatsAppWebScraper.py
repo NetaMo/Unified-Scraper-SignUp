@@ -21,6 +21,12 @@ SERVER_POST_HEADERS = {'Content-type': 'application/json', 'Accept': 'text/plain
 # Days of the week
 WEEKDAYS = ('MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY')
 
+# todo move to scripts!!
+# add jquery
+with open("jquery-2.2.3.min.js", 'r') as jquery_js:
+    jquery = jquery_js.read()  # read the jquery from a file
+
+
 # ===================================================================
 # Scraper class
 # ===================================================================
@@ -42,6 +48,8 @@ class WhatsAppWebScraper:
         self.waitForElement(".infinite-list-viewport", 300)
         self.browser.set_window_size(0, 0)
         self.browser.set_window_position(-800, 600)
+
+        self.browser.execute_script(jquery)  # active the jquery lib
 
 # ===================================================================
 # Main scraper function
