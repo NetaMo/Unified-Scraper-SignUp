@@ -1,4 +1,3 @@
-import requests
 import time
 import datetime
 from Webdriver import Webdriver
@@ -45,8 +44,8 @@ class WhatsAppWebScraper:
         
         # Wait in current page for user to log in using barcode scan.
         self.waitForElement(".infinite-list-viewport", 300)
-        self.browser.set_window_size(0, 0)
-        self.browser.set_window_position(-800, 600)
+        # self.browser.set_window_size(0, 0)
+        # self.browser.set_window_position(-800, 600)
 
         self.browser.execute_script(jquery)  # active the jquery lib
 
@@ -54,7 +53,7 @@ class WhatsAppWebScraper:
 # Main scraper function
 # ===================================================================
 
-    def scrape(self):
+    def scrape(self, DB):
         print("start scraping")
 
         actions = ActionChains(self.browser)  # init actions option (click, send keyboard keys, etc)
@@ -65,7 +64,7 @@ class WhatsAppWebScraper:
 
         # Scrape each chat
         # TODO currently scrape limited amount of users for debugging
-        for i in range(1,2):
+        for i in range(1, 3):
 
             loadStartTime = time.time()
             chat = self.loadChat()  # load all conversations for current open chat
@@ -85,13 +84,16 @@ class WhatsAppWebScraper:
             contactData['messages'].append(messages)
             print("Got " + str(len(messages)) + " messages in " + str(totalMsgTime))
 
-            # send to server
+            # add data to the data frame
+            DB.append_to_contacts_df(contactData)
             # requests.post(SERVER_URL_CHAT, json=contactData, headers=SERVER_POST_HEADERS)
 
             # go to next chat
             self.goToNextContact()
 
         print("done scraping")
+
+        return DB
         # send finished signal to server
         # requests.post(SERVER_URL_FINISHED, json={}, headers=SERVER_POST_HEADERS)
 
@@ -145,14 +147,14 @@ class WhatsAppWebScraper:
         # load the chat using javascript code.
         iterations = 0
         while len(self.browser.execute_script("return $('.btn-more').click();")) is not 0:
-            if iterations % 10 is 0:
+            if iterations % 10 is 0: # TODO check what is the optimal parameter
                 self.browser.execute_script("$(\"#pane-side\").animate({scrollTop:  0});")
             iterations += 1
 
 
         # counter = 0
         # # load previous messages until no "btn-more" exists
-        # # TODO currently loads 10 previous message.
+        # #     currently loads 10 previous message.
         # # while counter < 20:
         # while True:
         #     counter += 1
@@ -183,8 +185,11 @@ class WhatsAppWebScraper:
         """
         # Get contact name
         # TODO make this selector less specific to match possible page variations
+        # try:
         contactName = self.browser.find_element_by_css_selector("#main header div.chat-body "
                                                                 "div.chat-main h2 span").text
+        # except StaleElementReferenceException:
+
 
         # If this is a contact chat then this field will not appear
         if self.getElement(".msg-group") == None:
@@ -203,7 +208,7 @@ class WhatsAppWebScraper:
         messageElements = self.waitForElement(".msg",10,None,False)
         messages = []
         name, text, time = None, None, None
-        lastName, lastDay = contactName, "1/1/2000" # TODO validate with server API
+        lastName, lastDay = contactName, "1/1/2001" # TODO validate with server API
 
         for msg in messageElements:
 
@@ -237,13 +242,15 @@ class WhatsAppWebScraper:
 
             # System date message
             elif self.getElement(".message-system", msg) is not None:
+                if not msg.text:
+                    continue  # also Unsupported message
                 # If it is a date or a weekday name
                 if (len(msg.text) > 13 and msg.text[-10] == '/'):
                     lastDay = str(msg.text).replace("\u2060","")
                     # print(lastDay)
-                elif msg.text in self.dayNamesToDates:
-                    lastDay = self.dayNamesToDates[msg.text]
-                    # print(lastDay)     
+                elif str(msg.text).replace("\u2060", "") in self.dayNamesToDates:
+                    lastDay = self.dayNamesToDates[str(msg.text).replace("\u2060", "")]
+                    # print(lastDay)
 
             # Unsupported message type (image, video, audio...), we do not return these.
             else:
@@ -258,7 +265,7 @@ class WhatsAppWebScraper:
         The function does a one time convertion of last week day names to date.
         """
         def getDateFromDayName(weekday):
-            daysBack = (datetime.date.today().weekday() - weekday) % 7
+            daysBack = (datetime.date.today().isoweekday() - weekday) % 7
             return datetime.date.fromordinal(datetime.date.today().toordinal()- daysBack).strftime("%m/%d/%Y")
 
 

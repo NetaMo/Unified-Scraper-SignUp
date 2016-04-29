@@ -1,2 +1,2 @@
-# WhatsAppWebScraper-V2
+# Unified-Scraper-SignUp
 WhatsAppWebScraper with python
