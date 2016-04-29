@@ -241,9 +241,9 @@ class WhatsAppWebScraper:
                 if (len(msg.text) > 13 and msg.text[-10] == '/'):
                     lastDay = str(msg.text).replace("\u2060","")
                     # print(lastDay)
-                elif msg.text in self.dayNamesToDates:
-                    lastDay = self.dayNamesToDates[msg.text]
-                    # print(lastDay)     
+                elif str(msg.text).replace("\u2060","") in self.dayNamesToDates:
+                    lastDay = self.dayNamesToDates[str(msg.text).replace("\u2060","")]
+                    # print(lastDay)   
 
             # Unsupported message type (image, video, audio...), we do not return these.
             else:
@@ -258,7 +258,7 @@ class WhatsAppWebScraper:
         The function does a one time convertion of last week day names to date.
         """
         def getDateFromDayName(weekday):
-            daysBack = (datetime.date.today().weekday() - weekday) % 7
+            daysBack = (datetime.date.today().isoweekday() - weekday) % 7
             return datetime.date.fromordinal(datetime.date.today().toordinal()- daysBack).strftime("%m/%d/%Y")
 
 
