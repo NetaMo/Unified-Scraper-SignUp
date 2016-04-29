@@ -1,4 +1,4 @@
-import requests
+from PIL import Image
 import time
 import datetime
 from Webdriver import Webdriver
@@ -19,6 +19,8 @@ SERVER_URL_FINISHED = "http://localhost:8888/chatFinished"
 SERVER_POST_HEADERS = {'Content-type': 'application/json', 'Accept': 'text/plain'}
 # Days of the week
 WEEKDAYS = ('MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY')
+# how much profile images to save
+NUMBER_OF_CONTACT_PICTURES = 6
 
 # todo move to scripts
 # add jquery
@@ -68,7 +70,7 @@ class WhatsAppWebScraper:
         for i in range(1, 3):
 
             loadStartTime = time.time()
-            chat = self.loadChat()  # load all conversations for current open chat
+            chat = self.loadChat()  # load all conversations for current open chat # TODO what is the use of chat var?
             print("Loaded chat in " + str(time.time() - loadStartTime) + "seconds")
 
             # Get contact name and type (person/group).
@@ -84,6 +86,10 @@ class WhatsAppWebScraper:
             totalMsgTime = time.time() - startTime
             contactData['messages'].append(messages)
             print("Got " + str(len(messages)) + " messages in " + str(totalMsgTime))
+
+            # get the avatar of the contact TODO change to apply only the first six contacts
+            # if i < NUMBER_OF_CONTACT_PICTURES:
+            #     self.get_contact_avatar()
 
             # add data to the data frame
             DB.append_to_contacts_df(contactData)
@@ -101,6 +107,42 @@ class WhatsAppWebScraper:
 # ===================================================================
 # Helper functions
 # ===================================================================
+
+    def get_contact_avatar(self):
+        """
+        TODO
+        """
+        print("In getContactAvatar")
+        # Getting the small image's url and switching to the large image
+        avatar_url = self.getElement("#main header div.chat-avatar div img").get_attribute("src")
+        avatar_url = avatar_url[:34] + "l" + avatar_url[35:]
+
+        # Opening a new tab
+        actions = ActionChains(self.browser)
+        actions.send_keys(Keys.CONTROL).send_keys('t').perform()
+
+        # Switching to the new tab and navigating to image's url
+        defWin = self.browser.window_handles[0]
+        newWin = self.browser.window_handles[1]
+        self.browser.switch_to_window(newWin)
+        self.browser.get(avatar_url)
+
+        # Saving a screen shot
+        self.waitForElement("body img")
+
+        # Getting image size for cropping
+        width = self.getElement("body img").get_attribute("width")
+        height = self.getElement("body img").get_attribute("height")
+        self.browser.save_screenshot("full_screen_shot_temp.png")
+
+        # Cropping
+        screenshot = Image.open("full_screen_shot_temp.png")
+        cropped = screenshot.crop((0, 0, int(width), int(height)))
+        cropped.save("contact_avatar.jpg")
+
+        # Closing the tab
+        actions.send_keys(Keys.CONTROL).send_keys('w').perform()
+        self.browser.switch_to_window(defWin)
 
     def waitForElement(self, cssSelector, timeout=10, cssContainer=None, singleElement=True):
         """

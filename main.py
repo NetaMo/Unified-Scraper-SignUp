@@ -89,12 +89,12 @@ if __name__ == "__main__":
     app = make_app()
 
     # enter True as the first argument to run the web page
-    # TODO decide where to place in order to have good functionality
+    # TODO decide where to place in order to have good functionality- divide the server!
     if sys.argv[1] == 'True':
         # A Chrome window to navigate to our site
         print("web Page")
         driver1 = Webdriver()
-        driver1.browser.get("localhost:8888")
+        driver1.browser.get("localhost:8888")  # TODO read about passing the DB to the handlers
     else:  # just runs the scrapping
         print("scrape_whatsapp")
         DB = scrape_whatsapp(DB)
@@ -105,4 +105,7 @@ if __name__ == "__main__":
 
     app.listen(port)
     tornado.ioloop.IOLoop.current().start()
+
+
+
 
