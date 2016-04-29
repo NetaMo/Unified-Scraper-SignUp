@@ -1,3 +1,4 @@
+import requests
 import time
 import datetime
 from Webdriver import Webdriver
@@ -185,11 +186,8 @@ class WhatsAppWebScraper:
         """
         # Get contact name
         # TODO make this selector less specific to match possible page variations
-        # try:
         contactName = self.browser.find_element_by_css_selector("#main header div.chat-body "
                                                                 "div.chat-main h2 span").text
-        # except StaleElementReferenceException:
-
 
         # If this is a contact chat then this field will not appear
         if self.getElement(".msg-group") == None:
@@ -208,7 +206,7 @@ class WhatsAppWebScraper:
         messageElements = self.waitForElement(".msg",10,None,False)
         messages = []
         name, text, time = None, None, None
-        lastName, lastDay = contactName, "1/1/2001" # TODO validate with server API
+        lastName, lastDay = contactName, "1/1/2000" # TODO validate with server API
 
         for msg in messageElements:
 
