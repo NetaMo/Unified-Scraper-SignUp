@@ -76,16 +76,20 @@ class WhatsAppWebScraper:
             # Get contact name and type (person/group).
             contactName, contactType = self.get_contact_details(actions)
 
-            # Initialize data item to store messages
-            contactData = {"contact": {"name":contactName,"type":contactType},"messages":[]}
-
             # Get messages from current chat
-            print("Get messages for: " + str(contactName))
+            print("Scraper: scrape: Get messages for: " + str(contactName))
             startTime = time.time()
-            messages = self.get_messages(chat, contactType, contactName)
+            messages = self.get_messages(chat, contactType)
             totalMsgTime = time.time() - startTime
-            contactData['messages'].append(messages)
-            print("Got " + str(len(messages)) + " messages in " + str(totalMsgTime))
+            print("Scraper: scrape: Got " + str(len(messages)) + " messages in " + str(totalMsgTime))
+
+            # Initialize data item to store chat
+            if contactType == 'group':
+                contactData = {"contactName": contactName,"contactMessageCounter":messages}
+                # TODO add sending group data to DB
+            elif contactType == 'person':
+                contactData = {"contact": {"name":contactName,"type":contactType},"messages":[messages]}
+                DB.append_to_contacts_df(contactData) # add data to the data frame
 
             # get the avatar of the contact TODO change to apply only the first six contacts
             # if i < NUMBER_OF_CONTACT_PICTURES:
