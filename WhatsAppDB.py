@@ -1,3 +1,5 @@
+import json
+
 from pandas.tseries.frequencies import to_offset
 from datetime import date, datetime
 import pandas as pd
@@ -10,11 +12,10 @@ class WhatsAppDB:
     def __init__(self):
         print("initializing the DataFrames")
 
-        self.contacts_df = pd.DataFrame(data=None, columns=["contactName", "contactType", "name", "text", "time"])  # TODO remove contactType
-        self.contacts_df.contactType.astype('category', categories=["person", "group"])
+        self.contacts_df = pd.DataFrame(data=None, columns=["contactName", "name", "text", "time"])
         self.contacts_df.name.astype('category')
         
-        self.groups_df = pd.DataFrame(columns=["groupName", "name", "messagesCount"]) # todo maybe make multi index
+        self.groups_df = pd.DataFrame(columns=["groupName", "name", "messagesCount"])  # todo maybe make multi index
 
         self.user_name = ''
 
@@ -35,14 +36,13 @@ class WhatsAppDB:
         # data = json.loads(data_json.decode(charset))
         print("data: " + str(data_dict))
         contact_name = data_dict["contact"]["name"]
-        contact_type = data_dict["contact"]["type"] # TODO remove
         for message in data_dict["messages"][0]:
             name = message["name"]
             text = message["text"]
 
-            self.contacts_df = self.contacts_df.append({'contactName': contact_name, 'contactType': contact_type, 'name': name, 'text': text,
-                            'time': message["time"]}, ignore_index=True)
-            #             todo check about chronological consistency
+            self.contacts_df = self.contacts_df.append({'contactName': contact_name, 'name': name, 'text': text,
+                                                        'time': message["time"]}, ignore_index=True)
+
         print("the current state of contacts_df: ")
         print(self.contacts_df)
         print("===================================================")
@@ -53,6 +53,29 @@ class WhatsAppDB:
         """
         self.contacts_df.time = pd.to_datetime(self.contacts_df.time)
         self.contacts_df.sort_values('time', ascending=False, inplace=True)
+
+    def run_data_analysis_and_store_results(self):
+        """
+        runs all of the data analysis methods and store the resulted json outputs
+        """
+        print(json.loads(self.get_latest_chats(6)))
+
+        number_of_contacts = 150
+        past_fraction = 0.75
+        print(json.loads(self.get_closest_persons_and_msg(number_of_contacts, self.user_name, past_fraction)))
+
+        print(self.does_df_has_hebrew())
+
+        print(json.loads(self.get_good_night_messages()))
+
+        past_fraction = 0.25
+        print(json.loads(self.get_dreams_or_old_messages(past_fraction)))
+
+        # print("get_most_active_groups_and_user_groups")
+        # max_num_of_groups = 5
+        # print(DB.get_most_active_groups_and_user_groups(max_num_of_groups))
+
+        print(self.get_chat_archive())
 
     """""
     data analysis methods
