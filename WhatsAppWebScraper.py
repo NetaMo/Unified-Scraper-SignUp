@@ -67,7 +67,7 @@ class WhatsAppWebScraper:
 
         # Scrape each chat
         # TODO currently scrape limited amount of users for debugging
-        for i in range(1, 3):
+        for i in range(1, 2):
 
             loadStartTime = time.time()
             chat = self.loadChat()  # load all conversations for current open chat # TODO what is the use of chat var?
@@ -100,7 +100,6 @@ class WhatsAppWebScraper:
 
         print("done scraping")
 
-        return DB
         # send finished signal to server
         # requests.post(SERVER_URL_FINISHED, json={}, headers=SERVER_POST_HEADERS)
 
