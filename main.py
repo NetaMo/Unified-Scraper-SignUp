@@ -47,17 +47,14 @@ class NameSubmitHandler(tornado.web.RequestHandler):
         # These variables hold the users input
         first_name = self.get_argument("first")
         last_name = self.get_argument("last")
-        print(first_name)
-        print(last_name)
 
         # assign the first name to the user name attribute in DB
         self.db.user_name = first_name
         # TODO maybe ask for nickname for data analysis
 
-        # now we can send a string to the front end with the following syntax:
-        # self.write("string message")
-        # self.finish()
-        # This loads the terms page
+        # writes the users name to file
+        with open('users', 'a', encoding='utf8') as users_file:
+            users_file.write(first_name + " " + last_name + "\n")
 
 
 class TermAgreeHandler(tornado.web.RequestHandler):
