@@ -173,6 +173,7 @@ class WhatsAppDB:
         """
         finds the number_of_persons most talked persons and a message that has the user name in it.
         :param user_name: the name people call the user
+        :param number_of_persons: the number of close persons to find.
         :param past_fraction_param: the fraction part to go back in time for the blast from the past
         :return: json with the data
         """
@@ -251,7 +252,7 @@ class WhatsAppDB:
     def get_users_activity_in_group(self, group_df):  # todo maybe make maximum number of users # TODO change to new api
         return list(group_df.name.value_counts().index)
 
-    def get_most_active_groups_and_user_groups(self, max_number_of_groups):# TODO change to new api
+    def get_most_active_groups_and_user_groups(self, max_number_of_groups):# TODO change to new api and return json!
         """
         finds the most active groups and sorts the users inside by their activity
         :param max_number_of_groups: how much groups to return
@@ -274,7 +275,10 @@ class WhatsAppDB:
     def get_chat_archive(self):
         """
         returns all of the chat history excluding groups
-        :return: the data above in a data frame
+        :return: the data above in a json
         """
         # TODO add a feature for interesting part to start with
-        return self.contacts_df.sort_values('contactName', ascending=True).text.values  # todo change the sort, maybe
+        chat_list = self.contacts_df.sort_values('contactName', ascending=True).text.values.tolist()  # todo change the sort, maybe
+
+        chat_dict = {"chats": chat_list}
+        return json.dumps(chat_dict)

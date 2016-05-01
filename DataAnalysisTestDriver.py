@@ -46,5 +46,5 @@ def test_data_analysis(DB):
     # print("----------------------------------")
 
     print("get_chat_archive")
-    print(DB.get_chat_archive())
+    print(json.loads(DB.get_chat_archive()))
     print("----------------------------------")

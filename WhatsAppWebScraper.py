@@ -123,11 +123,12 @@ class WhatsAppWebScraper:
 
         # ----------a new faster way to load chats---------------------
         # load the chat using javascript code.
-        iterations = 0
+        # iterations = 0
         while len(self.browser.execute_script("return $('.btn-more').click();")) is not 0:
-            if iterations % 10 is 0: # TODO check what is the optimal parameter
-                self.browser.execute_script("$(\"#pane-side\").animate({scrollTop:  0});")
-            iterations += 1
+            continue
+            # if iterations % 10 is 0: # TODO check what is the optimal parameter
+            #     self.browser.execute_script("$(\"#pane-side\").animate({scrollTop:  0});")
+            # iterations += 1
 
 
         # counter = 0
