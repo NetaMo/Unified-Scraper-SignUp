@@ -21,6 +21,15 @@ class WhatsAppDB:
 
         # TODO add oldest_time
 
+        # =====data analysis json outputs=====
+        self.latest_chats = 0
+        self.closest_persons_and_msg = 0
+        self.have_hebrew = False  # boolean
+        self.good_night_messages = 0
+        self.dreams_or_old_messages = 0
+        self.most_active_groups_and_user_groups = 0
+        self.chat_archive = 0
+
     def append_to_contacts_df(self, data_dict):
         """
         appends the dictionary data to the contacts data frame.
@@ -58,24 +67,35 @@ class WhatsAppDB:
         """
         runs all of the data analysis methods and store the resulted json outputs
         """
-        print(json.loads(self.get_latest_chats(6)))
+        self.latest_chats = self.get_latest_chats(6)
 
         number_of_contacts = 150
         past_fraction = 0.75
-        print(json.loads(self.get_closest_persons_and_msg(number_of_contacts, self.user_name, past_fraction)))
+        self.closest_persons_and_msg = self.get_closest_persons_and_msg(number_of_contacts, self.user_name, past_fraction)
 
-        print(self.does_df_has_hebrew())
+        self.have_hebrew = self.does_df_has_hebrew()
 
-        print(json.loads(self.get_good_night_messages()))
+        self.good_night_messages = self.get_good_night_messages()
 
         past_fraction = 0.25
-        print(json.loads(self.get_dreams_or_old_messages(past_fraction)))
+        self.dreams_or_old_messages = self.get_dreams_or_old_messages(past_fraction)
 
-        # print("get_most_active_groups_and_user_groups")
         # max_num_of_groups = 5
-        # print(DB.get_most_active_groups_and_user_groups(max_num_of_groups))
+        # self.most_active_groups_and_user_groups = self.get_most_active_groups_and_user_groups(max_num_of_groups) TODO UPDATE
 
-        print(self.get_chat_archive())
+        self.chat_archive = self.get_chat_archive()
+
+    def save_db_to_files(self, path):
+        self.contacts_df.to_pickle(path + "saved_contacts_df")
+        self.groups_df.to_pickle(path + "saved_groups_df")
+        with open(path + "user name", 'w+', encoding='utf8') as file:
+            file.write(self.user_name)
+
+    def load_db_from_files(self, path):
+        self.contacts_df = pd.read_pickle(path + "saved_contacts_df")
+        self.groups_df = pd.read_pickle(path + "saved_groups_df")
+        with open(path + "user name", 'r', encoding='utf8') as file:
+            self.user_name = file.read()
 
     """""
     data analysis methods
@@ -99,14 +119,16 @@ class WhatsAppDB:
         checks if the contacts data frame text fields has hebrew chars
         :return: True if has hebrew
         """
+        language = {"hebrew": False}
         for text in list(self.contacts_df.head(10).text.values):
             if self.is_language_hebrew(text):
-                return True
+                language["hebrew"] = True
 
         for text in list(self.contacts_df.tail(10).text.values):
             if self.is_language_hebrew(text):
-                return True
-        return False
+                language["hebrew"] = True
+
+        return json.dumps(language)
 
     @staticmethod
     def correct_time_for_whatsapp(x):
@@ -200,7 +222,7 @@ class WhatsAppDB:
             pd.Timestamp(date(datetime.today().year, datetime.today().month, datetime.today().day)).date() - (
                 min(self.contacts_df.time).date()))
         past_chats_threshold_date = min(self.contacts_df.time) + to_offset(past_chats_threshold_days)
-        print(past_chats_threshold_date)
+        # print(past_chats_threshold_date)
         df_past_chats = self.contacts_df.where(self.contacts_df.time <= past_chats_threshold_date).dropna()
         return df_past_chats  # todo check how to filter good past msgs
     

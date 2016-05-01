@@ -1,4 +1,4 @@
-# from PIL import Image
+from PIL import Image
 import time
 import datetime
 from Webdriver import Webdriver
@@ -79,7 +79,7 @@ class WhatsAppWebScraper:
             # Get messages from current chat
             print("Scraper: scrape: Get messages for: " + str(contactName))
             startTime = time.time()
-            messages = self.get_messages(chat, contactType)
+            messages = self.get_messages(chat, contactType, contactName)
             totalMsgTime = time.time() - startTime
             print("Scraper: scrape: Got " + str(len(messages)) + " messages in " + str(totalMsgTime))
 
