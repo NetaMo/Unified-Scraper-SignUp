@@ -85,7 +85,8 @@ class WhatsAppWebScraper:
 
             # Initialize data item to store chat
             if contactType == 'group':
-                contactData = {"contactName": contactName, "contactMessageCounter": messages}
+                contactData = {"contactName": contactName, "contactMessageTotal" : messages[0],
+                               "contactMessageCounter" : messages[1]}
                 print(contactData)
                 DB.append_to_groups_df(contactData)
 
@@ -231,6 +232,7 @@ class WhatsAppWebScraper:
         # Get all incoming messages, only the author name and text.
         # this script looks for class "message-in" then "emojitext" then takes .innerText
         incomingMessages = self.browser.execute_script("var B = []; var A = document.getElementsByClassName('message-in');  for (var i = 0; i < A.length; i++){ var b = []; var a = A[i].getElementsByClassName('emojitext');  for (var j = 0; j < a.length; j++){  b.push( a[j].innerText); }  B.push(b); };;return B")
+        totalMessages = len(incomingMessages)
 
         for msg in incomingMessages:
             # If has author name, check if exists then update, if doesn't exists create it.
@@ -250,9 +252,10 @@ class WhatsAppWebScraper:
 
             groupData[lastName] += 1
 
+
         # print("getGroupMessages got " + str(len(incomingMessages)) + " messages, here they are:")
         # print(str(groupData))
-        return groupData
+        return [totalMessages,groupData]
 
     def get_day_names_to_dates(self):
         """
