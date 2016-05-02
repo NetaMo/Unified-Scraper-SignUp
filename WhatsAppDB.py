@@ -15,7 +15,9 @@ class WhatsAppDB:
         self.contacts_df = pd.DataFrame(data=None, columns=["contactName", "name", "text", "time"])
         self.contacts_df.name.astype('category')
         
-        self.groups_df = pd.DataFrame(columns=["groupName", "name", "messagesCount"])  # todo maybe make multi index
+        self.groups_df = pd.DataFrame(columns=["groupName", "name", "messagesCount", "totalMessages"])  # todo maybe make index
+        self.groups_df.messagesCount.astype(int)
+        self.groups_df.totalMessages.astype(int)
 
         self.user_name = ''
 
@@ -30,19 +32,34 @@ class WhatsAppDB:
         self.most_active_groups_and_user_groups = 0
         self.chat_archive = 0
 
+    def append_to_groups_df(self, data_dict):
+        """
+        appends the dictionary data to the groups data frame.
+        :param data_dict: the dictionary to append
+        """
+        print("append_to_groups_df")
+        print("data: " + str(data_dict))
+
+
+        # total_messages = 0
+        group_name = data_dict["contactName"]
+        for name in iter(data_dict["contactMessageCounter"]):
+            # total_messages += data_dict["contactMessageCounter"][name]
+            self.groups_df = self.groups_df.append({'groupName': group_name, 'name': name, 'messagesCount': data_dict[
+                "contactMessageCounter"][name]}, ignore_index=True)
+
+        # self.groups_df[self.groups_df['groupName'] == group_name].totalMessages = total_messages
+
+        print("the current state of groups_df: ")
+        print(self.groups_df)
+        print("===================================================")
+
     def append_to_contacts_df(self, data_dict):
         """
         appends the dictionary data to the contacts data frame.
         :param data_dict: the dictionary to append
         """
         print("append_to_contacts_df")
-        # data_json = self.request.body
-        # content_type = self.request.headers.get('content-type', '')
-        # content_type, params = parse_header(content_type)
-        # if content_type.lower() != 'application/json':
-        #     print("ERROR: not the right content")
-        # charset = params.get('charset', 'UTF8')c
-        # data = json.loads(data_json.decode(charset))
         print("data: " + str(data_dict))
         contact_name = data_dict["contact"]["name"]
         for message in data_dict["messages"][0]:
@@ -189,7 +206,7 @@ class WhatsAppDB:
             i += 1
 
         blast = self.get_blast_from_the_past(past_fraction_param)
-        closest_persons_df = closest_persons_df.append({"contactName": blast, "text": "im the blast fron the past"}, ignore_index=True)
+        closest_persons_df = closest_persons_df.append({"contactName": blast, "text": "im the blast from the past"}, ignore_index=True)
         return closest_persons_df.to_json(date_format='iso', double_precision=0, date_unit='s', orient='records')
 
     def get_good_night_messages(self):
@@ -248,11 +265,12 @@ class WhatsAppDB:
 
     def get_most_active_groups(self, max_number_of_groups):
         return list(self.groups_df['contactName'].value_counts().index)[:max_number_of_groups]  # TODO change to new api
-    
-    def get_users_activity_in_group(self, group_df):  # todo maybe make maximum number of users # TODO change to new api
+
+    @staticmethod
+    def get_users_activity_in_group(group_df):  # todo maybe make maximum number of users # TODO change to new api
         return list(group_df.name.value_counts().index)
 
-    def get_most_active_groups_and_user_groups(self, max_number_of_groups):# TODO change to new api and return json!
+    def get_most_active_groups_and_user_groups(self, max_number_of_groups):  # TODO change to new api and return json!
         """
         finds the most active groups and sorts the users inside by their activity
         :param max_number_of_groups: how much groups to return

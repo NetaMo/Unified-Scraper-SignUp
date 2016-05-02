@@ -85,27 +85,23 @@ class WhatsAppWebScraper:
 
             # Initialize data item to store chat
             if contactType == 'group':
-                contactData = {"contactName": contactName,"contactMessageCounter":messages}
-                # TODO add sending group data to DB
-            elif contactType == 'person':
-                contactData = {"contact": {"name":contactName,"type":contactType},"messages":[messages]}
-                DB.append_to_contacts_df(contactData) # add data to the data frame
+                contactData = {"contactName": contactName, "contactMessageCounter": messages}
+                print(contactData)
+                DB.append_to_groups_df(contactData)
 
-            # get the avatar of the contact TODO change to apply only the first six contacts
+            elif contactType == 'person':
+                contactData = {"contact": {"name": contactName, "type": contactType},"messages": [messages]}
+                DB.append_to_contacts_df(contactData)  # add data to the data frame
+
+            # get the avatar of the contact
             # if i < NUMBER_OF_CONTACT_PICTURES:
             #     self.get_contact_avatar()
-
-            # add data to the data frame
-            DB.append_to_contacts_df(contactData)
-            # requests.post(SERVER_URL_CHAT, json=contactData, headers=SERVER_POST_HEADERS)
 
             # go to next chat
             self.go_to_next_contact()
 
         print("done scraping")
 
-        # send finished signal to server
-        # requests.post(SERVER_URL_FINISHED, json={}, headers=SERVER_POST_HEADERS)
 
 # ===================================================================
 #   Scraper helper functions
@@ -123,12 +119,10 @@ class WhatsAppWebScraper:
 
         # ----------a new faster way to load chats---------------------
         # load the chat using javascript code.
-        # iterations = 0
         while len(self.browser.execute_script("return $('.btn-more').click();")) is not 0:
+            # time.sleep(0.0001)
             continue
-            # if iterations % 10 is 0: # TODO check what is the optimal parameter
-            #     self.browser.execute_script("$(\"#pane-side\").animate({scrollTop:  0});")
-            # iterations += 1
+
 
 
         # counter = 0
@@ -231,8 +225,8 @@ class WhatsAppWebScraper:
         @:return dictionary {"Asaf":360, "Neta":180,...}
         """
 
-        groupData = {} # data to be returned
-        lastName = None # last known name to send a msg, used for msgs without author name
+        groupData = {}  # data to be returned
+        lastName = None  # last known name to send a msg, used for msgs without author name
 
         # Get all incoming messages, only the author name and text.
         # this script looks for class "message-in" then "emojitext" then takes .innerText
@@ -256,8 +250,8 @@ class WhatsAppWebScraper:
 
             groupData[lastName] += 1
 
-        print("getGroupMessages got " + str(len(incomingMessages)) + " messages, here they are:")
-        print(str(groupData))
+        # print("getGroupMessages got " + str(len(incomingMessages)) + " messages, here they are:")
+        # print(str(groupData))
         return groupData
 
     def get_day_names_to_dates(self):
