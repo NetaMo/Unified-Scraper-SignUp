@@ -15,11 +15,12 @@ class WhatsAppDB:
         self.contacts_df = pd.DataFrame(data=None, columns=["contactName", "name", "text", "time"])
         self.contacts_df.name.astype('category')
         
-        self.groups_df = pd.DataFrame(columns=["groupName", "name", "messagesCount", "totalMessages"])  # todo maybe make index
+        self.groups_df = pd.DataFrame(columns=["groupName", "name", "messagesCount", "totalMessages"])
+        # self.groups_df.set_index("groupName", append=False, inplace=True)
         self.groups_df.messagesCount.astype(int)
         self.groups_df.totalMessages.astype(int)
 
-        self.user_name = ''
+        self.user_name = '+972 54-750-8445'  # TODO change to ''
 
         # TODO add oldest_time
 
@@ -40,10 +41,15 @@ class WhatsAppDB:
         print("append_to_groups_df")
         print("data: " + str(data_dict))
 
+        print("the current state of groups df:")
+        print(self.groups_df)
+
         group_name = data_dict["contactName"]
         for name in iter(data_dict["contactMessageCounter"]):
             self.groups_df = self.groups_df.append({'groupName': group_name, 'name': name, 'messagesCount': data_dict[
                 "contactMessageCounter"][name], 'totalMessages': data_dict['contactMessageTotal']}, ignore_index=True)
+            #
+            # self.groups_df.loc[group_name] = {'name': name, 'messagesCount': data_dict["contactMessageCounter"][name], 'totalMessages': data_dict['contactMessageTotal']}
 
         print("the current state of groups_df: ")
         print(self.groups_df)
@@ -74,9 +80,6 @@ class WhatsAppDB:
         """
         self.contacts_df.time = pd.to_datetime(self.contacts_df.time)
         self.contacts_df.sort_values('time', ascending=False, inplace=True)
-
-        self.groups_df.sort_values(['totalMessages', 'groupName', 'messagesCount'], ascending=False, inplace=True)
-        # self.groups_df = self.groups_df.reset_index(inplace=True)
 
     def run_data_analysis_and_store_results(self):
         """
@@ -293,13 +296,18 @@ class WhatsAppDB:
         :param max_number_of_groups: how much groups to return
         :return: a json with the data
         """
+        self.groups_df.sort_values(['totalMessages', 'groupName', 'messagesCount'], ascending=False, inplace=True)
+        group_names = self.groups_df.groupName.unique()[:max_number_of_groups]
+
+        print(self.groups_df.loc[self.groups_df['groupName'].isin(group_names)])  # todo return json
+
+        # print(self.groups_df)
         # last_index = self.groups_df.index.get_loc(self.groups_df.drop_duplicates(subset='groupName', keep='last').head(
         #     max_number_of_groups).tail(1).index)
         # print(last_index)
         # print(type(last_index))
         # return self.groups_df.iloc[:last_index].to_json(date_format='iso', double_precision=0, date_unit='s', orient='records')
-
-
+        # self.groups_df = self.groups_df.reset_index(inplace=True)
 
     def get_chat_archive(self):
         """
@@ -308,6 +316,6 @@ class WhatsAppDB:
         """
         # TODO add a feature for interesting part to start with
         chat_list = self.contacts_df.sort_values('contactName', ascending=True).text.values.tolist()  # todo change the sort, maybe
-
+        # todo return json of name and text
         chat_dict = {"chats": chat_list}
         return json.dumps(chat_dict)

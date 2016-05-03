@@ -45,10 +45,10 @@ def test_data_analysis(DB):
     print(json.loads(DB.get_dreams_or_old_messages(past_fraction)))
     print("----------------------------------")
 
-    # print("get_most_active_groups_and_user_groups")
-    # max_num_of_groups = 5
-    # print(json.loads(DB.get_most_active_groups_and_user_groups(max_num_of_groups)))
-    # print("----------------------------------")
+    print("get_most_active_groups_and_user_groups")
+    max_num_of_groups = 5
+    DB.get_most_active_groups_and_user_groups(max_num_of_groups)  # TODO print and loads
+    print("----------------------------------")
 
     print("get_chat_archive")
     print(json.loads(DB.get_chat_archive()))

@@ -38,7 +38,7 @@ def getIncomingMessages():
     #                 url: 'localhost:8888/userName',\
     #                 contentType: \"application/json; charset=utf-8\",\
     #                 data: JSON.stringify({\"userName\":result.textContent}),\
-    #                 type: 'POST',\
+    #                 type: #'POST',\
     #                 success: function(response) {\
     #                     console.log(response);\
     #                 },\
