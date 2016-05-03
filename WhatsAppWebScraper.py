@@ -1,14 +1,16 @@
-from PIL import Image
 import time
-import datetime
-from Webdriver import Webdriver
+
+import selenium.webdriver.support.expected_conditions as ec
+from PIL import Image
 from selenium.common.exceptions import TimeoutException, \
     StaleElementReferenceException, NoSuchElementException
 from selenium.webdriver import ActionChains
-from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.common.by import By
-import selenium.webdriver.support.expected_conditions as ec
 from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.support.wait import WebDriverWait
+
+import ScrapingScripts as SS
+from Webdriver import Webdriver
 
 # ===================================================================
 # Global variables
@@ -17,16 +19,8 @@ from selenium.webdriver.common.keys import Keys
 SERVER_URL_CHAT = "http://localhost:8888/chat"
 SERVER_URL_FINISHED = "http://localhost:8888/chatFinished"
 SERVER_POST_HEADERS = {'Content-type': 'application/json', 'Accept': 'text/plain'}
-# Days of the week
-WEEKDAYS = ('MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY')
 # how much profile images to save
 NUMBER_OF_CONTACT_PICTURES = 6
-
-# todo move to scripts
-# add jquery
-with open("jquery-2.2.3.min.js", 'r') as jquery_js:
-    jquery = jquery_js.read()  # read the jquery from a file
-
 
 # ===================================================================
 # Scraper class
@@ -42,15 +36,14 @@ class WhatsAppWebScraper:
         self.browser.set_page_load_timeout(150)  # Set timeout to 150 seconds
         self.browser.get("https://web.whatsapp.com/")  # Navigate browser to WhatsApp page
 
-        # Conversation table from day names to date for past week
-        self.dayNamesToDates = self.__get_day_names_to_dates()
-        
         # Wait in current page for user to log in using barcode scan.
         self.wait_for_element(".infinite-list-viewport", 300)
+
+        # Move browser out of screen scope
         # self.browser.set_window_size(0, 0)
         # self.browser.set_window_position(-800, 600)
 
-        self.browser.execute_script(jquery)  # active the jquery lib
+        self.browser.execute_script(SS.initJQuery())  # active the jquery lib
 
 # ===================================================================
 #   Main scraper function
@@ -182,7 +175,7 @@ class WhatsAppWebScraper:
         "text": text, "time":time}, ...]
         """
         messages = []
-        rawMessages = self.browser.execute_script("var B = []; var A = document.getElementsByClassName('message');  for (var i = 0; i < A.length; i++){ var b = []; var a = A[i].getElementsByClassName('message-text');  for (var j = 0; j < a.length; j++){  b.push( a[j].innerText); }  B.push(b); };return B")
+        rawMessages = self.browser.execute_script(SS.getTextMessages())
 
         # Extract data from raw message
         for msg in rawMessages:
@@ -216,7 +209,7 @@ class WhatsAppWebScraper:
 
         # Get all incoming messages, only the author name and text.
         # this script looks for class "message-in" then "emojitext" then takes .innerText
-        incomingMessages = self.browser.execute_script("var B = []; var A = document.getElementsByClassName('message-in');  for (var i = 0; i < A.length; i++){ var b = []; var a = A[i].getElementsByClassName('emojitext');  for (var j = 0; j < a.length; j++){  b.push( a[j].innerText); }  B.push(b); };;return B")
+        incomingMessages = self.browser.execute_script(SS.getIncomingMessages())
         totalMessages = len(incomingMessages)
 
         for msg in incomingMessages:
