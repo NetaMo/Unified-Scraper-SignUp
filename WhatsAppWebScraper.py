@@ -1,10 +1,11 @@
 import time
 
 from PIL import Image
+from selenium.common.exceptions import StaleElementReferenceException
 from selenium.webdriver import ActionChains
 from selenium.webdriver.common.keys import Keys
 
-import ScrapingScripts as scraping_scripts
+import ScrapingScripts as SS
 from Webdriver import Webdriver
 
 # ===================================================================
@@ -29,7 +30,8 @@ class WhatsAppWebScraper:
         self.browser = Webdriver.getBrowser(webdriver)  # Get browser
         self.browser.set_page_load_timeout(150)  # Set timeout to 150 seconds
         self.browser.get("https://web.whatsapp.com/")  # Navigate browser to WhatsApp page
-        self.browser.execute_script(scraping_scripts.initJQuery())  # active the jquery lib
+        self.browser.execute_script(SS.initJQuery())  # active the jquery lib
+        self.scrapedContacts = [ ]  # List of scraped contacts
 
         # Wait in current page for user to log in using barcode scan.
         self.wait_for_element('.infinite-list-viewport', 300)
@@ -48,41 +50,45 @@ class WhatsAppWebScraper:
         actions = ActionChains(self.browser)  # init actions option (click, send keyboard keys, etc)
 
         # Get to first contact chat
-        searchBox = self.wait_for_element('.input.input-search')
-        actions.click(searchBox).send_keys(Keys.TAB).perform()
+        actions.click(self.wait_for_element('.input.input-search')).send_keys(Keys.TAB).perform()
 
         # Scrape each chat
         # TODO currently scrape limited amount of users for debugging
-        for i in range(1, 4):
+        for i in range(1, 25):
 
             loadStartTime = time.time()
             chat = self.__load_chat()  # load all conversations for current open chat
             print("Loaded chat in " + str(time.time() - loadStartTime) + "seconds")
 
             # Get contact name and type (person/group).
-            contactName, contactType = self.__get_contact_details(actions)
+            contactName, contactType = self.__get_contact_details()
 
             # Get messages from current chat
             print("Scraper: scrape: Get messages for: " + str(contactName))
             startTime = time.time()
-            messages = self.__get_messages(chat, contactType, contactName)
+            messages = self.__get_messages(contactType, contactName)
             totalMsgTime = time.time() - startTime
+
             if contactType == 'group':
-                print("Scraper: scrape: Got " + str(len(messages)) + " messages in " + str(totalMsgTime))
+                print(
+                    "Scraper: scrape: Got " + str(messages[ 0 ]) + " messages in " + str(totalMsgTime))
             else:
-                print("Scraper: scrape: Got " + str(len(messages)) + " contact counts in " + str(totalMsgTime))
+                print("Scraper: scrape: Got " + str(len(messages)) + " messages in " + str(
+                        totalMsgTime))
 
             # Initialize data item to store chat
             if contactType == 'group':
-                contactData = {"contactName": contactName, "contactMessageTotal": messages[0],
-                               "contactMessageCounter": messages[1]}
-                print(contactData)
+                contactData = {"contactName": contactName, "contactMessageTotal": messages[ 0 ],
+                               "contactMessageCounter": messages[ 1 ]}
                 DB.append_to_groups_df(contactData)
 
             elif contactType == 'person':
                 contactData = {"contact": {"name": contactName, "type": contactType},
-                               "messages": [messages]}
+                               "messages": [ messages ]}
                 DB.append_to_contacts_df(contactData)  # add data to the data frame
+
+            # Set as scraped
+            self.scrapedContacts.append(contactName)
 
             # get the avatar of the contact
             # if i < NUMBER_OF_CONTACT_PICTURES:
@@ -103,9 +109,11 @@ class WhatsAppWebScraper:
         """
         print("Load chat")
 
-        actions = ActionChains(self.browser)  # init actions
-        chat = self.wait_for_element('.message-list')  # wait for chat to load
-        actions.click(chat).perform()
+        self.stubbornLoadClick()
+
+        self.wait_for_element('.btn-more')
+        while len(self.browser.execute_script("return $('.btn-more').click();")) is not 0:
+            continue
 
         # # JS script intended to load chat messages async
         # load_script = """
@@ -145,14 +153,15 @@ class WhatsAppWebScraper:
         while len(self.browser.execute_script("return $('.btn-more').click();")) is not 0:
             continue
 
-    def __get_contact_details(self, actions):
+    def __get_contact_details(self):
         """
         Get contact name and type (contact/group). This is done by clicking on Chat Menu button and
         opening a submenu which contains the word Contact or Group and extracting that word.
         """
         # Get contact name
-        contactName = self.browser.execute_script("return document.getElementById("
-                                                  "'main').getElementsByTagName('h2');")[0].text
+        contactName = self.wait_for_element_by_script("return $('#main h2 span').text()")
+        # contactName = self.browser.execute_script("return document.getElementById("
+        #                                           "'main').getElementsByTagName('h2');")[ 0 ].text
 
         # If this is a contact chat then this field will not appear
         if len(self.browser.execute_script("return document.getElementsByClassName('msg-group');")) \
@@ -163,7 +172,7 @@ class WhatsAppWebScraper:
 
         return contactName, contactType
 
-    def __get_messages(self, chat, contactType, contactName):
+    def __get_messages(self, contactType, contactName):
         """
         Given a chat with a contact, return all messages formatted to be sent to server.
         """
@@ -180,8 +189,8 @@ class WhatsAppWebScraper:
         :return: list of messages [{"name":name, "text": text, "time":time}, {"name":name,
         "text": text, "time":time}, ...]
         """
-        messages = []
-        rawMessages = self.browser.execute_script(scraping_scripts.getTextMessages())
+        messages = [ ]
+        rawMessages = self.browser.execute_script(SS.getTextMessages())
 
         # Extract data from raw message
         for msg in rawMessages:
@@ -189,17 +198,16 @@ class WhatsAppWebScraper:
             if len(msg) == 0:
                 continue
 
-            datetimeEnd = msg[0].find("]")
-            dateandtime = msg[0][3:datetimeEnd]
+            datetimeEnd = msg[ 0 ].find("]")
+            dateandtime = msg[ 0 ][ 3:datetimeEnd ]
 
-            name = msg[0][datetimeEnd + 2:]
+            name = msg[ 0 ][ datetimeEnd + 2: ]
             nameEnd = name.find(":")
-            name = name[:nameEnd]
+            name = name[ :nameEnd ]
 
-            text = msg[0][datetimeEnd + nameEnd + 7:]
+            text = msg[ 0 ][ datetimeEnd + nameEnd + 7: ]
 
             msgData = {"name": name, "text": text, "time": dateandtime}
-            print(msgData)
             messages.append(msgData)
 
         return messages
@@ -211,34 +219,31 @@ class WhatsAppWebScraper:
         """
 
         groupData = {}  # data to be returned
-        lastName = None  # last known name to send a msg, used for msgs without author name
 
-        # Get all incoming messages, only the author name and text.
-        # this script looks for class "message-in" then "emojitext" then takes .innerText
-        incomingMessages = self.browser.execute_script(scraping_scripts.getIncomingMessages())
-        totalMessages = len(incomingMessages)
+        rawMessages = self.browser.execute_script(SS.getTextMessages())
+        totalMessages = len(rawMessages)
 
-        for msg in incomingMessages:
-            # If has author name, check if exists then update, if doesn't exists create it.
-            if len(msg) == 2:
-                lastName = msg[0]
-                if lastName in groupData:
-                    groupData[lastName] += 1
-                    continue
-                else:
-                    groupData[lastName] = 1
-                    continue
+        for msg in rawMessages:
+            # Unsupported messages type
+            if len(msg) == 0:
+                continue
 
-            # If no author name in msg, take last name
-            # TODO handle image, video, etc.
-            elif len(msg) == 1 and msg[0] in groupData:
-                lastName = msg[0]
+            datetimeEnd = msg[ 0 ].find("]")
+            dateandtime = msg[ 0 ][ 3:datetimeEnd ]
 
-            groupData[lastName] += 1
+            name = msg[ 0 ][ datetimeEnd + 2: ]
+            nameEnd = name.find(":")
+            name = name[ :nameEnd ]
+
+            # update contact if exists otherwise create
+            if name in groupData:
+                groupData[ name ] += 1
+            else:
+                groupData[ name ] = 1
 
         # print("getGroupMessages got " + str(len(incomingMessages)) + " messages, here they are:")
         # print(str(groupData))
-        return [totalMessages, groupData]
+        return [ totalMessages, groupData ]
 
     def __get_contact_avatar(self):
         """
@@ -249,15 +254,15 @@ class WhatsAppWebScraper:
         # Getting the small image's url and switching to the large image
         avatar_url = self.browser.execute_script("return $('#main header div.chat-avatar div "
                                                  "img');").get_attribute("src")
-        avatar_url = avatar_url[:34] + "l" + avatar_url[35:]
+        avatar_url = avatar_url[ :34 ] + "l" + avatar_url[ 35: ]
 
         # Opening a new tab
         actions = ActionChains(self.browser)
         actions.send_keys(Keys.CONTROL).send_keys('t').perform()
 
         # Switching to the new tab and navigating to image's url
-        defWin = self.browser.window_handles[0]
-        newWin = self.browser.window_handles[1]
+        defWin = self.browser.window_handles[ 0 ]
+        newWin = self.browser.window_handles[ 1 ]
         self.browser.switch_to_window(newWin)
         self.browser.get(avatar_url)
 
@@ -287,8 +292,8 @@ class WhatsAppWebScraper:
         pressing tab and then arrow down.
         """
         actions = ActionChains(self.browser)
-        actions.click(self.wait_for_element('.input.input-search')).perform()
-        actions.send_keys(Keys.TAB).send_keys(Keys.ARROW_DOWN).perform()
+        actions.click(self.wait_for_element('.input.input-search')).send_keys(Keys.TAB).send_keys(
+            Keys.ARROW_DOWN).perform()
 
     # ===================================================================
     #   Webdriver helper functions
@@ -307,4 +312,37 @@ class WhatsAppWebScraper:
             if time.time() - startTime > timeout:
                 return None
 
-        return elements[0]
+        return elements[ 0 ]
+
+    def wait_for_element_by_script(self, script, timeout=10):
+        """
+        General helper function. Searches and waits for css element to appear on page and returns it,
+        if it doesnt appear after timeout seconds prints relevant exception and returns None.
+        """
+        startTime = time.time()
+        elements = self.browser.execute_script(script)
+
+        while (len(elements) == 0):
+            elements = self.browser.execute_script(script)
+            if time.time() - startTime > timeout:
+                return None
+
+        return elements
+
+    def stubbornLoadClick(self):
+        print("Scraper: stubbornClick starting...")
+        i = 0
+
+        while (True):
+            try:
+                ActionChains(self.browser).click(
+                    self.wait_for_element('#main .pane-body', 1)).perform()
+                print("Scraper: stubbornClick finished on iteration: " + str(i))
+                return
+            except StaleElementReferenceException:
+                i += 1
+                if i & 500 == 0:
+                    ActionChains(self.browser).click(self.wait_for_element_by_script(
+                            "return $('#main .pane-body');")[ 0 ]).perform()
+                print("Scraper: stubbornClick iteration " + str(i))
+                continue
