@@ -1,4 +1,4 @@
-from PIL import Image
+# from PIL import Image
 import time
 import datetime
 from Webdriver import Webdriver
@@ -118,13 +118,20 @@ class WhatsAppWebScraper:
         chat = self.wait_for_element(".message-list")  # wait for chat to load
         actions.click(chat).perform()
 
-        # ----------a new faster way to load chats---------------------
         # load the chat using javascript code.
         while len(self.browser.execute_script("return $('.btn-more').click();")) is not 0:
-            # time.sleep(0.0001)
             continue
 
-
+        # Try #1.
+        # self.browser.execute_script("btnMore = $('.btn-more');")
+        # btnMoreCounter = 0
+        # while len(self.browser.execute_script("return btnMore.click();")) is not 0:
+        #     # time.sleep(0.0001)
+        #     btnMoreCounter += 1
+        #     if btnMoreCounter % 500 == 0:
+        #         print("------" + str(btnMoreCounter) + " iterations of btnMore: ")
+        #         self.browser.execute_script("btnMore = $('.btn-more');a")
+        #     continue
 
         # counter = 0
         # # load previous messages until no "btn-more" exists
@@ -147,9 +154,8 @@ class WhatsAppWebScraper:
         opening a submenu which contains the word Contact or Group and extracting that word.
         """
         # Get contact name
-        # TODO make this selector less specific to match possible page variations
-        contactName = self.browser.find_element_by_css_selector("#main header div.chat-body "
-                                                                "div.chat-main h2 span").text
+        contactName = self.browser.execute_script("return document.getElementById("
+                                                  "'main').getElementsByTagName('h2');")[0].text
 
         # If this is a contact chat then this field will not appear
         if self.get_elemenet(".msg-group") == None:
