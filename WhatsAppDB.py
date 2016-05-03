@@ -16,7 +16,6 @@ class WhatsAppDB:
         self.contacts_df.name.astype('category')
         
         self.groups_df = pd.DataFrame(columns=["groupName", "name", "messagesCount", "totalMessages"])
-        # self.groups_df.set_index("groupName", append=False, inplace=True)
         self.groups_df.messagesCount.astype(int)
         self.groups_df.totalMessages.astype(int)
 
@@ -41,15 +40,10 @@ class WhatsAppDB:
         print("append_to_groups_df")
         # print("data: " + str(data_dict))
 
-        print("the current state of groups df:")
-        print(self.groups_df)
-
         group_name = data_dict["contactName"]
         for name in iter(data_dict["contactMessageCounter"]):
             self.groups_df = self.groups_df.append({'groupName': group_name, 'name': name, 'messagesCount': data_dict[
                 "contactMessageCounter"][name], 'totalMessages': data_dict['contactMessageTotal']}, ignore_index=True)
-            #
-            # self.groups_df.loc[group_name] = {'name': name, 'messagesCount': data_dict["contactMessageCounter"][name], 'totalMessages': data_dict['contactMessageTotal']}
 
         print("the current state of groups_df: ")
         # print(self.groups_df)

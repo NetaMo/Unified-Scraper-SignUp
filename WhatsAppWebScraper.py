@@ -150,8 +150,6 @@ class WhatsAppWebScraper:
 
         # ----------a new faster way to load chats---------------------
         # load the chat using javascript code.
-        while len(self.browser.execute_script("return $('.btn-more').click();")) is not 0:
-            continue
 
     def __get_contact_details(self):
         """
