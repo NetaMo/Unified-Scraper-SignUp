@@ -110,7 +110,7 @@ class WhatsAppWebScraper:
         """
         print("Load chat")
 
-        self.stubbornClick('#main .pane-body')
+        self.stubbornLoadClick()
 
         self.wait_for_element('.btn-more')
         while len(self.browser.execute_script("return $('.btn-more').click();")) is not 0:
@@ -293,7 +293,6 @@ class WhatsAppWebScraper:
         actions = ActionChains(self.browser)
         actions.click(self.wait_for_element('.input.input-search')).send_keys(Keys.TAB).send_keys(
             Keys.ARROW_DOWN).perform()
-        self.browser.implicitly_wait(5)
 
     # ===================================================================
     #   Webdriver helper functions
@@ -329,19 +328,20 @@ class WhatsAppWebScraper:
 
         return elements
 
-    def stubbornClick(self, jquerySelector):
+    def stubbornLoadClick(self):
         print("Scraper: stubbornClick starting...")
-        actions = ActionChains(self.browser)
         i = 0
 
         while (True):
             try:
-                actions.click(self.wait_for_element(jquerySelector, 1)).perform()
+                ActionChains(self.browser).click(
+                    self.wait_for_element('#main .pane-body', 1)).perform()
                 print("Scraper: stubbornClick finished on iteration: " + str(i))
                 return
             except StaleElementReferenceException:
                 i += 1
                 if i & 500 == 0:
-                    self.browser.implicitly_wait(2)
+                    ActionChains(self.browser).click(self.wait_for_element_by_script(
+                            "return $('#main .pane-body');")[ 0 ]).perform()
                 print("Scraper: stubbornClick iteration " + str(i))
                 continue
