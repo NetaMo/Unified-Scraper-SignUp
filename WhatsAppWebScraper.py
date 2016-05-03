@@ -1,11 +1,10 @@
 import time
-
 from PIL import Image
 from selenium.common.exceptions import StaleElementReferenceException
 from selenium.webdriver import ActionChains
 from selenium.webdriver.common.keys import Keys
 
-import ScrapingScripts as SS
+import ScrapingScripts as scrapingScripts
 from Webdriver import Webdriver
 
 # ===================================================================
@@ -30,7 +29,7 @@ class WhatsAppWebScraper:
         self.browser = Webdriver.getBrowser(webdriver)  # Get browser
         self.browser.set_page_load_timeout(150)  # Set timeout to 150 seconds
         self.browser.get("https://web.whatsapp.com/")  # Navigate browser to WhatsApp page
-        self.browser.execute_script(SS.initJQuery())  # active the jquery lib
+        self.browser.execute_script(scrapingScripts.initJQuery())  # active the jquery lib
         self.scrapedContacts = [ ]  # List of scraped contacts
 
         # Wait in current page for user to log in using barcode scan.
@@ -54,7 +53,7 @@ class WhatsAppWebScraper:
 
         # Scrape each chat
         # TODO currently scrape limited amount of users for debugging
-        for i in range(1, 25):
+        for i in range(1, 10):
 
             loadStartTime = time.time()
             chat = self.__load_chat()  # load all conversations for current open chat
@@ -113,6 +112,7 @@ class WhatsAppWebScraper:
 
         self.wait_for_element('.btn-more')
         while len(self.browser.execute_script("return $('.btn-more').click();")) is not 0:
+            time.sleep(0.001)
             continue
 
         # # JS script intended to load chat messages async
@@ -188,7 +188,7 @@ class WhatsAppWebScraper:
         "text": text, "time":time}, ...]
         """
         messages = [ ]
-        rawMessages = self.browser.execute_script(SS.getTextMessages())
+        rawMessages = self.browser.execute_script(scrapingScripts.getTextMessages())
 
         # Extract data from raw message
         for msg in rawMessages:
@@ -218,7 +218,7 @@ class WhatsAppWebScraper:
 
         groupData = {}  # data to be returned
 
-        rawMessages = self.browser.execute_script(SS.getTextMessages())
+        rawMessages = self.browser.execute_script(scrapingScripts.getTextMessages())
         totalMessages = len(rawMessages)
 
         for msg in rawMessages:
