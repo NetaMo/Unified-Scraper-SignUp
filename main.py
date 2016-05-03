@@ -25,6 +25,9 @@ def scrape_whatsapp(db):
     print("before scrape")
     scraper.scrape(db)  # scrape
     print("after scrape")
+    # TODO for debugging, delete
+    while(True):
+        continue
     driver.close()  # close driver
 
 

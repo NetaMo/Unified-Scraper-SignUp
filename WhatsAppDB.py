@@ -39,7 +39,7 @@ class WhatsAppDB:
         :param data_dict: the dictionary to append
         """
         print("append_to_groups_df")
-        print("data: " + str(data_dict))
+        # print("data: " + str(data_dict))
 
         print("the current state of groups df:")
         print(self.groups_df)
@@ -52,7 +52,7 @@ class WhatsAppDB:
             # self.groups_df.loc[group_name] = {'name': name, 'messagesCount': data_dict["contactMessageCounter"][name], 'totalMessages': data_dict['contactMessageTotal']}
 
         print("the current state of groups_df: ")
-        print(self.groups_df)
+        # print(self.groups_df)
         print("===================================================")
 
     def append_to_contacts_df(self, data_dict):
@@ -61,7 +61,7 @@ class WhatsAppDB:
         :param data_dict: the dictionary to append
         """
         print("append_to_contacts_df")
-        print("data: " + str(data_dict))
+        # print("data: " + str(data_dict))
         contact_name = data_dict["contact"]["name"]
         for message in data_dict["messages"][0]:
             name = message["name"]
@@ -71,7 +71,7 @@ class WhatsAppDB:
                                                         'time': message["time"]}, ignore_index=True)
 
         print("the current state of contacts_df: ")
-        print(self.contacts_df)
+        # print(self.contacts_df)
         print("===================================================")
 
     def convert_to_datetime_and_sort(self):
