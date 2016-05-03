@@ -19,9 +19,9 @@ class WhatsAppDB:
         self.groups_df.messagesCount.astype(int)
         self.groups_df.totalMessages.astype(int)
 
-        self.user_name = '+972 54-750-8445'  # TODO change to ''
+        self.user_name = 'אסף'  # TODO change to ''
 
-        # TODO add oldest_time
+        # TODO add oldest_time maybe
 
         # =====data analysis json outputs=====
         self.latest_chats = 0
