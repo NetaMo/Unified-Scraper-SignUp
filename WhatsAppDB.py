@@ -40,15 +40,10 @@ class WhatsAppDB:
         print("append_to_groups_df")
         print("data: " + str(data_dict))
 
-
-        # total_messages = 0
         group_name = data_dict["contactName"]
         for name in iter(data_dict["contactMessageCounter"]):
-            # total_messages += data_dict["contactMessageCounter"][name]
             self.groups_df = self.groups_df.append({'groupName': group_name, 'name': name, 'messagesCount': data_dict[
-                "contactMessageCounter"][name]}, ignore_index=True)
-
-        # self.groups_df[self.groups_df['groupName'] == group_name].totalMessages = total_messages
+                "contactMessageCounter"][name], 'totalMessages': data_dict['contactMessageTotal']}, ignore_index=True)
 
         print("the current state of groups_df: ")
         print(self.groups_df)
@@ -80,6 +75,9 @@ class WhatsAppDB:
         self.contacts_df.time = pd.to_datetime(self.contacts_df.time)
         self.contacts_df.sort_values('time', ascending=False, inplace=True)
 
+        self.groups_df.sort_values(['totalMessages', 'groupName', 'messagesCount'], ascending=False, inplace=True)
+        # self.groups_df = self.groups_df.reset_index(inplace=True)
+
     def run_data_analysis_and_store_results(self):
         """
         runs all of the data analysis methods and store the resulted json outputs
@@ -98,7 +96,7 @@ class WhatsAppDB:
         self.dreams_or_old_messages = self.get_dreams_or_old_messages(past_fraction)
 
         # max_num_of_groups = 5
-        # self.most_active_groups_and_user_groups = self.get_most_active_groups_and_user_groups(max_num_of_groups) TODO UPDATE
+        # self.most_active_groups_and_user_groups = self.get_most_active_groups_and_user_groups(max_num_of_groups) # TODO UPDATE
 
         self.chat_archive = self.get_chat_archive()
 
@@ -218,7 +216,6 @@ class WhatsAppDB:
         good_night_df = good_night_df[['contactName', 'text']]
         return good_night_df.to_json(date_format='iso', double_precision=0, date_unit='s', orient='records')
 
-
     def get_dream_messages(self):  # todo check the results and decide on size
         """
         finds messages containing dream words
@@ -263,32 +260,46 @@ class WhatsAppDB:
             return self.get_old_messages(past_fraction_param).to_json(date_format='iso', double_precision=0,
                                                                                      date_unit='s', orient='records')
 
-    def get_most_active_groups(self, max_number_of_groups):
-        return list(self.groups_df['contactName'].value_counts().index)[:max_number_of_groups]  # TODO change to new api
-
-    @staticmethod
-    def get_users_activity_in_group(group_df):  # todo maybe make maximum number of users # TODO change to new api
-        return list(group_df.name.value_counts().index)
+    # def get_most_active_groups(self, max_number_of_groups):
+    #     return list(self.groups_df['contactName'].value_counts().index)[:max_number_of_groups]  # TODO change to new api
+    #
+    # @staticmethod
+    # def get_users_activity_in_group(group_df):  # todo maybe make maximum number of users # TODO change to new api
+    #     return list(group_df.name.value_counts().index)
+    #
+    # def get_most_active_groups_and_user_groups(self, max_number_of_groups):  # TODO change to new api and return json!
+    #     """
+    #     finds the most active groups and sorts the users inside by their activity
+    #     :param max_number_of_groups: how much groups to return
+    #     :return: a dict with the data
+    #     """
+    #     most_active_groups_list = self.get_most_active_groups(max_number_of_groups)
+    #     groups = self.groups_df.groupby('contactName')
+    #     ret_dict_list = []
+    #     i = 0
+    #     for group_name in most_active_groups_list:
+    #         for name, group in groups:
+    #             if name is group_name:
+    #                 ret_dict_list.append({})
+    #                 ret_dict_list[i]["groupName"] = name
+    #                 ret_dict_list[i]["groupContacts"] = self.get_users_activity_in_group(group)
+    #         i += 1
+    #
+    #     return ret_dict_list
 
     def get_most_active_groups_and_user_groups(self, max_number_of_groups):  # TODO change to new api and return json!
         """
-        finds the most active groups and sorts the users inside by their activity
+        finds the most active groups and gets the users inside by their activity
         :param max_number_of_groups: how much groups to return
-        :return: a dict with the data
+        :return: a json with the data
         """
-        most_active_groups_list = self.get_most_active_groups(max_number_of_groups)
-        groups = self.groups_df.groupby('contactName')
-        ret_dict_list = []
-        i = 0
-        for group_name in most_active_groups_list:
-            for name, group in groups:
-                if name is group_name:
-                    ret_dict_list.append({})
-                    ret_dict_list[i]["groupName"] = name
-                    ret_dict_list[i]["groupContacts"] = self.get_users_activity_in_group(group)
-            i += 1
+        # last_index = self.groups_df.index.get_loc(self.groups_df.drop_duplicates(subset='groupName', keep='last').head(
+        #     max_number_of_groups).tail(1).index)
+        # print(last_index)
+        # print(type(last_index))
+        # return self.groups_df.iloc[:last_index].to_json(date_format='iso', double_precision=0, date_unit='s', orient='records')
 
-        return ret_dict_list
+
 
     def get_chat_archive(self):
         """

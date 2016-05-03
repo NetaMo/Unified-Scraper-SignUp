@@ -183,7 +183,7 @@ if __name__ == "__main__":
 
         DB.convert_to_datetime_and_sort()
 
-        DB.run_data_analysis_and_store_results()
+        # DB.run_data_analysis_and_store_results()
         DB.save_db_to_files(".\\stored data\\")
         sys.exit()
 

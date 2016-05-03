@@ -13,6 +13,11 @@ def test_data_analysis(DB):
     print(DB.contacts_df)
     print("=============================================")
 
+    print("=============================================")
+    print("groups_df:")
+    print(DB.groups_df)
+    print("=============================================")
+
     # print("Me:")
     # print(DB.contacts_df[DB.contacts_df["name"] == 'Me'])
     # print("=============================================")
@@ -42,7 +47,7 @@ def test_data_analysis(DB):
 
     # print("get_most_active_groups_and_user_groups")
     # max_num_of_groups = 5
-    # print(DB.get_most_active_groups_and_user_groups(max_num_of_groups))
+    # print(json.loads(DB.get_most_active_groups_and_user_groups(max_num_of_groups)))
     # print("----------------------------------")
 
     print("get_chat_archive")

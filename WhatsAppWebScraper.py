@@ -14,8 +14,6 @@ from selenium.webdriver.common.keys import Keys
 # Global variables
 # ===================================================================
 # Server data
-SERVER_URL_CHAT = "http://localhost:8888/chat"
-SERVER_URL_FINISHED = "http://localhost:8888/chatFinished"
 SERVER_POST_HEADERS = {'Content-type': 'application/json', 'Accept': 'text/plain'}
 # Days of the week
 WEEKDAYS = ('MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY')
@@ -67,7 +65,7 @@ class WhatsAppWebScraper:
 
         # Scrape each chat
         # TODO currently scrape limited amount of users for debugging
-        for i in range(1, 2):
+        for i in range(1, 4):
 
             loadStartTime = time.time()
             chat = self.load_chat()  # load all conversations for current open chat
@@ -81,12 +79,15 @@ class WhatsAppWebScraper:
             startTime = time.time()
             messages = self.get_messages(chat, contactType, contactName)
             totalMsgTime = time.time() - startTime
-            print("Scraper: scrape: Got " + str(len(messages)) + " messages in " + str(totalMsgTime))
+            if contactType == 'group':
+                print("Scraper: scrape: Got " + str(len(messages)) + " messages in " + str(totalMsgTime))
+            else:
+                print("Scraper: scrape: Got " + str(len(messages)) + " contact counts in " + str(totalMsgTime))
 
             # Initialize data item to store chat
             if contactType == 'group':
-                contactData = {"contactName": contactName, "contactMessageTotal" : messages[0],
-                               "contactMessageCounter" : messages[1]}
+                contactData = {"contactName": contactName, "contactMessageTotal": messages[0],
+                               "contactMessageCounter": messages[1]}
                 print(contactData)
                 DB.append_to_groups_df(contactData)
 
@@ -118,10 +119,42 @@ class WhatsAppWebScraper:
         chat = self.wait_for_element(".message-list")  # wait for chat to load
         actions.click(chat).perform()
 
+        # # JS script intended to load chat messages async
+        # load_script = """
+        #     continueFlag = true;
+        #     // create an observer instance to monitor
+        #     // any changes to the messages list
+        #     var observer = new MutationObserver(
+        #         // mutation callback (message loader)
+        #         function(){
+        #             // gets load button
+        #             var btnList = document.getElementsByClassName('btn-more');
+        #             // if there are no messages left, disconnect and break
+        #             // otherwise, load next batch of messages
+        #             if( btnList.length < 1 ) {
+        #                 continueFlag = false;
+        #                 observer.disconnect();
+        #             }
+        #             else btnList[0].click();
+        #         }
+        #     );
+        #     // initialize observer and preempt mutation event
+        #     var btnList = document.getElementsByClassName('btn-more');
+        #     if( btnList.length > 0 ){
+        #         // pass in the target node, as well as the observer options
+        #         observer.observe(document.getElementsByClassName('message-list')[0], { childList: true });
+        #         btnList[0].click();
+        #     }
+        #     """
+        # # execute inject and execute script on browser
+        # self.browser.execute_script(load_script)
+        # # sample break flag every 1 second (might vary)
+        # while self.browser.execute_script("return continueFlag"):
+        #     time.sleep(1)
+
         # ----------a new faster way to load chats---------------------
         # load the chat using javascript code.
         while len(self.browser.execute_script("return $('.btn-more').click();")) is not 0:
-            # time.sleep(0.0001)
             continue
 
 
