@@ -1,4 +1,4 @@
-# from PIL import Image
+from PIL import Image
 import time
 import datetime
 from Webdriver import Webdriver
@@ -43,7 +43,7 @@ class WhatsAppWebScraper:
         self.browser.get("https://web.whatsapp.com/")  # Navigate browser to WhatsApp page
 
         # Conversation table from day names to date for past week
-        self.dayNamesToDates = self.get_day_names_to_dates()
+        self.dayNamesToDates = self.__get_day_names_to_dates()
         
         # Wait in current page for user to log in using barcode scan.
         self.wait_for_element(".infinite-list-viewport", 300)
@@ -70,16 +70,16 @@ class WhatsAppWebScraper:
         for i in range(1, 2):
 
             loadStartTime = time.time()
-            chat = self.load_chat()  # load all conversations for current open chat
+            chat = self.__load_chat()  # load all conversations for current open chat
             print("Loaded chat in " + str(time.time() - loadStartTime) + "seconds")
 
             # Get contact name and type (person/group).
-            contactName, contactType = self.get_contact_details(actions)
+            contactName, contactType = self.__get_contact_details(actions)
 
             # Get messages from current chat
             print("Scraper: scrape: Get messages for: " + str(contactName))
             startTime = time.time()
-            messages = self.get_messages(chat, contactType, contactName)
+            messages = self.__get_messages(chat, contactType, contactName)
             totalMsgTime = time.time() - startTime
             print("Scraper: scrape: Got " + str(len(messages)) + " messages in " + str(totalMsgTime))
 
@@ -99,16 +99,15 @@ class WhatsAppWebScraper:
             #     self.get_contact_avatar()
 
             # go to next chat
-            self.go_to_next_contact()
+            self.__go_to_next_contact()
 
         print("done scraping")
-
 
 # ===================================================================
 #   Scraper helper functions
 # ===================================================================
 
-    def load_chat(self):
+    def __load_chat(self):
         """
         Load to page all message for current open chat.
         """
@@ -148,7 +147,7 @@ class WhatsAppWebScraper:
         #     else:
         #         break
 
-    def get_contact_details(self, actions):
+    def __get_contact_details(self, actions):
         """
         Get contact name and type (contact/group). This is done by clicking on Chat Menu button and
         opening a submenu which contains the word Contact or Group and extracting that word.
@@ -158,78 +157,58 @@ class WhatsAppWebScraper:
                                                   "'main').getElementsByTagName('h2');")[0].text
 
         # If this is a contact chat then this field will not appear
-        if self.get_elemenet(".msg-group") == None:
+        if self.get_element(".msg-group") == None:
             contactType = "person"
         else:
             contactType = "group"
 
         return contactName, contactType
 
-    def get_messages(self, chat, contactType, contactName):
+    def __get_messages(self, chat, contactType, contactName):
         """
         Given a chat with a contact, return all messages formatted to be sent to server.
         """
 
         # Group chat case
         if contactType == 'group':
-            return self.get_group_messages(chat)
+            return self.__get_group_messages()
+        # Person chat case
+        return self.__get_person_messages()
 
-        messageElements = self.wait_for_element(".msg", 10, None, False)
+    def __get_person_messages(self):
+        """
+        Get all messages from current open chat, parse to fields name, datetime and text.
+        :return: list of messages [{"name":name, "text": text, "time":time}, {"name":name,
+        "text": text, "time":time}, ...]
+        """
         messages = []
-        name, text, time = None, None, None
-        lastName, lastDay = contactName, "1/1/2000" # TODO validate with server API
+        rawMessages = self.browser.execute_script("var B = []; var A = document.getElementsByClassName('message');  for (var i = 0; i < A.length; i++){ var b = []; var a = A[i].getElementsByClassName('message-text');  for (var j = 0; j < a.length; j++){  b.push( a[j].innerText); }  B.push(b); };return B")
 
-        for msg in messageElements:
-
-            # Incoming/Outgoing message
-            textContainer = self.get_elemenet(".selectable-text", msg)
-            if textContainer is not None:
-                # Get text and time
-                text = textContainer.text
-                time = msg.find_element_by_css_selector(".message-datetime").text + ", " + lastDay
-
-                # Incoming message case
-                if self.get_elemenet(".message-in", msg):
-                    if contactType == 'person':
-                        name = contactName
-                    else:
-                        name = self.get_elemenet(".message-author", msg)
-                        if name is None:
-                            name = lastName
-                        else:
-                            name = str(name.text).replace("\u2060","")
-                            lastName = name
-
-                # Outgoing message case
-                elif self.get_elemenet(".message-out", msg) is not None:
-                    name = "Me" # TODO validate with server API
-
-                # Add message to message list
-                msgData = {"name":name, "text": text, "time":time}
-                messages.append(msgData)
-                # print(msgData) # Print each message
-
-            # System date message
-            elif self.get_elemenet(".message-system", msg) is not None:
-                # Unsupported system message
-                if not msg.text:
-                    continue
-                # If it is a date or a weekday name
-                if (len(msg.text) > 13 and msg.text[-10] == '/'):
-                    lastDay = str(msg.text).replace("\u2060","")
-                elif str(msg.text).replace("\u2060", "") in self.dayNamesToDates:
-                    lastDay = self.dayNamesToDates[str(msg.text).replace("\u2060", "")]
-
-            # Unsupported message type (image, video, audio...), we do not return these.
-            else:
+        # Extract data from raw message
+        for msg in rawMessages:
+            # Unsupported messages type
+            if len(msg) == 0:
                 continue
+
+            datetimeEnd = msg[0].find("]")
+            datetime = msg[0][3:datetimeEnd]
+
+            name = msg[0][datetimeEnd+2:]
+            nameEnd = name.find(":")
+            name = name[:nameEnd]
+
+            text = msg[0][datetimeEnd+nameEnd+7:]
+
+            msgData = {"name":name, "text": text, "time":time}
+            print(msgData)
+            messages.append(msgData)
 
         return messages
 
-    def get_group_messages(self, chat):
+    def __get_group_messages(self):
         """
         Returns summary of group chat: each group member name and how many msgs they sent.
-        @:return dictionary {"Asaf":360, "Neta":180,...}
+        @:return list of len 2: [int totalMessages , dict {"Asaf":360, "Neta":180,...}]
         """
 
         groupData = {}  # data to be returned
@@ -258,39 +237,17 @@ class WhatsAppWebScraper:
 
             groupData[lastName] += 1
 
-
         # print("getGroupMessages got " + str(len(incomingMessages)) + " messages, here they are:")
         # print(str(groupData))
         return [totalMessages,groupData]
 
-    def get_day_names_to_dates(self):
-        """
-        Helper function to getMessages.
-        Take care of cases where WhatsApp chat tells the date by day name, see examples below.
-        The function does a one time convertion of last week day names to date.
-        """
-        def getDateFromDayName(weekday):
-            daysBack = (datetime.date.today().isoweekday() - weekday) % 7
-            return datetime.date.fromordinal(datetime.date.today().toordinal()- daysBack).strftime("%m/%d/%Y")
-
-
-        return {"TODAY":datetime.date.today().strftime("%m/%d/%Y"),
-                  "YESTERDAY":datetime.date.fromordinal(datetime.date.today().toordinal()- 1).strftime("%m/%d/%Y"),
-                  "SUNDAY":getDateFromDayName(0),
-                  "MONDAY":getDateFromDayName(1),
-                  "TUESDAY":getDateFromDayName(2),
-                  "WEDNESDAY":getDateFromDayName(3),
-                  "THURSDAY":getDateFromDayName(4),
-                  "FRIDAY":getDateFromDayName(5),
-                  "SATURDAY":getDateFromDayName(6)}
-
-    def get_contact_avatar(self):
+    def __get_contact_avatar(self):
         """
         Sends to db the avatar of current loaded chat.
         """
         print("In getContactAvatar")
         # Getting the small image's url and switching to the large image
-        avatar_url = self.get_elemenet("#main header div.chat-avatar div img").get_attribute("src")
+        avatar_url = self.get_element("#main header div.chat-avatar div img").get_attribute("src")
         avatar_url = avatar_url[:34] + "l" + avatar_url[35:]
 
         # Opening a new tab
@@ -307,8 +264,8 @@ class WhatsAppWebScraper:
         self.wait_for_element("body img")
 
         # Getting image size for cropping
-        width = self.get_elemenet("body img").get_attribute("width")
-        height = self.get_elemenet("body img").get_attribute("height")
+        width = self.get_element("body img").get_attribute("width")
+        height = self.get_element("body img").get_attribute("height")
         self.browser.save_screenshot("full_screen_shot_temp.png")
 
         # Cropping
@@ -320,7 +277,7 @@ class WhatsAppWebScraper:
         actions.send_keys(Keys.CONTROL).send_keys('w').perform()
         self.browser.switch_to_window(defWin)
 
-    def go_to_next_contact(self, isFirst = False):
+    def __go_to_next_contact(self, isFirst = False):
         """
         Goes to next contact chat in contact list. This is done by locating the "search" box and
         pressing tab and then arrow down.
@@ -353,7 +310,7 @@ class WhatsAppWebScraper:
             print("Exception for element "+str(cssSelector)+" on page: "+str(self.browser.current_url))
             return None
 
-    def get_elemenet(self, cssSelector, cssContainer = None):
+    def get_element(self, cssSelector, cssContainer = None):
         """
         Helper function. Searches for element by css selector, if it doesn't exists catchs
         NoSuchElementException and returns None.
