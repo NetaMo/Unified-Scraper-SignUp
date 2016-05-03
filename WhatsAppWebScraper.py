@@ -1,5 +1,6 @@
 import time
-from PIL import Image
+
+from PIL import Image, ImageChops
 from selenium.common.exceptions import StaleElementReferenceException
 from selenium.webdriver import ActionChains
 from selenium.webdriver.common.keys import Keys
@@ -31,6 +32,7 @@ class WhatsAppWebScraper:
         self.browser.get("https://web.whatsapp.com/")  # Navigate browser to WhatsApp page
         self.browser.execute_script(scrapingScripts.initJQuery())  # active the jquery lib
         self.scrapedContacts = [ ]  # List of scraped contacts
+        self.defaultAvatar = Image.open("defaultAvatar.jpg")
 
         # Wait in current page for user to log in using barcode scan.
         self.wait_for_element('.infinite-list-viewport', 300)
@@ -45,10 +47,10 @@ class WhatsAppWebScraper:
 
     def scrape(self, DB):
         print("Scraper: scrape: starting...")
-
-        actions = ActionChains(self.browser)  # init actions option (click, send keyboard keys, etc)
+        scrapeStartTime, scrapeTotalMsgs = time.time(), 0
 
         # Get to first contact chat
+        actions = ActionChains(self.browser)  # init actions option (click, send keyboard keys, etc)
         actions.click(self.wait_for_element('.input.input-search')).send_keys(Keys.TAB).perform()
 
         # Scrape each chat
@@ -56,7 +58,7 @@ class WhatsAppWebScraper:
         for i in range(1, 10):
 
             loadStartTime = time.time()
-            chat = self.__load_chat()  # load all conversations for current open chat
+            self.__load_chat()  # load all conversations for current open chat
             print("Loaded chat in " + str(time.time() - loadStartTime) + "seconds")
 
             # Get contact name and type (person/group).
@@ -71,9 +73,11 @@ class WhatsAppWebScraper:
             if contactType == 'group':
                 print(
                     "Scraper: scrape: Got " + str(messages[ 0 ]) + " messages in " + str(totalMsgTime))
+                scrapeTotalMsgs += messages[0]
             else:
                 print("Scraper: scrape: Got " + str(len(messages)) + " messages in " + str(
                         totalMsgTime))
+                scrapeTotalMsgs += len(messages)
 
             # Initialize data item to store chat
             if contactType == 'group':
@@ -89,14 +93,20 @@ class WhatsAppWebScraper:
             # Set as scraped
             self.scrapedContacts.append(contactName)
 
-            # get the avatar of the contact
-            # if i < NUMBER_OF_CONTACT_PICTURES:
-            #     self.__get_contact_avatar()
+            # get the avatar of the contact TODO change to apply only the first six contacts
+            if i < NUMBER_OF_CONTACT_PICTURES:
+                cropped = self.__get_contact_avatar()
+                if cropped is not None:
+                    cropped.save("static/contact_avatar" + str(i) + ".jpg")
+                else:
+                    self.defaultAvatar.save("static/contact_avatar" + str(i) + ".jpg")
 
             # go to next chat
             self.__go_to_next_contact()
 
-        print("Scraper: scrape: finished.")
+        scrapeTotalTime = time.time() - scrapeStartTime
+        print("Scraper: scrape: finished. Messages and seconds: " + scrapeTotalMsgs + " in " +
+              scrapeTotalTime + " seconds.")
 
     # ===================================================================
     #   Scraper helper functions
@@ -192,7 +202,7 @@ class WhatsAppWebScraper:
 
         # Extract data from raw message
         for msg in rawMessages:
-            # Unsupported messages type
+            # Unsupported messages of type image, video, audio, etc
             if len(msg) == 0:
                 continue
 
@@ -204,6 +214,10 @@ class WhatsAppWebScraper:
             name = name[ :nameEnd ]
 
             text = msg[ 0 ][ datetimeEnd + nameEnd + 7: ]
+
+            # Unsupported messages of type emoji
+            if text == "":
+                continue
 
             msgData = {"name": name, "text": text, "time": dateandtime}
             messages.append(msgData)
@@ -243,46 +257,62 @@ class WhatsAppWebScraper:
         # print(str(groupData))
         return [ totalMessages, groupData ]
 
+    def __trim_avatar(self, im):
+        """
+        Helper function that trims white margins from the given image
+        :return:
+        """
+        bg = Image.new(im.mode, im.size, im.getpixel((0, 0)))
+        diff = ImageChops.difference(im, bg)
+        diff = ImageChops.add(diff, diff, 2.0, -100)
+        bbox = diff.getbbox()
+        return im.crop(bbox)
+
+
     def __get_contact_avatar(self):
         """
         Sends to db the avatar of current loaded chat.
         """
-        print("Scraper: scrape: __get_contact_avatar started...")
+        print("In getContactAvatar")
 
         # Getting the small image's url and switching to the large image
-        avatar_url = self.browser.execute_script("return $('#main header div.chat-avatar div "
-                                                 "img');").get_attribute("src")
-        avatar_url = avatar_url[ :34 ] + "l" + avatar_url[ 35: ]
+        avatar_url = self.wait_for_element('#main .chat-avatar img', 2)
+
+        # If contact has no avatar
+        if avatar_url is None:
+            return None
+
+        avatar_url = avatar_url.get_attribute("src")
+        avatar_url = avatar_url[:34] + "l" + avatar_url[35:]
 
         # Opening a new tab
-        actions = ActionChains(self.browser)
-        actions.send_keys(Keys.CONTROL).send_keys('t').perform()
+        self.browser.execute_script("window.open('" + avatar_url + "');")
 
         # Switching to the new tab and navigating to image's url
-        defWin = self.browser.window_handles[ 0 ]
-        newWin = self.browser.window_handles[ 1 ]
+        defWin = self.browser.window_handles[0]
+        newWin = self.browser.window_handles[1]
         self.browser.switch_to_window(newWin)
         self.browser.get(avatar_url)
+        self.browser.execute_script(scrapingScripts.initJQuery())
 
         # Saving a screen shot
-        self.wait_for_element('body img')
+        img = self.wait_for_element('body img')
 
         # Getting image size for cropping
-        img = self.browser.execute_script("return $('body img');")
         width = img.get_attribute("width")
         height = img.get_attribute("height")
-        self.browser.save_screenshot("full_screen_shot_temp.png")
 
+        self.browser.save_screenshot("full_screen_shot_temp.png")
         # Cropping
         screenshot = Image.open("full_screen_shot_temp.png")
         cropped = screenshot.crop((0, 0, int(width), int(height)))
-        cropped.save("contact_avatar.jpg")
 
         # Closing the tab
-        actions.send_keys(Keys.CONTROL).send_keys('w').perform()
+        self.browser.close()
         self.browser.switch_to_window(defWin)
 
-        print("Scraper: scrape: __get_contact_avatar ended.")
+        return self.__trim_avatar(
+            cropped)  # TODO this was screenshot originally. make sure change is correct.
 
     def __go_to_next_contact(self, isFirst=False):
         """
