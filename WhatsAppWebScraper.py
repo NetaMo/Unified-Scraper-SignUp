@@ -1,6 +1,7 @@
 import time
 
 from PIL import Image
+from selenium.common.exceptions import StaleElementReferenceException
 from selenium.webdriver import ActionChains
 from selenium.webdriver.common.keys import Keys
 
@@ -50,29 +51,31 @@ class WhatsAppWebScraper:
 
         actions = ActionChains(self.browser)  # init actions option (click, send keyboard keys, etc)
         # Get to first contact chat
-        searchBox = self.wait_for_element('.input.input-search')
-        actions.click(searchBox).send_keys(Keys.TAB).perform()
+        actions.click(self.wait_for_element('.input.input-search')).send_keys(Keys.TAB).perform()
 
         # Scrape each chat
         # TODO currently scrape limited amount of users for debugging
-        for i in range(1, 7):
+        for i in range(1, 25):
 
             loadStartTime = time.time()
             chat = self.__load_chat()  # load all conversations for current open chat
             print("Loaded chat in " + str(time.time() - loadStartTime) + "seconds")
 
             # Get contact name and type (person/group).
-            contactName, contactType = self.__get_contact_details(actions)
+            contactName, contactType = self.__get_contact_details()
 
             # Get messages from current chat
             print("Scraper: scrape: Get messages for: " + str(contactName))
             startTime = time.time()
             messages = self.__get_messages(contactType, contactName)
             totalMsgTime = time.time() - startTime
+
             if contactType == 'group':
-                print("Scraper: scrape: Got " + str(len(messages)) + " messages in " + str(totalMsgTime))
+                print(
+                    "Scraper: scrape: Got " + str(messages[ 0 ]) + " messages in " + str(totalMsgTime))
             else:
-                print("Scraper: scrape: Got " + str(len(messages)) + " contact counts in " + str(totalMsgTime))
+                print("Scraper: scrape: Got " + str(len(messages)) + " messages in " + str(
+                        totalMsgTime))
 
             # Initialize data item to store chat
             if contactType == 'group':
@@ -107,8 +110,11 @@ class WhatsAppWebScraper:
         """
         print("Load chat")
 
-        actions = ActionChains(self.browser)  # init actions
-        actions.click(self.wait_for_element('.message-list')).perform()  # wait for chat to load
+        self.stubbornClick('#main .pane-body')
+
+        self.wait_for_element('.btn-more')
+        while len(self.browser.execute_script("return $('.btn-more').click();")) is not 0:
+            continue
 
         # # JS script intended to load chat messages async
         # load_script = """
@@ -145,10 +151,8 @@ class WhatsAppWebScraper:
 
         # ----------a new faster way to load chats---------------------
         # load the chat using javascript code.
-        while len(self.browser.execute_script("return $('.btn-more').click();")) is not 0:
-            continue
 
-    def __get_contact_details(self, actions):
+    def __get_contact_details(self):
         """
         Get contact name and type (contact/group). This is done by clicking on Chat Menu button and
         opening a submenu which contains the word Contact or Group and extracting that word.
@@ -203,7 +207,6 @@ class WhatsAppWebScraper:
             text = msg[ 0 ][ datetimeEnd + nameEnd + 7: ]
 
             msgData = {"name": name, "text": text, "time": dateandtime}
-            print(msgData)
             messages.append(msgData)
 
         return messages
@@ -288,8 +291,9 @@ class WhatsAppWebScraper:
         pressing tab and then arrow down.
         """
         actions = ActionChains(self.browser)
-        actions.click(self.wait_for_element('.input.input-search')).perform()
-        actions.send_keys(Keys.TAB).send_keys(Keys.ARROW_DOWN).perform()
+        actions.click(self.wait_for_element('.input.input-search')).send_keys(Keys.TAB).send_keys(
+            Keys.ARROW_DOWN).perform()
+        self.browser.implicitly_wait(5)
 
     # ===================================================================
     #   Webdriver helper functions
@@ -324,3 +328,20 @@ class WhatsAppWebScraper:
                 return None
 
         return elements
+
+    def stubbornClick(self, jquerySelector):
+        print("Scraper: stubbornClick starting...")
+        actions = ActionChains(self.browser)
+        i = 0
+
+        while (True):
+            try:
+                actions.click(self.wait_for_element(jquerySelector, 1)).perform()
+                print("Scraper: stubbornClick finished on iteration: " + str(i))
+                return
+            except StaleElementReferenceException:
+                i += 1
+                if i & 500 == 0:
+                    self.browser.implicitly_wait(2)
+                print("Scraper: stubbornClick iteration " + str(i))
+                continue
