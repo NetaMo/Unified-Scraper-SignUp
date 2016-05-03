@@ -22,6 +22,7 @@ SERVER_POST_HEADERS = {'Content-type': 'application/json', 'Accept': 'text/plain
 # how much profile images to save
 NUMBER_OF_CONTACT_PICTURES = 6
 
+
 # ===================================================================
 # Scraper class
 # ===================================================================
@@ -45,9 +46,9 @@ class WhatsAppWebScraper:
 
         self.browser.execute_script(SS.initJQuery())  # active the jquery lib
 
-# ===================================================================
-#   Main scraper function
-# ===================================================================
+    # ===================================================================
+    #   Main scraper function
+    # ===================================================================
 
     def scrape(self, DB):
         print("start scraping")
@@ -60,7 +61,7 @@ class WhatsAppWebScraper:
 
         # Scrape each chat
         # TODO currently scrape limited amount of users for debugging
-        for i in range(1, 2):
+        for i in range(1, 5):
 
             loadStartTime = time.time()
             chat = self.__load_chat()  # load all conversations for current open chat
@@ -78,13 +79,14 @@ class WhatsAppWebScraper:
 
             # Initialize data item to store chat
             if contactType == 'group':
-                contactData = {"contactName": contactName, "contactMessageTotal" : messages[0],
-                               "contactMessageCounter" : messages[1]}
+                contactData = {"contactName": contactName, "contactMessageTotal": messages[ 0 ],
+                               "contactMessageCounter": messages[ 1 ]}
                 print(contactData)
                 DB.append_to_groups_df(contactData)
 
             elif contactType == 'person':
-                contactData = {"contact": {"name": contactName, "type": contactType},"messages": [messages]}
+                contactData = {"contact": {"name": contactName, "type": contactType},
+                               "messages": [ messages ]}
                 DB.append_to_contacts_df(contactData)  # add data to the data frame
 
             # get the avatar of the contact
@@ -96,9 +98,9 @@ class WhatsAppWebScraper:
 
         print("done scraping")
 
-# ===================================================================
-#   Scraper helper functions
-# ===================================================================
+    # ===================================================================
+    #   Scraper helper functions
+    # ===================================================================
 
     def __load_chat(self):
         """
@@ -114,31 +116,31 @@ class WhatsAppWebScraper:
         while len(self.browser.execute_script("return $('.btn-more').click();")) is not 0:
             continue
 
-        # Try #1.
-        # self.browser.execute_script("btnMore = $('.btn-more');")
-        # btnMoreCounter = 0
-        # while len(self.browser.execute_script("return btnMore.click();")) is not 0:
-        #     # time.sleep(0.0001)
-        #     btnMoreCounter += 1
-        #     if btnMoreCounter % 500 == 0:
-        #         print("------" + str(btnMoreCounter) + " iterations of btnMore: ")
-        #         self.browser.execute_script("btnMore = $('.btn-more');a")
-        #     continue
+            # Try #1.
+            # self.browser.execute_script("btnMore = $('.btn-more');")
+            # btnMoreCounter = 0
+            # while len(self.browser.execute_script("return btnMore.click();")) is not 0:
+            #     # time.sleep(0.0001)
+            #     btnMoreCounter += 1
+            #     if btnMoreCounter % 500 == 0:
+            #         print("------" + str(btnMoreCounter) + " iterations of btnMore: ")
+            #         self.browser.execute_script("btnMore = $('.btn-more');a")
+            #     continue
 
-        # counter = 0
-        # # load previous messages until no "btn-more" exists
-        # #     currently loads 10 previous message.
-        # # while counter < 20:
-        # while True:
-        #     counter += 1
-        #     btnMore = self.waitForElement(".btn-more", 2)
-        #     if btnMore is not None:
-        #         try:
-        #             actions.click(btnMore).perform()
-        #         except StaleElementReferenceException as e:
-        #             break
-        #     else:
-        #         break
+            # counter = 0
+            # # load previous messages until no "btn-more" exists
+            # #     currently loads 10 previous message.
+            # # while counter < 20:
+            # while True:
+            #     counter += 1
+            #     btnMore = self.waitForElement(".btn-more", 2)
+            #     if btnMore is not None:
+            #         try:
+            #             actions.click(btnMore).perform()
+            #         except StaleElementReferenceException as e:
+            #             break
+            #     else:
+            #         break
 
     def __get_contact_details(self, actions):
         """
@@ -147,10 +149,11 @@ class WhatsAppWebScraper:
         """
         # Get contact name
         contactName = self.browser.execute_script("return document.getElementById("
-                                                  "'main').getElementsByTagName('h2');")[0].text
+                                                  "'main').getElementsByTagName('h2');")[ 0 ].text
 
         # If this is a contact chat then this field will not appear
-        if self.get_element(".msg-group") == None:
+        if len(self.browser.execute_script("return document.getElementsByClassName('msg-group');")) \
+                == 0:
             contactType = "person"
         else:
             contactType = "group"
@@ -174,7 +177,7 @@ class WhatsAppWebScraper:
         :return: list of messages [{"name":name, "text": text, "time":time}, {"name":name,
         "text": text, "time":time}, ...]
         """
-        messages = []
+        messages = [ ]
         rawMessages = self.browser.execute_script(SS.getTextMessages())
 
         # Extract data from raw message
@@ -183,16 +186,16 @@ class WhatsAppWebScraper:
             if len(msg) == 0:
                 continue
 
-            datetimeEnd = msg[0].find("]")
-            datetime = msg[0][3:datetimeEnd]
+            datetimeEnd = msg[ 0 ].find("]")
+            dateandtime = msg[ 0 ][ 3:datetimeEnd ]
 
-            name = msg[0][datetimeEnd+2:]
+            name = msg[ 0 ][ datetimeEnd + 2: ]
             nameEnd = name.find(":")
-            name = name[:nameEnd]
+            name = name[ :nameEnd ]
 
-            text = msg[0][datetimeEnd+nameEnd+7:]
+            text = msg[ 0 ][ datetimeEnd + nameEnd + 7: ]
 
-            msgData = {"name":name, "text": text, "time":time}
+            msgData = {"name": name, "text": text, "time": dateandtime}
             print(msgData)
             messages.append(msgData)
 
@@ -215,24 +218,24 @@ class WhatsAppWebScraper:
         for msg in incomingMessages:
             # If has author name, check if exists then update, if doesn't exists create it.
             if len(msg) == 2:
-                lastName = msg[0]
+                lastName = msg[ 0 ]
                 if lastName in groupData:
-                    groupData[lastName] += 1
+                    groupData[ lastName ] += 1
                     continue
                 else:
-                    groupData[lastName] = 1
+                    groupData[ lastName ] = 1
                     continue
 
             # If no author name in msg, take last name
             # TODO handle image, video, etc.
-            elif len(msg) == 1 and msg[0] in groupData:
-                lastName = msg[0]
+            elif len(msg) == 1 and msg[ 0 ] in groupData:
+                lastName = msg[ 0 ]
 
-            groupData[lastName] += 1
+            groupData[ lastName ] += 1
 
         # print("getGroupMessages got " + str(len(incomingMessages)) + " messages, here they are:")
         # print(str(groupData))
-        return [totalMessages,groupData]
+        return [ totalMessages, groupData ]
 
     def __get_contact_avatar(self):
         """
@@ -240,16 +243,17 @@ class WhatsAppWebScraper:
         """
         print("In getContactAvatar")
         # Getting the small image's url and switching to the large image
-        avatar_url = self.get_element("#main header div.chat-avatar div img").get_attribute("src")
-        avatar_url = avatar_url[:34] + "l" + avatar_url[35:]
+        avatar_url = self.browser.execute_script("return $('#main header div.chat-avatar div "
+                                                 "img');").get_attribute("src")
+        avatar_url = avatar_url[ :34 ] + "l" + avatar_url[ 35: ]
 
         # Opening a new tab
         actions = ActionChains(self.browser)
         actions.send_keys(Keys.CONTROL).send_keys('t').perform()
 
         # Switching to the new tab and navigating to image's url
-        defWin = self.browser.window_handles[0]
-        newWin = self.browser.window_handles[1]
+        defWin = self.browser.window_handles[ 0 ]
+        newWin = self.browser.window_handles[ 1 ]
         self.browser.switch_to_window(newWin)
         self.browser.get(avatar_url)
 
@@ -257,8 +261,9 @@ class WhatsAppWebScraper:
         self.wait_for_element("body img")
 
         # Getting image size for cropping
-        width = self.get_element("body img").get_attribute("width")
-        height = self.get_element("body img").get_attribute("height")
+        img = self.browser.execute_script("return $('body img');")
+        width = img.get_attribute("width")
+        height = img.get_attribute("height")
         self.browser.save_screenshot("full_screen_shot_temp.png")
 
         # Cropping
@@ -270,7 +275,7 @@ class WhatsAppWebScraper:
         actions.send_keys(Keys.CONTROL).send_keys('w').perform()
         self.browser.switch_to_window(defWin)
 
-    def __go_to_next_contact(self, isFirst = False):
+    def __go_to_next_contact(self, isFirst=False):
         """
         Goes to next contact chat in contact list. This is done by locating the "search" box and
         pressing tab and then arrow down.
@@ -279,9 +284,9 @@ class WhatsAppWebScraper:
         actions.click(self.wait_for_element(".input.input-search")).perform()
         actions.send_keys(Keys.TAB).send_keys(Keys.ARROW_DOWN).perform()
 
-# ===================================================================
-#   Webdriver helper functions
-# ===================================================================
+    # ===================================================================
+    #   Webdriver helper functions
+    # ===================================================================
 
     def wait_for_element(self, cssSelector, timeout=10, cssContainer=None, singleElement=True):
         """
@@ -293,24 +298,25 @@ class WhatsAppWebScraper:
             cssContainer = self.browser
 
         try:
-            elements = WebDriverWait(cssContainer, timeout).\
-                until(ec.presence_of_all_elements_located((By.CSS_SELECTOR,cssSelector)))
+            elements = WebDriverWait(cssContainer, timeout). \
+                until(ec.presence_of_all_elements_located((By.CSS_SELECTOR, cssSelector)))
             # print("Done waiting for element: " + cssSelector)
             if singleElement:
-                return elements[0]
+                return elements[ 0 ]
             return elements
         except (TimeoutException, NoSuchElementException, StaleElementReferenceException):
-            print("Exception for element "+str(cssSelector)+" on page: "+str(self.browser.current_url))
+            print("Exception for element " + str(cssSelector) + " on page: " + str(
+                    self.browser.current_url))
             return None
 
-    def get_element(self, cssSelector, cssContainer = None):
-        """
-        Helper function. Searches for element by css selector, if it doesn't exists catchs
-        NoSuchElementException and returns None.
-        """
-        if cssContainer is None:
-            cssContainer = self.browser
-        try:
-            return cssContainer.find_element_by_css_selector(cssSelector)
-        except (NoSuchElementException, StaleElementReferenceException):
-            return None
+            # def get_element(self, cssSelector, cssContainer = None):
+            #     """
+            #     Helper function. Searches for element by css selector, if it doesn't exists catchs
+            #     NoSuchElementException and returns None.
+            #     """
+            #     if cssContainer is None:
+            #         cssContainer = self.browser
+            #     try:
+            #         return cssContainer.find_element_by_css_selector(cssSelector)
+            #     except (NoSuchElementException, StaleElementReferenceException):
+            #         return None
