@@ -1,13 +1,8 @@
 import time
 
-import selenium.webdriver.support.expected_conditions as ec
 from PIL import Image
-from selenium.common.exceptions import TimeoutException, \
-    StaleElementReferenceException, NoSuchElementException
 from selenium.webdriver import ActionChains
-from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.support.wait import WebDriverWait
 
 import ScrapingScripts as SS
 from Webdriver import Webdriver
@@ -36,32 +31,32 @@ class WhatsAppWebScraper:
         self.browser = Webdriver.getBrowser(webdriver)  # Get browser
         self.browser.set_page_load_timeout(150)  # Set timeout to 150 seconds
         self.browser.get("https://web.whatsapp.com/")  # Navigate browser to WhatsApp page
+        self.browser.execute_script(SS.initJQuery())  # active the jquery lib
 
         # Wait in current page for user to log in using barcode scan.
-        self.wait_for_element(".infinite-list-viewport", 300)
+        self.wait_for_element('.infinite-list-viewport', 300)
 
         # Move browser out of screen scope
         # self.browser.set_window_size(0, 0)
         # self.browser.set_window_position(-800, 600)
 
-        self.browser.execute_script(SS.initJQuery())  # active the jquery lib
 
     # ===================================================================
     #   Main scraper function
     # ===================================================================
 
     def scrape(self, DB):
-        print("start scraping")
+        print("Scraper: scrape: starting...")
 
         actions = ActionChains(self.browser)  # init actions option (click, send keyboard keys, etc)
 
         # Get to first contact chat
-        searchBox = self.wait_for_element(".input.input-search")
+        searchBox = self.wait_for_element('.input.input-search')
         actions.click(searchBox).send_keys(Keys.TAB).perform()
 
         # Scrape each chat
         # TODO currently scrape limited amount of users for debugging
-        for i in range(1, 5):
+        for i in range(1, 7):
 
             loadStartTime = time.time()
             chat = self.__load_chat()  # load all conversations for current open chat
@@ -91,12 +86,12 @@ class WhatsAppWebScraper:
 
             # get the avatar of the contact
             # if i < NUMBER_OF_CONTACT_PICTURES:
-            #     self.get_contact_avatar()
+            #     self.__get_contact_avatar()
 
             # go to next chat
             self.__go_to_next_contact()
 
-        print("done scraping")
+        print("Scraper: scrape: finished.")
 
     # ===================================================================
     #   Scraper helper functions
@@ -109,7 +104,7 @@ class WhatsAppWebScraper:
         print("Load chat")
 
         actions = ActionChains(self.browser)  # init actions
-        chat = self.wait_for_element(".message-list")  # wait for chat to load
+        chat = self.wait_for_element('.message-list')  # wait for chat to load
         actions.click(chat).perform()
 
         # load the chat using javascript code.
@@ -241,7 +236,8 @@ class WhatsAppWebScraper:
         """
         Sends to db the avatar of current loaded chat.
         """
-        print("In getContactAvatar")
+        print("Scraper: scrape: __get_contact_avatar started...")
+
         # Getting the small image's url and switching to the large image
         avatar_url = self.browser.execute_script("return $('#main header div.chat-avatar div "
                                                  "img');").get_attribute("src")
@@ -258,7 +254,7 @@ class WhatsAppWebScraper:
         self.browser.get(avatar_url)
 
         # Saving a screen shot
-        self.wait_for_element("body img")
+        self.wait_for_element('body img')
 
         # Getting image size for cropping
         img = self.browser.execute_script("return $('body img');")
@@ -275,48 +271,32 @@ class WhatsAppWebScraper:
         actions.send_keys(Keys.CONTROL).send_keys('w').perform()
         self.browser.switch_to_window(defWin)
 
+        print("Scraper: scrape: __get_contact_avatar ended.")
+
     def __go_to_next_contact(self, isFirst=False):
         """
         Goes to next contact chat in contact list. This is done by locating the "search" box and
         pressing tab and then arrow down.
         """
         actions = ActionChains(self.browser)
-        actions.click(self.wait_for_element(".input.input-search")).perform()
+        actions.click(self.wait_for_element('.input.input-search')).perform()
         actions.send_keys(Keys.TAB).send_keys(Keys.ARROW_DOWN).perform()
 
     # ===================================================================
     #   Webdriver helper functions
     # ===================================================================
 
-    def wait_for_element(self, cssSelector, timeout=10, cssContainer=None, singleElement=True):
+    def wait_for_element(self, jquerySelector, timeout=10):
         """
         General helper function. Searches and waits for css element to appear on page and returns it,
         if it doesnt appear after timeout seconds prints relevant exception and returns None.
         """
-        # print("Wait for element: " + cssSelector)
-        if cssContainer is None:
-            cssContainer = self.browser
+        startTime = time.time()
+        elements = self.browser.execute_script("return $(arguments[0]);", jquerySelector)
 
-        try:
-            elements = WebDriverWait(cssContainer, timeout). \
-                until(ec.presence_of_all_elements_located((By.CSS_SELECTOR, cssSelector)))
-            # print("Done waiting for element: " + cssSelector)
-            if singleElement:
-                return elements[ 0 ]
-            return elements
-        except (TimeoutException, NoSuchElementException, StaleElementReferenceException):
-            print("Exception for element " + str(cssSelector) + " on page: " + str(
-                    self.browser.current_url))
-            return None
+        while (len(elements) == 0):
+            elements = self.browser.execute_script("return $(arguments[0]);", jquerySelector)
+            if time.time() - startTime > timeout:
+                return None
 
-            # def get_element(self, cssSelector, cssContainer = None):
-            #     """
-            #     Helper function. Searches for element by css selector, if it doesn't exists catchs
-            #     NoSuchElementException and returns None.
-            #     """
-            #     if cssContainer is None:
-            #         cssContainer = self.browser
-            #     try:
-            #         return cssContainer.find_element_by_css_selector(cssSelector)
-            #     except (NoSuchElementException, StaleElementReferenceException):
-            #         return None
+        return elements[ 0 ]
