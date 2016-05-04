@@ -15,8 +15,8 @@ from Webdriver import Webdriver
 SERVER_POST_HEADERS = {'Content-type': 'application/json', 'Accept': 'text/plain'}
 # how much profile images to save
 NUMBER_OF_CONTACT_PICTURES = 6
-# Where to save temp avatar images
-TEMP_AVATAR_PATH = "static/temp/contact_avatar"
+# Where to save tempAvatars avatar images
+TEMP_AVATAR_PATH = "static/tempAvatars/contact_avatar"
 
 
 # ===================================================================
