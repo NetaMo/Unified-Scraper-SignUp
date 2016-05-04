@@ -6,20 +6,24 @@ def initJQuery():
 
 
 def getTextMessages():
-    return "var B = []; " \
-           "var A = document.getElementsByClassName('message');  " \
-           "for (var i = 0; i < A.length; i++){ " \
-           "    var b = []; " \
-           "    var a = A[i].getElementsByClassName('message-text');  " \
-           "    for (var j = 0; j < a.length; j++){  " \
-           "        b.push( a[j].innerText); " \
-           "    }  " \
-           "    B.push(b); " \
-           "    if (A[i].getElementsByClassName('message-text message-link')){" \
-           "        B[i] = [];" \
-           "    };" \
-           "};" \
-           "return B;"
+    return '''
+           var B = [];
+           var A = document.getElementsByClassName('message');   
+           for (var i = 0; i < A.length; i++){  
+               var b = [];  
+               var a = A[i].getElementsByClassName('message-text');   
+               for (var j = 0; j < a.length; j++){   
+                   b.push( a[j].innerText);  
+               }   
+               B.push(b);
+               if (A[i].getElementsByClassName('message-text message-link').length != 0){
+                   B[i] = [];
+               };
+
+           };
+           return B;
+           '''
+
 
 
 def getIncomingMessages():

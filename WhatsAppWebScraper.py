@@ -15,9 +15,9 @@ from Webdriver import Webdriver
 SERVER_POST_HEADERS = {'Content-type': 'application/json', 'Accept': 'text/plain'}
 # how much profile images to save
 NUMBER_OF_CONTACT_PICTURES = 6
-# Where to save tempAvatars avatar images
+# Where to save temporary images for avatars
 TEMP_AVATAR_PATH = "static/tempAvatars/contact_avatar"
-
+TEMP_SCREENSHOT_PATH = "full_screen_shot_temp.png"
 
 # ===================================================================
 # Scraper class
@@ -67,7 +67,9 @@ class WhatsAppWebScraper:
             print("Loaded chat in " + str(time.time() - loadStartTime) + "seconds")
 
             # Get contact name and type (person/group).
+            get_contact_time = time.time()
             contactName, contactType = self.__get_contact_details()
+            print("Got Contact details in " + str(time.time() - get_contact_time) + "seconds")
 
             # If the user received message while scraping we don't want to scrape it again
             if contactName in scraped_contacts:
@@ -273,7 +275,7 @@ class WhatsAppWebScraper:
         defWin = self.browser.window_handles[0]
         newWin = self.browser.window_handles[1]
         self.browser.switch_to_window(newWin)
-        # self.browser.get(avatar_url) # TODO suspect this is useless
+        self.browser.get(avatar_url)
         self.browser.execute_script(scrapingScripts.initJQuery())
 
         # Saving a screen shot
@@ -283,7 +285,7 @@ class WhatsAppWebScraper:
         width = img.get_attribute("width")
         height = img.get_attribute("height")
 
-        self.browser.save_screenshot("full_screen_shot_temp.png")
+        self.browser.save_screenshot(TEMP_SCREENSHOT_PATH)
         # Cropping
         screenshot = Image.open("full_screen_shot_temp.png")
         cropped = screenshot.crop((0, 0, int(width), int(height)))
