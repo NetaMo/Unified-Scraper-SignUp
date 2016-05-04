@@ -1,3 +1,15 @@
+# Manual activation of jquery
+# //Load jQuery
+# var jq = document.createElement('script');
+# jq.src = "https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js";
+# document.getElementsByTagName('head')[0].appendChild(jq);
+#
+# //(2)
+# //give time for script to load and then run the rest (from here to the end):
+# jQuery.noConflict();
+# $ = jQuery;
+
+
 # # chatListContainer = self.browserWaitForElement(".infinite-list.chatlist")
 # # chatListContainer = self.browserWaitForElement(".infinite-list-viewport")
 # #

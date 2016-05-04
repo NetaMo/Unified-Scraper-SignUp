@@ -15,6 +15,8 @@ from Webdriver import Webdriver
 SERVER_POST_HEADERS = {'Content-type': 'application/json', 'Accept': 'text/plain'}
 # how much profile images to save
 NUMBER_OF_CONTACT_PICTURES = 6
+# Where to save temp avatar images
+TEMP_AVATAR_PATH = "static/temp/contact_avatar"
 
 
 # ===================================================================
@@ -55,7 +57,7 @@ class WhatsAppWebScraper:
 
         # Scrape each chat
         # TODO currently scrape limited amount of users for debugging
-        for i in range(1, 10):
+        for i in range(1, 15):
 
             loadStartTime = time.time()
             self.__load_chat()  # load all conversations for current open chat
@@ -93,20 +95,20 @@ class WhatsAppWebScraper:
             # Set as scraped
             self.scrapedContacts.append(contactName)
 
-            # get the avatar of the contact TODO change to apply only the first six contacts
+            # get the avatar of the contact
             if i < NUMBER_OF_CONTACT_PICTURES:
                 cropped = self.__get_contact_avatar()
                 if cropped is not None:
-                    cropped.save("static/contact_avatar" + str(i) + ".jpg")
+                    cropped.save(TEMP_AVATAR_PATH + str(i) + ".jpg")
                 else:
-                    self.defaultAvatar.save("static/contact_avatar" + str(i) + ".jpg")
+                    self.defaultAvatar.save(TEMP_AVATAR_PATH + str(i) + ".jpg")
 
             # go to next chat
             self.__go_to_next_contact()
 
         scrapeTotalTime = time.time() - scrapeStartTime
-        print("Scraper: scrape: finished. Messages and seconds: " + scrapeTotalMsgs + " in " +
-              scrapeTotalTime + " seconds.")
+        print("Scraper: scrape: finished. Messages and seconds: " + str(scrapeTotalMsgs) + " in " +
+              str(scrapeTotalTime) + " seconds.")
 
     # ===================================================================
     #   Scraper helper functions
@@ -118,9 +120,10 @@ class WhatsAppWebScraper:
         """
         print("Load chat")
 
-        self.stubbornLoadClick()
+        self.__stubborn_load_click()
 
         self.wait_for_element('.btn-more')
+        startTime = time.time()
         while len(self.browser.execute_script("return $('.btn-more').click();")) is not 0:
             time.sleep(0.001)
             continue
@@ -268,7 +271,6 @@ class WhatsAppWebScraper:
         bbox = diff.getbbox()
         return im.crop(bbox)
 
-
     def __get_contact_avatar(self):
         """
         Sends to db the avatar of current loaded chat.
@@ -314,7 +316,7 @@ class WhatsAppWebScraper:
         return self.__trim_avatar(
             cropped)  # TODO this was screenshot originally. make sure change is correct.
 
-    def __go_to_next_contact(self, isFirst=False):
+    def __go_to_next_contact(self):
         """
         Goes to next contact chat in contact list. This is done by locating the "search" box and
         pressing tab and then arrow down.
@@ -322,6 +324,24 @@ class WhatsAppWebScraper:
         actions = ActionChains(self.browser)
         actions.click(self.wait_for_element('.input.input-search')).send_keys(Keys.TAB).send_keys(
             Keys.ARROW_DOWN).perform()
+
+    def __stubborn_load_click(self):
+        print("Scraper: stubbornClick starting...")
+        i = 0
+
+        while (True):
+            try:
+                ActionChains(self.browser).click(
+                        self.wait_for_element('#main .pane-body', 1)).perform()
+                print("Scraper: stubbornClick finished on iteration: " + str(i))
+                return
+            except StaleElementReferenceException:
+                i += 1
+                if i & 500 == 0:
+                    ActionChains(self.browser).click(self.wait_for_element_by_script(
+                            "return $('#main .pane-body');")[0]).perform()
+                print("Scraper: stubbornClick iteration " + str(i))
+                continue
 
     # ===================================================================
     #   Webdriver helper functions
@@ -357,20 +377,3 @@ class WhatsAppWebScraper:
 
         return elements
 
-    def stubbornLoadClick(self):
-        print("Scraper: stubbornClick starting...")
-        i = 0
-
-        while (True):
-            try:
-                ActionChains(self.browser).click(
-                    self.wait_for_element('#main .pane-body', 1)).perform()
-                print("Scraper: stubbornClick finished on iteration: " + str(i))
-                return
-            except StaleElementReferenceException:
-                i += 1
-                if i & 500 == 0:
-                    ActionChains(self.browser).click(self.wait_for_element_by_script(
-                            "return $('#main .pane-body');")[ 0 ]).perform()
-                print("Scraper: stubbornClick iteration " + str(i))
-                continue
