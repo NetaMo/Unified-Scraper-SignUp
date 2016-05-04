@@ -10,9 +10,7 @@ import pandas
 """
 run the WhatsApp web scrapper.
 """
-# A Chrome window to navigate to our site
-driver1 = Webdriver()
-driver1.browser.get("localhost:8888")
+
 
 
 def scrape_whatsapp(db):
