@@ -2373,13 +2373,43 @@ if (typeof jQuery === 'undefined') {
     window.location.href = 'Terms&Conditions.html';
    }
 
+  function addNickName()
+  {
+    console.log("Currently in addnickname function");
+    var nickName = $("#NickName").val();
+    var nameArray = {nick: nickName};
+    console.log(nameArray);
+    $.get("/nicknamesubmit", nameArray);
+    window.location.href = 'name.html';
+   }
+
   function next()
   {
-    window.location.href = 'static/name.html';
+    window.location.href = 'static/nickname.html';
   }
 
   function agree()
   {
-    console.log("in the function");
     $.get("/agree");
+    window.location.href = 'sortphone.html';
   }
+
+  function iphone()
+  {
+    $.get("/iphone");
+    window.location.href = 'iphone.html';
+  }
+
+  function android()
+  {
+    $.get("/android");
+    window.location.href = 'android.html';
+  }
+
+  function letsgo()
+  {
+    $.get("/letsgo");
+    window.location.href = 'letsgo.html';
+  }
+
+
