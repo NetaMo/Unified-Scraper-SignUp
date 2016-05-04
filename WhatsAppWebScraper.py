@@ -40,8 +40,8 @@ class WhatsAppWebScraper:
         self.wait_for_element('.infinite-list-viewport', 300)
 
         # Move browser out of screen scope
-        self.browser.set_window_size(0, 0)
-        self.browser.set_window_position(-9999999, 99999999)
+        # self.browser.set_window_size(0, 0)
+        # self.browser.set_window_position(-800, 600)
 
     # ===================================================================
     #   Main scraper function
@@ -122,7 +122,7 @@ class WhatsAppWebScraper:
         """
         print("Load chat")
 
-        self.__stubborn_load_click()
+        # self.__stubborn_load_click()
 
         self.wait_for_element('.btn-more')
         startTime = time.time()
@@ -263,7 +263,7 @@ class WhatsAppWebScraper:
         defWin = self.browser.window_handles[0]
         newWin = self.browser.window_handles[1]
         self.browser.switch_to_window(newWin)
-        # self.browser.get(avatar_url) # TODO suspect this is useless
+        self.browser.get(avatar_url)
         self.browser.execute_script(scrapingScripts.initJQuery())
 
         # Saving a screen shot
