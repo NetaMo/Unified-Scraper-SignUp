@@ -14,7 +14,6 @@ run the WhatsApp web scrapper.
 driver1 = Webdriver()
 driver1.browser.get("localhost:8888")
 
-def isTyping():
 
 def scrape_whatsapp(db):
     """
@@ -60,7 +59,6 @@ class NameSubmitHandler(tornado.web.RequestHandler):
 
         # assign the first name to the user name attribute in DB
         self.db.user_name = first_name
-        # TODO maybe ask for nickname for data analysis
 
         # writes the users name to file
         with open('users', 'a', encoding='utf8') as users_file:
@@ -68,17 +66,18 @@ class NameSubmitHandler(tornado.web.RequestHandler):
 
 
 class NickNameSubmitHandler(tornado.web.RequestHandler):
+    def initialize(self, db):
+        self.db = db
 
     def get(self):
         print("Stage 2: Nick Name Submittted, Loading Full Name")
         # These variables hold the users input
         nickName = self.get_argument("nick")
         print("User NickName:", nickName)
+        #TODO Store nick name
 
 
 class TermAgreeHandler(tornado.web.RequestHandler):
-    def initialize(self, db):
-        self.db = db
 
     def get(self):
         print("Stage 4: Agreed, Loading WhatssApp web scrapper")
@@ -93,11 +92,13 @@ class PhoneSortHandler(tornado.web.RequestHandler):
 
 
 class LetsGoHandler(tornado.web.RequestHandler):
+    def initialize(self, db):
+        self.db = db
 
     def get(self):
         print("Stage 7: Lets Fucking GO!, Load whatssapp web!")
         # Insert whats up web run here
-        isTyping()
+        scrape_whatsapp(self.db)
 
         DB.convert_to_datetime_and_sort()
         import DataAnalysisTestDriver
@@ -175,7 +176,7 @@ make_app, settings, main
 settings = dict(static_path=os.path.join(os.path.dirname(__file__), "static"))
 
 
-def make_app(db):
+
 class IphoneHandler(tornado.web.RequestHandler):
 
     def get(self):
@@ -189,13 +190,20 @@ class AndroidHandler(tornado.web.RequestHandler):
         # Insert whats up web run here
         # isTyping()
 
-def make_app():
+def make_app(db):
     print("make_app")
     return tornado.web.Application([(
         # web page handlers
         (r"/", LandingHandler)),
-        (r"/agree", TermAgreeHandler, dict(db=DB)),
+        (r"/agree", TermAgreeHandler),
         (r"/namesubmit", NameSubmitHandler, dict(db=DB)),
+        (r"/", LandingHandler),
+        (r"/agree", TermAgreeHandler),
+        (r"/nicknamesubmit", NickNameSubmitHandler, dict(db=DB)),
+        (r"/phonesort", PhoneSortHandler),
+        (r"/iphone", IphoneHandler),
+        (r"/android", AndroidHandler),
+        (r"/letsgo", LetsGoHandler, dict(db=DB)),
         # unity handlers
         (r"/get_latest_chats", GiveLatestChatsHandler, dict(db=DB)),
         (r"/get_closest_persons_and_msgs", GiveClosestPersonsAndMsgs, dict(db=DB)),
@@ -204,14 +212,6 @@ def make_app():
         (r"/get_dreams_or_old_messages", GiveDreamsOrOldMessages, dict(db=DB)),
         (r"/get_most_active_groups_and_user_groups", GiveMostActiveGroupsAndUserGroups, dict(db=DB)),
         (r"/get_chat_archive", GiveChatArchive, dict(db=DB)),
-        (r"/", LandingHandler),
-        (r"/agree", TermAgreeHandler),
-        (r"/namesubmit", NameSubmitHandler),
-        (r"/nicknamesubmit", NickNameSubmitHandler),
-        (r"/phonesort", PhoneSortHandler),
-        (r"/iphone", IphoneHandler),
-        (r"/android", AndroidHandler),
-        (r"/letsgo", LetsGoHandler),
     ], **settings)
 
 
