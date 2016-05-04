@@ -37,23 +37,52 @@ class LandingHandler(tornado.web.RequestHandler):
 class NameSubmitHandler(tornado.web.RequestHandler):
 
     def get(self):
-        print("Stage 3: Name Submittted,Loading TermsPage")
+        print("Stage 3: Name Submittted, Loading TermsPage")
         # These variables hold the users input
         firstName = self.get_argument("first")
         lastName = self.get_argument("last")
-        print(firstName)
-        print(lastName)
-        # now we can send a string to the front end with the following syntax:
-        # self.write("string message")
-        # self.finish()
-        # This loads the terms page
+        print("User first name:", firstName)
+        print("User last name:", lastName)
+
+class NickNameSubmitHandler(tornado.web.RequestHandler):
+
+    def get(self):
+        print("Stage 2: Nick Name Submittted, Loading Full Name")
+        # These variables hold the users input
+        nickName = self.get_argument("nick")
+        print("User NickName:", nickName)
+
 
 class TermAgreeHandler(tornado.web.RequestHandler):
 
     def get(self):
-        print("Stage 4: Agreed,Load whatssapp web")
+        print("Stage 4: Agreed, Go to phone sort")
+
+class PhoneSortHandler(tornado.web.RequestHandler):
+
+    def get(self):
+        print("Stage 5: Load Phone Sort")
+
+
+class LetsGoHandler(tornado.web.RequestHandler):
+
+    def get(self):
+        print("Stage 7: Lets Fucking GO!, Load whatssapp web!")
         # Insert whats up web run here
         isTyping()
+
+class IphoneHandler(tornado.web.RequestHandler):
+
+    def get(self):
+        print("Stage 6: Iphone Chosen")
+
+
+class AndroidHandler(tornado.web.RequestHandler):
+
+    def get(self):
+        print("Stage 4: Agreed, Load whatssapp web")
+        # Insert whats up web run here
+        # isTyping()
 
 def make_app():
     print("make_app")
@@ -61,6 +90,11 @@ def make_app():
         (r"/", LandingHandler),
         (r"/agree", TermAgreeHandler),
         (r"/namesubmit", NameSubmitHandler),
+        (r"/nicknamesubmit", NickNameSubmitHandler),
+        (r"/phonesort", PhoneSortHandler),
+        (r"/iphone", IphoneHandler),
+        (r"/android", AndroidHandler),
+        (r"/letsgo", LetsGoHandler),
     ], **settings)
 
 
