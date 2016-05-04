@@ -15,9 +15,9 @@ from Webdriver import Webdriver
 SERVER_POST_HEADERS = {'Content-type': 'application/json', 'Accept': 'text/plain'}
 # how much profile images to save
 NUMBER_OF_CONTACT_PICTURES = 6
-# Where to save tempAvatars avatar images
+# Where to save temporary images for avatars
 TEMP_AVATAR_PATH = "static/tempAvatars/contact_avatar"
-
+TEMP_SCREENSHOT_PATH = "full_screen_shot_temp.png"
 
 # ===================================================================
 # Scraper class
@@ -55,16 +55,27 @@ class WhatsAppWebScraper:
         actions = ActionChains(self.browser)  # init actions option (click, send keyboard keys, etc)
         actions.click(self.wait_for_element('.input.input-search')).send_keys(Keys.TAB).perform()
 
+        # List of contacts we already scraped, in case user get new message while scraping
+        scraped_contacts = []
+
         # Scrape each chat
         # TODO currently scrape limited amount of users for debugging
-        for i in range(1, 15):
 
+        for i in range(1, 15):
             loadStartTime = time.time()
             self.__load_chat()  # load all conversations for current open chat
             print("Loaded chat in " + str(time.time() - loadStartTime) + "seconds")
 
             # Get contact name and type (person/group).
+            get_contact_time = time.time()
             contactName, contactType = self.__get_contact_details()
+            print("Got Contact details in " + str(time.time() - get_contact_time) + "seconds")
+
+            # If the user received message while scraping we don't want to scrape it again
+            if contactName in scraped_contacts:
+                self.__go_to_next_contact()
+                i -= 1  # TODO When changing to dynamic iteration should be handled differently
+                continue
 
             # Get messages from current chat
             print("Scraper: scrape: Get messages for: " + str(contactName))
@@ -103,6 +114,9 @@ class WhatsAppWebScraper:
                 else:
                     self.defaultAvatar.save(TEMP_AVATAR_PATH + str(i) + ".jpg")
 
+            # After we have the data we add it to scraped contacts
+            scraped_contacts.append(contactName)
+
             # go to next chat
             self.__go_to_next_contact()
 
@@ -125,44 +139,11 @@ class WhatsAppWebScraper:
         self.wait_for_element('.btn-more')
         startTime = time.time()
         while len(self.browser.execute_script("return $('.btn-more').click();")) is not 0:
+            # # TODO for debugging
+            if time.time() - startTime > 5:
+                break
             time.sleep(0.001)
             continue
-
-        # # JS script intended to load chat messages async
-        # load_script = """
-        #     continueFlag = true;
-        #     // create an observer instance to monitor
-        #     // any changes to the messages list
-        #     var observer = new MutationObserver(
-        #         // mutation callback (message loader)
-        #         function(){
-        #             // gets load button
-        #             var btnList = document.getElementsByClassName('btn-more');
-        #             // if there are no messages left, disconnect and break
-        #             // otherwise, load next batch of messages
-        #             if( btnList.length < 1 ) {
-        #                 continueFlag = false;
-        #                 observer.disconnect();
-        #             }
-        #             else btnList[0].click();
-        #         }
-        #     );
-        #     // initialize observer and preempt mutation event
-        #     var btnList = document.getElementsByClassName('btn-more');
-        #     if( btnList.length > 0 ){
-        #         // pass in the target node, as well as the observer options
-        #         observer.observe(document.getElementsByClassName('message-list')[0], { childList: true });
-        #         btnList[0].click();
-        #     }
-        #     """
-        # # execute inject and execute script on browser
-        # self.browser.execute_script(load_script)
-        # # sample break flag every 1 second (might vary)
-        # while self.browser.execute_script("return continueFlag"):
-        #     time.sleep(1)
-
-        # ----------a new faster way to load chats---------------------
-        # load the chat using javascript code.
 
     def __get_contact_details(self):
         """
@@ -304,7 +285,7 @@ class WhatsAppWebScraper:
         width = img.get_attribute("width")
         height = img.get_attribute("height")
 
-        self.browser.save_screenshot("full_screen_shot_temp.png")
+        self.browser.save_screenshot(TEMP_SCREENSHOT_PATH)
         # Cropping
         screenshot = Image.open("full_screen_shot_temp.png")
         cropped = screenshot.crop((0, 0, int(width), int(height)))
@@ -313,8 +294,7 @@ class WhatsAppWebScraper:
         self.browser.close()
         self.browser.switch_to_window(defWin)
 
-        return self.__trim_avatar(
-            cropped)  # TODO this was screenshot originally. make sure change is correct.
+        return self.__trim_avatar(cropped)
 
     def __go_to_next_contact(self):
         """
@@ -332,14 +312,14 @@ class WhatsAppWebScraper:
         while (True):
             try:
                 ActionChains(self.browser).click(
-                        self.wait_for_element('#main .pane-body', 1)).perform()
+                        self.wait_for_element('#main .message-list', 1)).perform()
                 print("Scraper: stubbornClick finished on iteration: " + str(i))
                 return
             except StaleElementReferenceException:
                 i += 1
-                if i & 500 == 0:
+                if i & 100 == 0:
                     ActionChains(self.browser).click(self.wait_for_element_by_script(
-                            "return $('#main .pane-body');")[0]).perform()
+                            "return $('#main .message-list');")[0]).perform()
                 print("Scraper: stubbornClick iteration " + str(i))
                 continue
 
