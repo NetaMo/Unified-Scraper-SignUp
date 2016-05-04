@@ -125,44 +125,11 @@ class WhatsAppWebScraper:
         self.wait_for_element('.btn-more')
         startTime = time.time()
         while len(self.browser.execute_script("return $('.btn-more').click();")) is not 0:
+            # # TODO for debugging
+            # if time.time() - startTime > 2:
+            #     break
             time.sleep(0.001)
             continue
-
-        # # JS script intended to load chat messages async
-        # load_script = """
-        #     continueFlag = true;
-        #     // create an observer instance to monitor
-        #     // any changes to the messages list
-        #     var observer = new MutationObserver(
-        #         // mutation callback (message loader)
-        #         function(){
-        #             // gets load button
-        #             var btnList = document.getElementsByClassName('btn-more');
-        #             // if there are no messages left, disconnect and break
-        #             // otherwise, load next batch of messages
-        #             if( btnList.length < 1 ) {
-        #                 continueFlag = false;
-        #                 observer.disconnect();
-        #             }
-        #             else btnList[0].click();
-        #         }
-        #     );
-        #     // initialize observer and preempt mutation event
-        #     var btnList = document.getElementsByClassName('btn-more');
-        #     if( btnList.length > 0 ){
-        #         // pass in the target node, as well as the observer options
-        #         observer.observe(document.getElementsByClassName('message-list')[0], { childList: true });
-        #         btnList[0].click();
-        #     }
-        #     """
-        # # execute inject and execute script on browser
-        # self.browser.execute_script(load_script)
-        # # sample break flag every 1 second (might vary)
-        # while self.browser.execute_script("return continueFlag"):
-        #     time.sleep(1)
-
-        # ----------a new faster way to load chats---------------------
-        # load the chat using javascript code.
 
     def __get_contact_details(self):
         """
@@ -294,7 +261,7 @@ class WhatsAppWebScraper:
         defWin = self.browser.window_handles[0]
         newWin = self.browser.window_handles[1]
         self.browser.switch_to_window(newWin)
-        self.browser.get(avatar_url)
+        # self.browser.get(avatar_url) # TODO suspect this is useless
         self.browser.execute_script(scrapingScripts.initJQuery())
 
         # Saving a screen shot
@@ -313,8 +280,7 @@ class WhatsAppWebScraper:
         self.browser.close()
         self.browser.switch_to_window(defWin)
 
-        return self.__trim_avatar(
-            cropped)  # TODO this was screenshot originally. make sure change is correct.
+        return self.__trim_avatar(cropped)
 
     def __go_to_next_contact(self):
         """
@@ -332,14 +298,14 @@ class WhatsAppWebScraper:
         while (True):
             try:
                 ActionChains(self.browser).click(
-                        self.wait_for_element('#main .pane-body', 1)).perform()
+                        self.wait_for_element('#main .message-list', 1)).perform()
                 print("Scraper: stubbornClick finished on iteration: " + str(i))
                 return
             except StaleElementReferenceException:
                 i += 1
-                if i & 500 == 0:
+                if i & 100 == 0:
                     ActionChains(self.browser).click(self.wait_for_element_by_script(
-                            "return $('#main .pane-body');")[0]).perform()
+                            "return $('#main .message-list');")[0]).perform()
                 print("Scraper: stubbornClick iteration " + str(i))
                 continue
 

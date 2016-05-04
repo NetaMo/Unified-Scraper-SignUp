@@ -112,3 +112,7 @@
     #         messages.append(msgData)
     #
     #     return messages
+
+# Get name and contact type straight from chat pane list
+#         contactName = self.wait_for_element_by_script("return $(document.activeElement).find('.chat-title').text();")
+#         if len(self.wait_for_element_by_script("return $(document.activeElement).find('.chat-status-name');"))
