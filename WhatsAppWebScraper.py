@@ -40,8 +40,8 @@ class WhatsAppWebScraper:
         self.wait_for_element('.infinite-list-viewport', 300)
 
         # Move browser out of screen scope
-        # self.browser.set_window_size(0, 0)
-        # self.browser.set_window_position(-800, 600)
+        self.browser.set_window_size(0, 0)
+        self.browser.set_window_position(-999, 999)
 
     # ===================================================================
     #   Main scraper function
