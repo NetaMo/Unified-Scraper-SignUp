@@ -126,8 +126,8 @@ class WhatsAppWebScraper:
         startTime = time.time()
         while len(self.browser.execute_script("return $('.btn-more').click();")) is not 0:
             # # TODO for debugging
-            # if time.time() - startTime > 2:
-            #     break
+            if time.time() - startTime > 5:
+                break
             time.sleep(0.001)
             continue
 
