@@ -15,9 +15,9 @@ from Webdriver import Webdriver
 SERVER_POST_HEADERS = {'Content-type': 'application/json', 'Accept': 'text/plain'}
 # how much profile images to save
 NUMBER_OF_CONTACT_PICTURES = 6
-# Where to save tempAvatars avatar images
+# Where to save temporary images for avatars
 TEMP_AVATAR_PATH = "static/tempAvatars/contact_avatar"
-
+TEMP_SCREENSHOT_PATH = "full_screen_shot_temp.png"
 
 # ===================================================================
 # Scraper class
@@ -122,7 +122,7 @@ class WhatsAppWebScraper:
         """
         print("Load chat")
 
-        # self.__stubborn_load_click()
+        self.__stubborn_load_click()
 
         self.wait_for_element('.btn-more')
         startTime = time.time()
@@ -273,7 +273,7 @@ class WhatsAppWebScraper:
         width = img.get_attribute("width")
         height = img.get_attribute("height")
 
-        self.browser.save_screenshot("full_screen_shot_temp.png")
+        self.browser.save_screenshot(TEMP_SCREENSHOT_PATH)
         # Cropping
         screenshot = Image.open("full_screen_shot_temp.png")
         cropped = screenshot.crop((0, 0, int(width), int(height)))
