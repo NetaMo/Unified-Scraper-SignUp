@@ -40,8 +40,8 @@ class WhatsAppWebScraper:
         self.wait_for_element('.infinite-list-viewport', 300)
 
         # Move browser out of screen scope
-        # self.browser.set_window_size(0, 0)
-        # self.browser.set_window_position(-800, 600)
+        self.browser.set_window_size(0, 0)
+        self.browser.set_window_position(-9999999, 99999999)
 
     # ===================================================================
     #   Main scraper function
@@ -64,7 +64,9 @@ class WhatsAppWebScraper:
             print("Loaded chat in " + str(time.time() - loadStartTime) + "seconds")
 
             # Get contact name and type (person/group).
+            get_contact_time = time.time()
             contactName, contactType = self.__get_contact_details()
+            print("Got Contact details in " + str(time.time() - get_contact_time) + "seconds")
 
             # Get messages from current chat
             print("Scraper: scrape: Get messages for: " + str(contactName))
