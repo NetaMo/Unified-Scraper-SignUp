@@ -55,16 +55,25 @@ class WhatsAppWebScraper:
         actions = ActionChains(self.browser)  # init actions option (click, send keyboard keys, etc)
         actions.click(self.wait_for_element('.input.input-search')).send_keys(Keys.TAB).perform()
 
+        # List of contacts we already scraped, in case user get new message while scraping
+        scraped_contacts = []
+
         # Scrape each chat
         # TODO currently scrape limited amount of users for debugging
-        for i in range(1, 15):
 
+        for i in range(1, 15):
             loadStartTime = time.time()
             self.__load_chat()  # load all conversations for current open chat
             print("Loaded chat in " + str(time.time() - loadStartTime) + "seconds")
 
             # Get contact name and type (person/group).
             contactName, contactType = self.__get_contact_details()
+
+            # If the user received message while scraping we don't want to scrape it again
+            if contactName in scraped_contacts:
+                self.__go_to_next_contact()
+                i -= 1  # TODO When changing to dynamic iteration should be handled differently
+                continue
 
             # Get messages from current chat
             print("Scraper: scrape: Get messages for: " + str(contactName))
@@ -102,6 +111,9 @@ class WhatsAppWebScraper:
                     cropped.save(TEMP_AVATAR_PATH + str(i) + ".jpg")
                 else:
                     self.defaultAvatar.save(TEMP_AVATAR_PATH + str(i) + ".jpg")
+
+            # After we have the data we add it to scraped contacts
+            scraped_contacts.append(contactName)
 
             # go to next chat
             self.__go_to_next_contact()
