@@ -103,7 +103,6 @@ class WhatsAppWebScraper:
                 contactData = {"contact": {"name": contactName, "type": contactType},
                                "messages": [ messages ]}
                 DB.append_to_contacts_df(contactData)  # add data to the data frame
-                DB.set_user_whatsapp_name()
 
             # Set as scraped
             self.scrapedContacts.append(contactName)
@@ -122,6 +121,9 @@ class WhatsAppWebScraper:
             # go to next chat
             self.__go_to_next_contact()
 
+        # Set user whastapp name
+        DB.set_user_whatsapp_name(self.user_whatsapp_name)
+        print(self.user_whatsapp_name)
         scrapeTotalTime = time.time() - scrapeStartTime
         print("Scraper: scrape: finished. Messages and seconds: " + str(scrapeTotalMsgs) + " in " +
               str(scrapeTotalTime) + " seconds.")
@@ -186,28 +188,24 @@ class WhatsAppWebScraper:
         messages = [ ]
         rawMessages = self.browser.execute_script(scrapingScripts.getTextMessages())
 
+        # Onetime update for user whatsapp name
+        if self.user_whatsapp_name is None:
+            outMsg = self.browser.execute_script(scrapingScripts.getSingleOutgoingMessage())
+            if outMsg is not None:
+                self.user_whatsapp_name, a, b = self.__parse_message(outMsg)
+
         # Extract data from raw message
         for msg in rawMessages:
-            # Unsupported messages of type image, video, audio, etc
-            if len(msg) == 0:
-                continue
 
             name, text, dateandtime = self.__parse_message(msg)
-            datetimeEnd = msg[ 0 ].find("]")
-            dateandtime = msg[ 0 ][ 3:datetimeEnd ]
 
-            name = msg[ 0 ][ datetimeEnd + 2: ]
-            nameEnd = name.find(":")
-            name = name[ :nameEnd ]
-
-            text = msg[ 0 ][ datetimeEnd + nameEnd + 7: ]
-
-            # Unsupported messages of type emoji
-            if text == "":
+            # Unsupported message
+            if name is None:
                 continue
 
             msgData = {"name": name, "text": text, "time": dateandtime}
             messages.append(msgData)
+            print(msgData)
 
         return messages
 
@@ -223,17 +221,9 @@ class WhatsAppWebScraper:
         totalMessages = len(rawMessages)
 
         for msg in rawMessages:
-            # Unsupported messages type
-            if len(msg) == 0:
-                continue
 
-            datetimeEnd = msg[ 0 ].find("]")
-            dateandtime = msg[ 0 ][ 3:datetimeEnd ]
-
-            name = msg[ 0 ][ datetimeEnd + 2: ]
-            nameEnd = name.find(":")
-            name = name[ :nameEnd ]
-
+            name, text, dateandtime = self.__parse_message(msg)
+            print(name, text, dateandtime)
             # update contact if exists otherwise create
             if name in groupData:
                 groupData[ name ] += 1
@@ -243,6 +233,26 @@ class WhatsAppWebScraper:
         # print("getGroupMessages got " + str(len(incomingMessages)) + " messages, here they are:")
         # print(str(groupData))
         return [ totalMessages, groupData ]
+
+    def __parse_message(self, msg):
+        # Unsupported messages of type image, video, audio, etc
+        if msg is None or len(msg) == 0:
+            return None, None, None
+
+        datetimeEnd = msg[0].find("]")
+        dateandtime = msg[0][3:datetimeEnd]
+
+        name = msg[0][datetimeEnd + 2:]
+        nameEnd = name.find(":")
+        name = name[:nameEnd]
+
+        text = msg[0][datetimeEnd + nameEnd + 7:]
+
+        # Unsupported messages of type emoji
+        if text == "":
+            return None, None, None
+
+        return name, text, dateandtime
 
     def __trim_avatar(self, im):
         """
@@ -359,4 +369,3 @@ class WhatsAppWebScraper:
                 return None
 
         return elements
-
