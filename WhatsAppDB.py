@@ -1,8 +1,8 @@
 import json
-
-from pandas.tseries.frequencies import to_offset
 from datetime import date, datetime
+
 import pandas as pd
+from pandas.tseries.frequencies import to_offset
 
 
 class WhatsAppDB:
@@ -19,7 +19,10 @@ class WhatsAppDB:
         self.groups_df.messagesCount.astype(int)
         self.groups_df.totalMessages.astype(int)
 
-        self.user_name = 'אסף'  # TODO change to ''
+        self.user_first_name = ""
+        self.user_last_name = ""
+        self.user_whatsapp_name = ""
+        self.user_nicknames = []
 
         # TODO add oldest_time maybe
 
@@ -31,6 +34,9 @@ class WhatsAppDB:
         self.dreams_or_old_messages = 0
         self.most_active_groups_and_user_groups = 0
         self.chat_archive = 0
+
+    def set_user_whatsapp_name(self, user_whatsapp_name):
+        self.user_whatsapp_name = user_whatsapp_name
 
     def append_to_groups_df(self, data_dict):
         """
