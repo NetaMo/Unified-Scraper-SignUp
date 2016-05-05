@@ -25,6 +25,14 @@ def getTextMessages():
            '''
 
 
+def getSingleOutgoingMessage():
+    return '''    var B = [];
+               var A = document.getElementsByClassName('message message-out')[0].getElementsByClassName('message-text');
+               for (var j = 0; j < A.length; j++){
+                   B.push( A[j].innerText);
+               }
+               return B;
+            '''
 
 def getIncomingMessages():
     return "var B = []; var A = document.getElementsByClassName('message-in');  for (var i = 0; i < A.length; i++){ var b = []; var a = A[i].getElementsByClassName('emojitext');  for (var j = 0; j < a.length; j++){  b.push( a[j].innerText); }  B.push(b); };;return B"

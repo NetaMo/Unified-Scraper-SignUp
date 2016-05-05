@@ -46,6 +46,7 @@ class WhatsAppWebScraper:
         self.browser.execute_script(scrapingScripts.initJQuery())  # active the jquery lib
         self.scrapedContacts = [ ]  # List of scraped contacts
         self.defaultAvatar = Image.open("defaultAvatar.jpg")
+        self.user_whatsapp_name = None
         self.person_count = 0
         self.group_count = 0
 
@@ -53,8 +54,8 @@ class WhatsAppWebScraper:
         self.wait_for_element('.infinite-list-viewport', 300)
 
         # Move browser out of screen scope
-        # self.browser.set_window_size(0, 0)
-        # self.browser.set_window_position(-800, 600)
+        # We don't want to resize the window, otherwise avatars don't work
+        self.browser.set_window_position(-999999, 999999)
 
     # ===================================================================
     #   Main scraper function
@@ -147,6 +148,9 @@ class WhatsAppWebScraper:
             # go to next chat
             self.__go_to_next_contact()
 
+        # Set user whastapp name
+        DB.set_user_whatsapp_name(self.user_whatsapp_name)
+
         scrapeTotalTime = time.time() - scrapeStartTime
         print("Scraper: scrape: finished. Messages and seconds: " + str(scrapeTotalMsgs) + " in " +
               str(scrapeTotalTime) + " seconds.")
@@ -216,23 +220,19 @@ class WhatsAppWebScraper:
         messages = [ ]
         rawMessages = self.browser.execute_script(scrapingScripts.getTextMessages())
 
+        # Onetime update for user whatsapp name
+        if self.user_whatsapp_name is None:
+            outMsg = self.browser.execute_script(scrapingScripts.getSingleOutgoingMessage())
+            if outMsg is not None:
+                self.user_whatsapp_name, a, b = self.__parse_message(outMsg)
+
         # Extract data from raw message
         for msg in rawMessages:
-            # Unsupported messages of type image, video, audio, etc
-            if len(msg) == 0:
-                continue
 
-            datetimeEnd = msg[ 0 ].find("]")
-            dateandtime = msg[ 0 ][ 3:datetimeEnd ]
+            name, text, dateandtime = self.__parse_message(msg)
 
-            name = msg[ 0 ][ datetimeEnd + 2: ]
-            nameEnd = name.find(":")
-            name = name[ :nameEnd ]
-
-            text = msg[ 0 ][ datetimeEnd + nameEnd + 7: ]
-
-            # Unsupported messages of type emoji
-            if text == "":
+            # Unsupported message
+            if name is None:
                 continue
 
             msgData = {"name": name, "text": text, "time": dateandtime}
@@ -252,16 +252,8 @@ class WhatsAppWebScraper:
         totalMessages = len(rawMessages)
 
         for msg in rawMessages:
-            # Unsupported messages type
-            if len(msg) == 0:
-                continue
 
-            datetimeEnd = msg[ 0 ].find("]")
-            dateandtime = msg[ 0 ][ 3:datetimeEnd ]
-
-            name = msg[ 0 ][ datetimeEnd + 2: ]
-            nameEnd = name.find(":")
-            name = name[ :nameEnd ]
+            name, text, dateandtime = self.__parse_message(msg)
 
             # update contact if exists otherwise create
             if name in groupData:
@@ -272,6 +264,26 @@ class WhatsAppWebScraper:
         # print("getGroupMessages got " + str(len(incomingMessages)) + " messages, here they are:")
         # print(str(groupData))
         return [ totalMessages, groupData ]
+
+    def __parse_message(self, msg):
+        # Unsupported messages of type image, video, audio, etc
+        if msg is None or len(msg) == 0:
+            return None, None, None
+
+        datetimeEnd = msg[0].find("]")
+        dateandtime = msg[0][3:datetimeEnd]
+
+        name = msg[0][datetimeEnd + 2:]
+        nameEnd = name.find(":")
+        name = name[:nameEnd]
+
+        text = msg[0][datetimeEnd + nameEnd + 7:]
+
+        # Unsupported messages of type emoji
+        if text == "":
+            return None, None, None
+
+        return name, text, dateandtime
 
     def __trim_avatar(self, im):
         """
@@ -414,4 +426,3 @@ class WhatsAppWebScraper:
                 return None
 
         return elements
-

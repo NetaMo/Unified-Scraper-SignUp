@@ -1,8 +1,8 @@
 import json
-
-from pandas.tseries.frequencies import to_offset
 from datetime import date, datetime
+
 import pandas as pd
+from pandas.tseries.frequencies import to_offset
 
 
 class WhatsAppDB:
@@ -19,9 +19,10 @@ class WhatsAppDB:
         self.groups_df.messagesCount.astype(int)
         self.groups_df.totalMessages.astype(int)
 
-        self.user_name = 'אסף'  # TODO change to ''
-
-        # TODO add oldest_time maybe
+        self.user_first_name = "אסף"
+        self.user_last_name = "עציון"
+        self.user_whatsapp_name = "+972 54-750-8445"
+        self.user_nicknames = ["יוסוף", "יוסף"]
 
         # =====data analysis json outputs=====
         self.latest_chats = 0
@@ -31,6 +32,9 @@ class WhatsAppDB:
         self.dreams_or_old_messages = 0
         self.most_active_groups_and_user_groups = 0
         self.chat_archive = 0
+
+    def set_user_whatsapp_name(self, user_whatsapp_name):
+        self.user_whatsapp_name = user_whatsapp_name
 
     def append_to_groups_df(self, data_dict):
         """
@@ -45,9 +49,9 @@ class WhatsAppDB:
             self.groups_df = self.groups_df.append({'groupName': group_name, 'name': name, 'messagesCount': data_dict[
                 "contactMessageCounter"][name], 'totalMessages': data_dict['contactMessageTotal']}, ignore_index=True)
 
-        print("the current state of groups_df: ")
+        # print("the current state of groups_df: ")
         # print(self.groups_df)
-        print("===================================================")
+        # print("===================================================")
 
     def append_to_contacts_df(self, data_dict):
         """
@@ -64,9 +68,9 @@ class WhatsAppDB:
             self.contacts_df = self.contacts_df.append({'contactName': contact_name, 'name': name, 'text': text,
                                                         'time': message["time"]}, ignore_index=True)
 
-        print("the current state of contacts_df: ")
+        # print("the current state of contacts_df: ")
         # print(self.contacts_df)
-        print("===================================================")
+        # print("===================================================")
 
     def convert_to_datetime_and_sort(self):
         """
@@ -83,7 +87,7 @@ class WhatsAppDB:
 
         number_of_contacts = 150
         past_fraction = 0.75
-        self.closest_persons_and_msg = self.get_closest_persons_and_msg(number_of_contacts, self.user_name, past_fraction)
+        self.closest_persons_and_msg = self.get_closest_persons_and_msg(number_of_contacts, past_fraction)
 
         self.have_hebrew = self.does_df_has_hebrew()
 
@@ -92,8 +96,8 @@ class WhatsAppDB:
         past_fraction = 0.25
         self.dreams_or_old_messages = self.get_dreams_or_old_messages(past_fraction)
 
-        # max_num_of_groups = 5
-        # self.most_active_groups_and_user_groups = self.get_most_active_groups_and_user_groups(max_num_of_groups) # TODO UPDATE
+        max_num_of_groups = 5
+        self.most_active_groups_and_user_groups = self.get_most_active_groups_and_user_groups(max_num_of_groups)
 
         self.chat_archive = self.get_chat_archive()
 
@@ -131,16 +135,16 @@ class WhatsAppDB:
         checks if the contacts data frame text fields has hebrew chars
         :return: True if has hebrew
         """
-        language = {"hebrew": False}
+        data = {"hebrew": False, "user_whatsapp_name":self.user_whatsapp_name, "user_os": "android"}
         for text in list(self.contacts_df.head(10).text.values):
             if self.is_language_hebrew(text):
-                language["hebrew"] = True
+                data["hebrew"] = True
 
         for text in list(self.contacts_df.tail(10).text.values):
             if self.is_language_hebrew(text):
-                language["hebrew"] = True
+                data["hebrew"] = True
 
-        return json.dumps(language)
+        return json.dumps(data)
 
     @staticmethod
     def correct_time_for_whatsapp(x):
@@ -164,6 +168,7 @@ class WhatsAppDB:
         """
         latest_msgs_df = self.contacts_df.drop_duplicates(subset='contactName').head(number_of_chats)
         latest_msgs_df.time = latest_msgs_df.time.apply(self.correct_time_for_whatsapp)
+        sliced_df = latest_msgs_df[['contactName', 'text', 'time']]
         return latest_msgs_df.to_json(date_format='iso', double_precision=0, date_unit='s', orient='records')
 
     def get_blast_from_the_past(self, past_fraction):
@@ -181,27 +186,30 @@ class WhatsAppDB:
         df_past_chats = self.contacts_df.where(self.contacts_df.time <= past_chats_threshold_date).dropna()
         return df_past_chats.contactName.value_counts().head(1).index[0]
 
-    def get_closest_persons_and_msg(self, number_of_persons, user_name, past_fraction_param):
+    def get_closest_persons_and_msg(self, number_of_persons, past_fraction_param):
         """
         finds the number_of_persons most talked persons and a message that has the user name in it.
-        :param user_name: the name people call the user
         :param number_of_persons: the number of close persons to find.
         :param past_fraction_param: the fraction part to go back in time for the blast from the past
         :return: json with the data
         """
         closest_persons_ndarray = self.contacts_df.contactName.value_counts().head(number_of_persons).index
+
+
+        self.user_nicknames.append(self.user_first_name)
         i = 0
         closest_persons_df = pd.DataFrame()
         for contactName in closest_persons_ndarray:
-            closest_persons_df = closest_persons_df.append({'contactName': contactName, 'text': user_name}, ignore_index=True)
+            closest_persons_df = closest_persons_df.append({'contactName': contactName, 'text': self.user_first_name}, ignore_index=True)
             for index, col in self.contacts_df.iterrows():
                 if col['contactName'] == contactName:
-                    if user_name in col['text']:
+                    if any(word in col['text'] for word in self.user_nicknames):
                         closest_persons_df.iloc[i].text = col['text']
             i += 1
 
         blast = self.get_blast_from_the_past(past_fraction_param)
-        closest_persons_df = closest_persons_df.append({"contactName": blast, "text": "im the blast from the past"}, ignore_index=True)
+        closest_persons_df = closest_persons_df.append({"contactName": blast, "text": "im the blast from the past"},
+                                                       ignore_index=True)
         return closest_persons_df.to_json(date_format='iso', double_precision=0, date_unit='s', orient='records')
 
     def get_good_night_messages(self):
@@ -209,7 +217,9 @@ class WhatsAppDB:
         finds messages containing good night words
         :return: json with the data
         """
-        good_night_df = self.contacts_df[self.contacts_df.text.str.contains("good night|לילה טוב|Bonne nuit|bonne nuit|sweet dreams|ליל מנוחה")]
+        good_night_df = self.contacts_df[self.contacts_df.text.str.lower().str.contains("good night|לילה טוב|bonne nuit|sweet dreams|ליל "
+                                                                             "מנוחה")]
+
         good_night_df = good_night_df[['contactName', 'text']]
         return good_night_df.to_json(date_format='iso', double_precision=0, date_unit='s', orient='records')
 
@@ -218,10 +228,10 @@ class WhatsAppDB:
         finds messages containing dream words
         :return: dataframe of the data above
         """
-        good_night_df = self.contacts_df[self.contacts_df.text.str.contains(
+        good_night_df = self.contacts_df[self.contacts_df.text.str.lower().str.contains(
             "חלמתי|חלומות|חלמת|dream|dreamt|dreaming|dreams|rêver|rêves|rêvé|rêve|reve|reves|rever|dreamed")]
         good_night_df = good_night_df[['contactName', 'text']]
-        return good_night_df
+        return good_night_df[['contactName', 'text']]
 
     def get_old_messages(self, past_fraction):
         """
@@ -236,7 +246,7 @@ class WhatsAppDB:
         past_chats_threshold_date = min(self.contacts_df.time) + to_offset(past_chats_threshold_days)
         # print(past_chats_threshold_date)
         df_past_chats = self.contacts_df.where(self.contacts_df.time <= past_chats_threshold_date).dropna()
-        return df_past_chats  # todo check how to filter good past msgs
+        return df_past_chats[['contactName', 'text']]  # todo check how to filter good past msgs
     
     def get_dreams_or_old_messages(self, past_fraction_param):
         """
@@ -247,7 +257,7 @@ class WhatsAppDB:
         dreams_df = self.get_dream_messages()
 
         num_of_sentences = 0
-        for text in dreams_df.text:  # todo chceck the results of this logic
+        for text in dreams_df.text:  # todo check the results of this logic
             if len(text.strip().split()) > 2:
                 num_of_sentences += 1
 
@@ -257,51 +267,30 @@ class WhatsAppDB:
             return self.get_old_messages(past_fraction_param).to_json(date_format='iso', double_precision=0,
                                                                                      date_unit='s', orient='records')
 
-    # def get_most_active_groups(self, max_number_of_groups):
-    #     return list(self.groups_df['contactName'].value_counts().index)[:max_number_of_groups]  # TODO change to new api
-    #
-    # @staticmethod
-    # def get_users_activity_in_group(group_df):  # todo maybe make maximum number of users # TODO change to new api
-    #     return list(group_df.name.value_counts().index)
-    #
-    # def get_most_active_groups_and_user_groups(self, max_number_of_groups):  # TODO change to new api and return json!
-    #     """
-    #     finds the most active groups and sorts the users inside by their activity
-    #     :param max_number_of_groups: how much groups to return
-    #     :return: a dict with the data
-    #     """
-    #     most_active_groups_list = self.get_most_active_groups(max_number_of_groups)
-    #     groups = self.groups_df.groupby('contactName')
-    #     ret_dict_list = []
-    #     i = 0
-    #     for group_name in most_active_groups_list:
-    #         for name, group in groups:
-    #             if name is group_name:
-    #                 ret_dict_list.append({})
-    #                 ret_dict_list[i]["groupName"] = name
-    #                 ret_dict_list[i]["groupContacts"] = self.get_users_activity_in_group(group)
-    #         i += 1
-    #
-    #     return ret_dict_list
 
-    def get_most_active_groups_and_user_groups(self, max_number_of_groups):  # TODO change to new api and return json!
+    def get_most_active_groups_and_user_groups(self, max_number_of_groups):
         """
         finds the most active groups and gets the users inside by their activity
         :param max_number_of_groups: how much groups to return
         :return: a json with the data
         """
+
+        # TODO if we load same number of messages for each group- then we need to change the sort of the active groups
+        # TODO so we can sort the intensity of the groups by the earliest date found in each group.
         self.groups_df.sort_values(['totalMessages', 'groupName', 'messagesCount'], ascending=False, inplace=True)
         group_names = self.groups_df.groupName.unique()[:max_number_of_groups]
 
-        print(self.groups_df.loc[self.groups_df['groupName'].isin(group_names)])  # todo return json
+        result_df = self.groups_df.loc[self.groups_df['groupName'].isin(group_names)]
+        sliced_df = result_df[['groupName', 'name']]
 
-        # print(self.groups_df)
-        # last_index = self.groups_df.index.get_loc(self.groups_df.drop_duplicates(subset='groupName', keep='last').head(
-        #     max_number_of_groups).tail(1).index)
-        # print(last_index)
-        # print(type(last_index))
-        # return self.groups_df.iloc[:last_index].to_json(date_format='iso', double_precision=0, date_unit='s', orient='records')
-        # self.groups_df = self.groups_df.reset_index(inplace=True)
+        # print(sliced_df) TODO check its correct!
+
+        # sliced_df = sliced_df.append({'WhatsAppUserName': self.user_whatsapp_name}, ignore_index=True)
+        # res_dict = sliced_df.to_dict(orient='records')
+        # res_dict["WhatsAppUserName"] = self.user_whatsapp_name
+
+        return sliced_df.to_json(date_format='iso', double_precision=0, date_unit='s', )
+        # return json.dumps(res_dict)
 
     def get_chat_archive(self):
         """
@@ -309,7 +298,12 @@ class WhatsAppDB:
         :return: the data above in a json
         """
         # TODO add a feature for interesting part to start with
-        chat_list = self.contacts_df.sort_values('contactName', ascending=True).text.values.tolist()  # todo change the sort, maybe
-        # todo return json of name and text
-        chat_dict = {"chats": chat_list}
-        return json.dumps(chat_dict)
+        self.contacts_df.sort_values('contactName', ascending=True, inplace=True)
+        sliced_df = self.contacts_df[['name', 'text']]
+        # sliced_df = sliced_df.append({'WhatsAppUserName': self.user_whatsapp_name}, ignore_index=True)
+        #
+        # res_dict = sliced_df.to_dict(orient='records')
+        # res_dict["WhatsAppUserName"] = self.user_whatsapp_name
+
+        return sliced_df.to_json(date_format='iso', double_precision=0, date_unit='s', orient='records')
+        # return json.dumps(res_dict)

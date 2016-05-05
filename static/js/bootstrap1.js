@@ -2408,8 +2408,13 @@ if (typeof jQuery === 'undefined') {
 
   function letsgo()
   {
-    $.get("/letsgo");
     window.location.href = 'letsgo.html';
+
+
   }
 
+  function getletsgo()
+  {
+  $.get("/letsgo");
+  }
 

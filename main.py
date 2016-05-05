@@ -18,23 +18,34 @@ def scrape_whatsapp(db):
     runs the whatsapp web scrapping procedure.
     :param db: the WhatsAppDB object
     """
+    print("create driver")
     driver = Webdriver()  # create new driver
-    # window_before = driver.browser.window_handles[0]
-    window_after = driver.getBrowser().window_handles[0]
-    driver.getBrowser().switch_to.window(window_after)
+    number_of_handles = len(driver.browser.window_handles)
+    # print(number_of_handles)
+    # window_after = driver.getBrowser().window_handles[0]
+    # driver.getBrowser().switch_to.window(window_after)
     scraper = WhatsAppWebScraper.WhatsAppWebScraper(driver)  # create new WhatsApp scraper
-    print("before scrape")
+    #insert resize here
     scraper.scrape(db)  # scrape
-    print("after scrape")
     # TODO for debugging, delete
-    while(True):
-        continue
+    # while(True):
+    #     continue
     driver.close()  # close driver
 
 
 """""
 web page handlers:
 """""
+class IphoneHandler(tornado.web.RequestHandler):
+
+    def get(self):
+        print("Stage 6: Iphone Chosen")
+
+
+class AndroidHandler(tornado.web.RequestHandler):
+
+    def get(self):
+        print("Stage 6: Android Chosen")
 
 
 class LandingHandler(tornado.web.RequestHandler):
@@ -64,6 +75,7 @@ class NameSubmitHandler(tornado.web.RequestHandler):
 
 
 class NickNameSubmitHandler(tornado.web.RequestHandler):
+
     def initialize(self, db):
         self.db = db
 
@@ -80,7 +92,6 @@ class TermAgreeHandler(tornado.web.RequestHandler):
     def get(self):
         print("Stage 4: Agreed, Loading WhatssApp web scrapper")
         # run whats up web scrapper
-        scrape_whatsapp(self.db)
         print("Stage 4: Agreed, Go to phone sort")
 
 class PhoneSortHandler(tornado.web.RequestHandler):
@@ -90,6 +101,7 @@ class PhoneSortHandler(tornado.web.RequestHandler):
 
 
 class LetsGoHandler(tornado.web.RequestHandler):
+
     def initialize(self, db):
         self.db = db
 
@@ -110,6 +122,7 @@ unity communication handlers
 
 
 class GiveLatestChatsHandler(tornado.web.RequestHandler):
+
     def initialize(self, db):
         self.db = db
 
@@ -174,26 +187,11 @@ make_app, settings, main
 settings = dict(static_path=os.path.join(os.path.dirname(__file__), "static"))
 
 
-
-class IphoneHandler(tornado.web.RequestHandler):
-
-    def get(self):
-        print("Stage 6: Iphone Chosen")
-
-
-class AndroidHandler(tornado.web.RequestHandler):
-
-    def get(self):
-        print("Stage 4: Agreed, Load whatssapp web")
-        # Insert whats up web run here
-        # isTyping()
-
 def make_app(db):
     print("make_app")
     return tornado.web.Application([(
         # web page handlers
         (r"/", LandingHandler)),
-        (r"/agree", TermAgreeHandler),
         (r"/namesubmit", NameSubmitHandler, dict(db=DB)),
         (r"/", LandingHandler),
         (r"/agree", TermAgreeHandler),
@@ -221,12 +219,13 @@ if __name__ == "__main__":
     app = make_app(DB)
 
     # enter webPage as the first argument to run the web page
-    # TODO decide where to place in order to have good functionality- divide the server!
+    # TODO decide where to place in order to have good functionality
     if sys.argv[1] == 'WebPage':
         # A Chrome window to navigate to our site
         print("web Page")
-        driver1 = Webdriver()
-        driver1.browser.get("localhost:8888")  # TODO read about passing the DB to the handlers
+        #TODO delete this if we use normal browser
+        # driver1 = Webdriver()
+        # driver1.browser.get("localhost:8888")  # TODO read about passing the DB to the handlers
 
     # save the data for future work
     elif sys.argv[1] == 'SaveData':
@@ -235,7 +234,7 @@ if __name__ == "__main__":
 
         DB.convert_to_datetime_and_sort()
 
-        # DB.run_data_analysis_and_store_results()
+        DB.run_data_analysis_and_store_results()
         DB.save_db_to_files(".\\stored data\\")
         sys.exit()
 
