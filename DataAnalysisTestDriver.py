@@ -29,11 +29,11 @@ def test_data_analysis(DB):
     print("get_closest_persons_and_msg")
     number_of_contacts = 150
     past_fraction = 0.75
-    print(json.loads(DB.get_closest_persons_and_msg(number_of_contacts, DB.user_name, past_fraction)))
+    print(json.loads(DB.get_closest_persons_and_msg(number_of_contacts, past_fraction)))
     print("----------------------------------")
 
     print("does_df_has_hebrew")
-    print(DB.does_df_has_hebrew())
+    print(json.loads(DB.does_df_has_hebrew()))
     print("----------------------------------")
 
     print("get_good_night_messages")
@@ -47,7 +47,7 @@ def test_data_analysis(DB):
 
     print("get_most_active_groups_and_user_groups")
     max_num_of_groups = 5
-    DB.get_most_active_groups_and_user_groups(max_num_of_groups)  # TODO print and loads
+    print(json.loads(DB.get_most_active_groups_and_user_groups(max_num_of_groups)))
     print("----------------------------------")
 
     print("get_chat_archive")
