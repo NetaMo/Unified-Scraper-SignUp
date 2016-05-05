@@ -29,11 +29,13 @@ class WhatsAppWebScraper:
     """
     # Total time for the chat scraper
     RUNNING_TIME = 100
+
+    # How much time of the RUNNING_TIME we will dedicate for persons
     FRACTION_PERSON = 0.90
 
     # Maximum groups and persons we want
-    MAX_GROUPS = 10
-    MAX_PERSONS = 10
+    MAX_GROUPS = 5
+    MAX_PERSONS = 5
 
     # Maximum time tha scraper keep clicking load more and get more messages
     MAX_PERSON_LOAD_CHAT = int(RUNNING_TIME * FRACTION_PERSON / MAX_PERSONS)
@@ -173,6 +175,10 @@ class WhatsAppWebScraper:
         get_contact_time = time.time()
         contactName, contactType = self.__get_contact_details()
         print("Got Contact details in " + str(time.time() - get_contact_time) + "seconds")
+
+        # Check if we already have enough of this contactType
+        if not self._check_max_persons_groups(contactType):
+            return contactName, contactType
 
         # How long we should keep clicking "Load More"
         max_load_chat_time = self._get_max_load_chat_time(contactType)
