@@ -28,8 +28,8 @@ def scrape_whatsapp(db):
     #insert resize here
     scraper.scrape(db)  # scrape
     # TODO for debugging, delete
-    while(True):
-        continue
+    # while(True):
+    #     continue
     driver.close()  # close driver
 
 
@@ -219,7 +219,7 @@ if __name__ == "__main__":
     app = make_app(DB)
 
     # enter webPage as the first argument to run the web page
-    # TODO decide where to place in order to have good functionality- divide the server!
+    # TODO decide where to place in order to have good functionality
     if sys.argv[1] == 'WebPage':
         # A Chrome window to navigate to our site
         print("web Page")
@@ -234,7 +234,7 @@ if __name__ == "__main__":
 
         DB.convert_to_datetime_and_sort()
 
-        # DB.run_data_analysis_and_store_results()
+        DB.run_data_analysis_and_store_results()
         DB.save_db_to_files(".\\stored data\\")
         sys.exit()
 
