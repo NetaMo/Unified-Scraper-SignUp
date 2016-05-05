@@ -28,11 +28,16 @@ class WhatsAppWebScraper:
     and sends one contact at a time to the server.
     """
     # Total time for the chat scraper
-    RUNNING_TIME = 600
+    RUNNING_TIME = 100
+    FRACTION_PERSON = 0.90
+
+    # Maximum groups and persons we want
+    MAX_GROUPS = 10
+    MAX_PERSONS = 10
 
     # Maximum time tha scraper keep clicking load more and get more messages
-    MAX_GROUP_LOAD_CHAT = 15
-    MAX_PERSON_LOAD_CHAT = 3
+    MAX_PERSON_LOAD_CHAT = int(RUNNING_TIME * FRACTION_PERSON / MAX_PERSONS)
+    MAX_GROUP_LOAD_CHAT = int(RUNNING_TIME * (1 - FRACTION_PERSON) / MAX_GROUPS)
 
     def __init__(self, webdriver):
         self.browser = Webdriver.getBrowser(webdriver)  # Get browser
@@ -41,6 +46,8 @@ class WhatsAppWebScraper:
         self.browser.execute_script(scrapingScripts.initJQuery())  # active the jquery lib
         self.scrapedContacts = [ ]  # List of scraped contacts
         self.defaultAvatar = Image.open("defaultAvatar.jpg")
+        self.person_count = 0
+        self.group_count = 0
 
         # Wait in current page for user to log in using barcode scan.
         self.wait_for_element('.infinite-list-viewport', 300)
@@ -59,7 +66,13 @@ class WhatsAppWebScraper:
 
         # Get to first contact chat
         actions = ActionChains(self.browser)  # init actions option (click, send keyboard keys, etc)
-        actions.click(self.wait_for_element('.input.input-search')).send_keys(Keys.TAB).perform()
+        try:
+            actions.click(self.wait_for_element('.input.input-search')).send_keys(Keys.TAB).perform()
+        except StaleElementReferenceException:
+            # Element is removed from the DOM structure, that happens when whatsapp refresh
+            # the page and we don't want to break the app. I'm retying again after 2 sec.
+            time.sleep(2)
+            actions.click(self.wait_for_element('.input.input-search')).send_keys(Keys.TAB).perform()
 
         # List of contacts we already scraped, in case user get new message while scraping
         scraped_contacts = []
@@ -82,7 +95,11 @@ class WhatsAppWebScraper:
             # If the user received message while scraping we don't want to scrape it again
             if contactName in scraped_contacts:
                 self.__go_to_next_contact()
-                avatar_count -= 1
+                continue
+
+            # Check if we already have enough of this contactType
+            if not self._check_max_persons_groups(contactType):
+                self.__go_to_next_contact()
                 continue
 
             # Get messages from current chat
@@ -105,11 +122,13 @@ class WhatsAppWebScraper:
                 contactData = {"contactName": contactName, "contactMessageTotal": messages[ 0 ],
                                "contactMessageCounter": messages[ 1 ]}
                 DB.append_to_groups_df(contactData)
+                self.group_count += 1
 
             elif contactType == 'person':
                 contactData = {"contact": {"name": contactName, "type": contactType},
                                "messages": [ messages ]}
                 DB.append_to_contacts_df(contactData)  # add data to the data frame
+                self.person_count += 1
 
             # Set as scraped
             self.scrapedContacts.append(contactName)
@@ -173,7 +192,7 @@ class WhatsAppWebScraper:
         #                                           "'main').getElementsByTagName('h2');")[ 0 ].text
 
         # If this is a contact chat then this field will not appear
-        is_group = self.browser.execute_script("return document.getElementsByClassName('msg-group');")
+        is_group = self.wait_for_element_by_script("return document.getElementsByClassName('msg-group');", 1.5)
 
         return contactName, "group" if is_group else "person"
 
@@ -315,8 +334,16 @@ class WhatsAppWebScraper:
         pressing tab and then arrow down.
         """
         actions = ActionChains(self.browser)
-        actions.click(self.wait_for_element('.input.input-search')).send_keys(Keys.TAB).send_keys(
-            Keys.ARROW_DOWN).perform()
+        try:
+            actions.click(self.wait_for_element('.input.input-search')).send_keys(Keys.TAB).send_keys(
+                Keys.ARROW_DOWN).perform()
+        except StaleElementReferenceException:
+            # Element is removed from the DOM structure, that happens when whatsapp refresh
+            # the page and we don't want to break the app. I'm retying again after 2 sec.
+            time.sleep(2)
+
+            actions.click(self.wait_for_element('.input.input-search')).send_keys(Keys.TAB).send_keys(
+                Keys.ARROW_DOWN).perform()
 
     def __stubborn_load_click(self):
         print("Scraper: stubbornClick starting...")
@@ -336,6 +363,23 @@ class WhatsAppWebScraper:
                 print("Scraper: stubbornClick iteration " + str(i))
                 continue
 
+    def _get_max_load_chat_time(self, contentType):
+        """
+        Returns the maximum time for load chat, also checks if it's group or person
+        and calculate different times.
+        """
+        return self.MAX_PERSON_LOAD_CHAT if contentType == "person" else self.MAX_GROUP_LOAD_CHAT
+
+    def _check_max_persons_groups(self, contactType):
+        """
+        Checks if we have reached the quantity of persons/groups we want
+        according to MAX_PERSONS/MAX_GROUPS.
+        Returns True if we want this contactType, False otherwise.
+        """
+        if contactType == "person":
+            return self.person_count < self.MAX_PERSONS
+        return self.group_count < self.MAX_GROUPS
+
     # ===================================================================
     #   Webdriver helper functions
     # ===================================================================
@@ -352,6 +396,7 @@ class WhatsAppWebScraper:
             elements = self.browser.execute_script("return $(arguments[0]);", jquerySelector)
             if time.time() - startTime > timeout:
                 return None
+            time.sleep(0.001)
 
         return elements[ 0 ]
 
@@ -370,9 +415,3 @@ class WhatsAppWebScraper:
 
         return elements
 
-    def _get_max_load_chat_time(self, contentType):
-        """
-        Returns the maximum time for load chat, also checks if it's group or person
-        and calculate different times.
-        """
-        return self.MAX_PERSON_LOAD_CHAT if contentType == "person" else self.MAX_GROUP_LOAD_CHAT
