@@ -61,6 +61,7 @@ class WhatsAppWebScraper:
         # Scrape each chat
         # TODO currently scrape limited amount of users for debugging
 
+
         for i in range(1, 15):
             loadStartTime = time.time()
             self.__load_chat()  # load all conversations for current open chat
