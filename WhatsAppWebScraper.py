@@ -27,6 +27,12 @@ class WhatsAppWebScraper:
     Main class for scraping whatsapp. Receives open browser, goes to WhatsApp Web page, scrapes data
     and sends one contact at a time to the server.
     """
+    # Total time for the chat scraper
+    RUNNING_TIME = 600
+
+    # Maximum time tha scraper keep clicking load more and get more messages
+    MAX_GROUP_LOAD_CHAT = 15
+    MAX_PERSON_LOAD_CHAT = 3
 
     def __init__(self, webdriver):
         self.browser = Webdriver.getBrowser(webdriver)  # Get browser
@@ -58,24 +64,25 @@ class WhatsAppWebScraper:
         # List of contacts we already scraped, in case user get new message while scraping
         scraped_contacts = []
 
+        # We want to scrape just NUMBER_OF_CONTACT_PICTURES
+        avatar_count = 0
+
         # Scrape each chat
-        # TODO currently scrape limited amount of users for debugging
+        running_time_start = time.time()
 
+        # Iterate over the contacts until we reach our RUNNING_TIME
+        while time.time() - running_time_start < self.RUNNING_TIME:
+            contact_iteration_start = time.time()
 
-        for i in range(1, 15):
-            loadStartTime = time.time()
-            self.__load_chat()  # load all conversations for current open chat
-            print("Loaded chat in " + str(time.time() - loadStartTime) + "seconds")
+            # load all conversations for current open chat
+            contactName, contactType = self.__load_chat()
 
-            # Get contact name and type (person/group).
-            get_contact_time = time.time()
-            contactName, contactType = self.__get_contact_details()
-            print("Got Contact details in " + str(time.time() - get_contact_time) + "seconds")
+            print("Loaded chat in " + str(time.time() - contact_iteration_start) + "seconds")
 
             # If the user received message while scraping we don't want to scrape it again
             if contactName in scraped_contacts:
                 self.__go_to_next_contact()
-                i -= 1  # TODO When changing to dynamic iteration should be handled differently
+                avatar_count -= 1
                 continue
 
             # Get messages from current chat
@@ -108,12 +115,12 @@ class WhatsAppWebScraper:
             self.scrapedContacts.append(contactName)
 
             # get the avatar of the contact
-            if i < NUMBER_OF_CONTACT_PICTURES:
+            if avatar_count < NUMBER_OF_CONTACT_PICTURES:
                 cropped = self.__get_contact_avatar()
                 if cropped is not None:
-                    cropped.save(TEMP_AVATAR_PATH + str(i) + ".jpg")
+                    cropped.save(TEMP_AVATAR_PATH + str(avatar_count) + ".jpg")
                 else:
-                    self.defaultAvatar.save(TEMP_AVATAR_PATH + str(i) + ".jpg")
+                    self.defaultAvatar.save(TEMP_AVATAR_PATH + str(avatar_count) + ".jpg")
 
             # After we have the data we add it to scraped contacts
             scraped_contacts.append(contactName)
@@ -138,13 +145,22 @@ class WhatsAppWebScraper:
         self.__stubborn_load_click()
 
         self.wait_for_element('.btn-more')
+
+        # Get contact name and type (person/group).
+        get_contact_time = time.time()
+        contactName, contactType = self.__get_contact_details()
+        print("Got Contact details in " + str(time.time() - get_contact_time) + "seconds")
+
+        # How long we should keep clicking "Load More"
+        max_load_chat_time = self._get_max_load_chat_time(contactType)
+
         startTime = time.time()
-        while len(self.browser.execute_script("return $('.btn-more').click();")) is not 0:
-            # # TODO for debugging
-            if time.time() - startTime > 5:
+        while self.browser.execute_script("return $('.btn-more').click();"):
+            if time.time() - startTime > max_load_chat_time:
                 break
             time.sleep(0.001)
-            continue
+
+        return contactName, contactType
 
     def __get_contact_details(self):
         """
@@ -157,13 +173,9 @@ class WhatsAppWebScraper:
         #                                           "'main').getElementsByTagName('h2');")[ 0 ].text
 
         # If this is a contact chat then this field will not appear
-        if len(self.browser.execute_script("return document.getElementsByClassName('msg-group');")) \
-                == 0:
-            contactType = "person"
-        else:
-            contactType = "group"
+        is_group = self.browser.execute_script("return document.getElementsByClassName('msg-group');")
 
-        return contactName, contactType
+        return contactName, "group" if is_group else "person"
 
     def __get_messages(self, contactType, contactName):
         """
@@ -358,3 +370,9 @@ class WhatsAppWebScraper:
 
         return elements
 
+    def _get_max_load_chat_time(self, contentType):
+        """
+        Returns the maximum time for load chat, also checks if it's group or person
+        and calculate different times.
+        """
+        return self.MAX_PERSON_LOAD_CHAT if contentType == "person" else self.MAX_GROUP_LOAD_CHAT
