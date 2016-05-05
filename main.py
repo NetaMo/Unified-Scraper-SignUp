@@ -192,7 +192,6 @@ def make_app(db):
     return tornado.web.Application([(
         # web page handlers
         (r"/", LandingHandler)),
-        (r"/agree", TermAgreeHandler),
         (r"/namesubmit", NameSubmitHandler, dict(db=DB)),
         (r"/", LandingHandler),
         (r"/agree", TermAgreeHandler),
