@@ -123,7 +123,7 @@ class WhatsAppWebScraper:
 
         # Set user whastapp name
         DB.set_user_whatsapp_name(self.user_whatsapp_name)
-        print(self.user_whatsapp_name)
+
         scrapeTotalTime = time.time() - scrapeStartTime
         print("Scraper: scrape: finished. Messages and seconds: " + str(scrapeTotalMsgs) + " in " +
               str(scrapeTotalTime) + " seconds.")
@@ -205,7 +205,6 @@ class WhatsAppWebScraper:
 
             msgData = {"name": name, "text": text, "time": dateandtime}
             messages.append(msgData)
-            print(msgData)
 
         return messages
 
@@ -223,7 +222,7 @@ class WhatsAppWebScraper:
         for msg in rawMessages:
 
             name, text, dateandtime = self.__parse_message(msg)
-            print(name, text, dateandtime)
+
             # update contact if exists otherwise create
             if name in groupData:
                 groupData[ name ] += 1
