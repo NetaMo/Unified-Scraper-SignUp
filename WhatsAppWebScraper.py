@@ -35,13 +35,14 @@ class WhatsAppWebScraper:
         self.browser.execute_script(scrapingScripts.initJQuery())  # active the jquery lib
         self.scrapedContacts = [ ]  # List of scraped contacts
         self.defaultAvatar = Image.open("defaultAvatar.jpg")
+        self.user_whatsapp_name = None
 
         # Wait in current page for user to log in using barcode scan.
         self.wait_for_element('.infinite-list-viewport', 300)
 
         # Move browser out of screen scope
-        # We don't want to resize the window, otherwise avatars don't work
-        self.browser.set_window_position(-999999, 999999)
+        # self.browser.set_window_size(0, 0)
+        # self.browser.set_window_position(-999, 999)
 
     # ===================================================================
     #   Main scraper function
@@ -102,6 +103,7 @@ class WhatsAppWebScraper:
                 contactData = {"contact": {"name": contactName, "type": contactType},
                                "messages": [ messages ]}
                 DB.append_to_contacts_df(contactData)  # add data to the data frame
+                DB.set_user_whatsapp_name()
 
             # Set as scraped
             self.scrapedContacts.append(contactName)
@@ -190,6 +192,7 @@ class WhatsAppWebScraper:
             if len(msg) == 0:
                 continue
 
+            name, text, dateandtime = self.__parse_message(msg)
             datetimeEnd = msg[ 0 ].find("]")
             dateandtime = msg[ 0 ][ 3:datetimeEnd ]
 
