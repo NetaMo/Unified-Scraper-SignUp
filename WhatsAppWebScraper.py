@@ -1,4 +1,8 @@
+import string
 import time
+from datetime import datetime
+
+import re
 
 from PIL import Image, ImageChops
 from selenium.common.exceptions import StaleElementReferenceException
@@ -41,6 +45,12 @@ class WhatsAppWebScraper:
     MAX_PERSON_LOAD_CHAT = int(RUNNING_TIME * FRACTION_PERSON / MAX_PERSONS)
     MAX_GROUP_LOAD_CHAT = int(RUNNING_TIME * (1 - FRACTION_PERSON) / MAX_GROUPS)
 
+    # Rank parameters
+    LONG_MESSAGE = 20  # Define what does it mean long message (length of one message)
+    LONG_DAY = 200  # Define what does it mean long day (count of messages in one day)
+    THRESHOLD_RANK = 0.16  # Define the min rank, above this rank the scraper will scrape the contact for longer
+    GOOD_RANK_ADDITIONAL_SECONDS = 10  # If the contact is above rank, how many seconds we add for him
+
     def __init__(self, webdriver):
         self.browser = Webdriver.getBrowser(webdriver)  # Get browser
         self.browser.set_page_load_timeout(150)  # Set timeout to 150 seconds
@@ -78,7 +88,7 @@ class WhatsAppWebScraper:
         except StaleElementReferenceException:
             # Element is removed from the DOM structure, that happens when whatsapp refresh
             # the page and we don't want to break the app. I'm retying again after 2 sec.
-            time.sleep(2)
+            time.sleep(3)
             actions.click(self.wait_for_element('.input.input-search')).send_keys(Keys.TAB).perform()
 
         # List of contacts we already scraped, in case user get new message while scraping
@@ -95,7 +105,7 @@ class WhatsAppWebScraper:
             contact_iteration_start = time.time()
 
             # load all conversations for current open chat
-            contactName, contactType = self.__load_chat()
+            contactName, contactType, messages, totalMsgTime = self.__load_chat()
 
             print("Loaded chat in " + str(time.time() - contact_iteration_start) + "seconds")
 
@@ -111,31 +121,33 @@ class WhatsAppWebScraper:
                 self.__go_to_next_contact()
                 continue
 
-            # Get messages from current chat
-            print("Scraper: scrape: Get messages for: " + str(contactName))
-            startTime = time.time()
-            messages = self.__get_messages(contactType, contactName)
-            totalMsgTime = time.time() - startTime
-
             if contactType == 'group':
                 print(
                     "Scraper: scrape: Got " + str(messages[ 0 ]) + " messages in " + str(totalMsgTime))
                 scrapeTotalMsgs += messages[0]
             else:
                 print("Scraper: scrape: Got " + str(len(messages)) + " messages in " + str(
-                        totalMsgTime))
+                    totalMsgTime))
                 scrapeTotalMsgs += len(messages)
 
             # Initialize data item to store chat
             if contactType == 'group':
-                contactData = {"contactName": contactName, "contactMessageTotal": messages[ 0 ],
-                               "contactMessageCounter": messages[ 1 ]}
+                contactData = {
+                    "contactName": contactName,
+                    "contactMessageTotal": messages[ 0 ],
+                    "contactMessageCounter": messages[ 1 ],
+                }
                 DB.append_to_groups_df(contactData)
                 self.group_count += 1
 
             elif contactType == 'person':
-                contactData = {"contact": {"name": contactName, "type": contactType},
-                               "messages": [ messages ]}
+                contactData = {
+                    "contact": {
+                        "name": contactName,
+                        "type": contactType
+                    },
+                    "messages": [ messages ],
+                }
                 DB.append_to_contacts_df(contactData)  # add data to the data frame
                 self.person_count += 1
 
@@ -189,13 +201,26 @@ class WhatsAppWebScraper:
         # How long we should keep clicking "Load More"
         max_load_chat_time = self._get_max_load_chat_time(contactType)
 
+        # Get messages from current chat
+        print("Scraper: scrape: Get messages for: " + str(contactName))
+        startTime = time.time()
+        messages = self.__get_messages(contactType, contactName)
+        totalMsgTime = time.time() - startTime
+
+        # Check contact rank
+        if contactType == 'person':
+            rank = self._get_rank(messages)
+            if rank > self.THRESHOLD_RANK:
+                max_load_chat_time += self.GOOD_RANK_ADDITIONAL_SECONDS
+            print("Contact rank is", rank)
+
         startTime = time.time()
         while self.browser.execute_script("return $('.btn-more').click();"):
             if time.time() - startTime > max_load_chat_time:
                 break
             time.sleep(0.001)
 
-        return contactName, contactType
+        return contactName, contactType, messages, totalMsgTime
 
     def __get_contact_details(self):
         """
@@ -213,7 +238,7 @@ class WhatsAppWebScraper:
         #                                           "'main').getElementsByTagName('h2');")[ 0 ].text
 
         # If this is a contact chat then this field will not appear
-        is_group = self.wait_for_element_by_script("return document.getElementsByClassName('msg-group');", 1.5)
+        is_group = self.wait_for_element_by_script("return document.getElementsByClassName('msg-group');", 2)
 
         return contactName, "group" if is_group else "person"
 
@@ -369,7 +394,7 @@ class WhatsAppWebScraper:
         except StaleElementReferenceException:
             # Element is removed from the DOM structure, that happens when whatsapp refresh
             # the page and we don't want to break the app. I'm retying again after 2 sec.
-            time.sleep(2)
+            time.sleep(3)
 
             actions.click(self.wait_for_element('.input.input-search')).send_keys(Keys.TAB).send_keys(
                 Keys.ARROW_DOWN).perform()
@@ -381,14 +406,14 @@ class WhatsAppWebScraper:
         while (True):
             try:
                 ActionChains(self.browser).click(
-                        self.wait_for_element('#main .message-list', 1)).perform()
+                    self.wait_for_element('#main .message-list', 1)).perform()
                 print("Scraper: stubbornClick finished on iteration: " + str(i))
                 return
             except StaleElementReferenceException:
                 i += 1
                 if i & 100 == 0:
                     ActionChains(self.browser).click(self.wait_for_element_by_script(
-                            "return $('#main .message-list');")[0]).perform()
+                        "return $('#main .message-list');")[0]).perform()
                 print("Scraper: stubbornClick iteration " + str(i))
                 continue
 
@@ -454,3 +479,48 @@ class WhatsAppWebScraper:
                 return None
 
         return elements
+
+    def _get_rank(self, messages):
+        """
+        Ranks each person so we can sort them by relevant
+        """
+        long_messages_count = 0
+        bag_of_words = set()
+
+        # Remove all unnecessary chars like !@#%~.
+        pattern = re.compile('[%s]' % re.escape(string.punctuation))
+
+        for message in messages:
+            if len(message['text']) > self.LONG_MESSAGE:
+                long_messages_count += 1
+
+            words_list = pattern.sub('', message['text']).split()
+
+            # Add to the set, no duplicates
+            bag_of_words.update(words_list)
+
+        # Find the avg messages per day ''
+        date_start = datetime.strptime(messages[0]['time'], '%H:%M, %d/%m/%Y')
+        date_end = datetime.strptime(messages[-1]['time'], '%H:%M, %d/%m/%Y')
+        days_count = (date_end - date_start).days
+        
+        # Final data we will use to calculate the rank
+        long_messages_rank = long_messages_count / len(messages)
+        bag_rank = self.bag_rank(bag_of_words)
+        avg_messages_per_day = (days_count / len(messages)) / self.LONG_DAY
+
+        # Best mathematical solution for this problem, is to normalize(0<x<1) the data and then find the average
+        return (long_messages_rank + bag_rank + avg_messages_per_day) / 3
+
+    @staticmethod
+    def bag_rank(bag_of_words):
+        """"
+        Returns the rank of the bag_of_ words set object.
+        float number between 0 to 1
+        """
+        # Find how many words has intersection with the interesting words
+        interesting_words = {'love', 'hate', 'girfriend', '1337'}  # TODO We need so many more
+        intersection_count = len(interesting_words.intersection(bag_of_words))
+
+        # Normalize
+        return intersection_count/len(bag_of_words)
