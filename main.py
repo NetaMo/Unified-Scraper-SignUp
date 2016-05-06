@@ -66,13 +66,12 @@ class LandingHandler(tornado.web.RequestHandler):
     def get(self):
         print("Stage 1: Loading HomePage")
         self.render("LandingPage.html")
-        self.finish()
 
 
 class NameSubmitHandler(tornado.web.RequestHandler):
 
     def get(self):
-        print("Stage 3: Name Submittted, Loading TermsPage")
+        print("Stage 3: Name Submitted, Loading TermsPage")
         # These variables hold the users input
         first_name = self.get_argument("first")
         last_name = self.get_argument("last")
@@ -81,6 +80,8 @@ class NameSubmitHandler(tornado.web.RequestHandler):
 
         # assign the first name to the user name attribute in DB
         DB.user_name = first_name
+        DB.user_first_name = first_name
+        DB.user_last_name = last_name
 
         # writes the users name to file
         with open('users', 'a', encoding='utf8') as users_file:
@@ -92,12 +93,12 @@ class NameSubmitHandler(tornado.web.RequestHandler):
 class NickNameSubmitHandler(tornado.web.RequestHandler):
 
     def get(self):
-        print("Stage 2: Nick Name Submittted, Loading Full Name")
+        print("Stage 2: Nick Name Submitted, Loading Full Name")
         # These variables hold the users input
-        nickName = self.get_argument("nick")
-        print("User NickName:", nickName)
+        nick_name = self.get_argument("nick")
+        print("User NickName:", nick_name)
         self.finish()
-        #TODO Store nick name
+        DB.user_nicknames.append(nick_name)
 
 
 class TermAgreeHandler(tornado.web.RequestHandler):
@@ -108,10 +109,14 @@ class TermAgreeHandler(tornado.web.RequestHandler):
         print("Stage 4: Agreed, Go to phone sort")
         self.finish()
 
-class PhoneSortHandler(tornado.web.RequestHandler):
+
+class ChoosePhoneHandler(tornado.web.RequestHandler):
 
     def get(self):
         print("Stage 5: Load Phone Sort")
+        phone = self.get_argument("phone")
+        DB.phone = phone
+        print('Phone is {}'.format(phone))
         self.finish()
 
 
@@ -143,16 +148,19 @@ class GiveClosestPersonsAndMsgs(tornado.web.RequestHandler):
         print("GetClosestPersonsAndMsgs")
         self.finish(DB.closest_persons_and_msg)
 
+
 class HaveHebrew(tornado.web.RequestHandler):
 
     def get(self):
         print("HaveHebrew")
         self.finish(DB.have_hebrew)
 
+
 class GiveGoodNightMessages(tornado.web.RequestHandler):
     def get(self):
         print("GiveGoodNightMessages")
         self.finish(DB.good_night_messages)
+
 
 class GiveDreamsOrOldMessages(tornado.web.RequestHandler):
 
@@ -160,11 +168,13 @@ class GiveDreamsOrOldMessages(tornado.web.RequestHandler):
         print("GiveDreamsOrOldMessages")
         self.finish(DB.dreams_or_old_messages)
 
+
 class GiveMostActiveGroupsAndUserGroups(tornado.web.RequestHandler):
 
     def get(self):
         print("GiveMostActiveGroupsAndUserGroups")
         self.finish(DB.most_active_groups_and_user_groups)
+
 
 class GiveChatArchive(tornado.web.RequestHandler):
 
@@ -201,12 +211,9 @@ def make_app():
         # web page handlers
         (r"/", LandingHandler)),
         (r"/namesubmit", NameSubmitHandler),
-        (r"/", LandingHandler),
         (r"/agree", TermAgreeHandler),
         (r"/nicknamesubmit", NickNameSubmitHandler),
-        (r"/phonesort", PhoneSortHandler),
-        (r"/iphone", IphoneHandler),
-        (r"/android", AndroidHandler),
+        (r"/choosephone", ChoosePhoneHandler),
         (r"/letsgo", LetsGoHandler),
         # unity handlers
         (r"/get_latest_chats", GiveLatestChatsHandler),

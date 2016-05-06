@@ -52,6 +52,8 @@ class WhatsAppWebScraper:
         self.person_count = 0
         self.group_count = 0
 
+        self.probably_hebrew_interface = True
+
         # Wait in current page for user to log in using barcode scan.
         self.wait_for_element('.infinite-list-viewport', 300)
 
@@ -64,6 +66,8 @@ class WhatsAppWebScraper:
     # ===================================================================
 
     def scrape(self, DB):
+        self._guess_hebrew_interface(DB)
+
         print("Scraper: scrape: starting...")
         scrapeStartTime, scrapeTotalMsgs = time.time(), 0
 
@@ -97,11 +101,13 @@ class WhatsAppWebScraper:
 
             # If the user received message while scraping we don't want to scrape it again
             if contactName in scraped_contacts:
+                print('this contact is scraped', contactName)
                 self.__go_to_next_contact()
                 continue
 
             # Check if we already have enough of this contactType
             if not self._check_max_persons_groups(contactType):
+                print('max persons', contactName, contactType)
                 self.__go_to_next_contact()
                 continue
 
@@ -196,6 +202,11 @@ class WhatsAppWebScraper:
         Get contact name and type (contact/group). This is done by clicking on Chat Menu button and
         opening a submenu which contains the word Contact or Group and extracting that word.
         """
+        # It takes around 100 ms to switch the title of the contact name,
+        # so wait 200 to ensure it switch's the contact name,
+        # Otherwise we get the contact name of the previous contact and all hell breaks loose
+        time.sleep(0.2)
+
         # Get contact name
         contactName = self.wait_for_element_by_script("return $('#main h2 span').text()")
         # contactName = self.browser.execute_script("return document.getElementById("
@@ -397,6 +408,17 @@ class WhatsAppWebScraper:
         if contactType == "person":
             return self.person_count < self.MAX_PERSONS
         return self.group_count < self.MAX_GROUPS
+
+    def _guess_hebrew_interface(self, DB):
+        """
+        Guess if we're going to handle an interface in Hebrew or not.
+        If yes, sleep for 3 seconds to let the interface refresh to Hebrew
+        """
+        for nickname in DB.user_nicknames:
+            if DB.is_language_hebrew(nickname):
+                self.probably_hebrew_interface = True
+                time.sleep(3)
+                break
 
     # ===================================================================
     #   Webdriver helper functions

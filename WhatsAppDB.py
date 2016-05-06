@@ -19,10 +19,11 @@ class WhatsAppDB:
         self.groups_df.messagesCount.astype(int)
         self.groups_df.totalMessages.astype(int)
 
-        self.user_first_name = "אסף"
-        self.user_last_name = "עציון"
-        self.user_whatsapp_name = "+972 54-750-8445"
-        self.user_nicknames = ["יוסוף", "יוסף"]
+        self.user_first_name = ""
+        self.user_last_name = ""
+        self.user_whatsapp_name = ""
+        self.user_nicknames = []
+        self.phone = ""
 
         # =====data analysis json outputs=====
         self.latest_chats = 0

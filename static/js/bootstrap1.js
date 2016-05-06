@@ -2391,18 +2391,20 @@ if (typeof jQuery === 'undefined') {
   function agree()
   {
     $.get("/agree");
-    window.location.href = 'sortphone.html';
+    window.location.href = 'choosephone.html';
   }
 
   function iphone()
   {
-    $.get("/iphone");
+    var request = {phone: 'iphone'};
+    $.get("/choosephone", request);
     window.location.href = 'iphone.html';
   }
 
   function android()
   {
-    $.get("/android");
+    var request = {phone: 'android'};
+    $.get("/choosephone", request);
     window.location.href = 'android.html';
   }
 
