@@ -20,12 +20,7 @@ def scrape_whatsapp_and_analyze_db():
     """
     print("create driver")
     driver = Webdriver()  # create new driver
-    number_of_handles = len(driver.browser.window_handles)
-    # print(number_of_handles)
-    # window_after = driver.getBrowser().window_handles[0]
-    # driver.getBrowser().switch_to.window(window_after)
     scraper = WhatsAppWebScraper.WhatsAppWebScraper(driver)  # create new WhatsApp scraper
-    #insert resize here
     scraper.scrape(DB)  # scrape
     # TODO for debugging, delete
     # while(True):
@@ -190,7 +185,7 @@ class ResetHandler(tornado.web.RequestHandler):
             window.location = '/';
         }, 2000);
         ''')
-        self.finish()
+        self.finish('')
 
 
 """""
