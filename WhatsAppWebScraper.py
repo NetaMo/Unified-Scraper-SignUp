@@ -492,10 +492,10 @@ class WhatsAppWebScraper:
             bag_of_words.update(words_list)
 
         # Find the avg messages per day ''
-        date_start = datetime.strptime(messages[0]['time'], '%H:%M, %m/%d/%Y')
-        date_end = datetime.strptime(messages[-1]['time'], '%H:%M, %m/%d/%Y')
+        date_start = datetime.strptime(messages[0]['time'], '%H:%M, %d/%m/%Y')
+        date_end = datetime.strptime(messages[-1]['time'], '%H:%M, %d/%m/%Y')
         days_count = (date_end - date_start).days
-        
+
         # Final data we will use to calculate the rank
         long_messages_rank = long_messages_count / len(messages)
         bag_rank = self.bag_rank(bag_of_words)
