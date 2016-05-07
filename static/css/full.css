@@ -103,7 +103,7 @@ position:absolute; bottom:20%;  margin-bottom:7px; left: 47%;
 }
 
 .bottomnick {
-position:absolute; bottom:13%;  margin-bottom:7px; left: 20%;
+position:absolute; bottom:12%;  margin-bottom:7px; left: 45%;
 }
 
 .bottomlegalagree {
@@ -121,7 +121,7 @@ position:absolute; bottom:34%;  margin-bottom:7px; left: 45%;
 
 
 .iphone {
-position:absolute; bottom:10%;  margin-bottom:7px; left: 37.5%;
+position:absolute; bottom:10%;  margin-bottom:7px; left: 40%;
 }
 
 .android {
@@ -133,7 +133,7 @@ position:absolute; bottom:30%;  margin-bottom:7px; left: 10%;
 }
 
 .startvideo {
-position:absolute; bottom:30%;  margin-bottom:7px; left: 10%;
+position:absolute; bottom:1%;  margin-bottom:7px; left: 7%;
 }
 
 .buttonagree{
@@ -143,4 +143,10 @@ position:absolute; bottom:30%;  margin-bottom:7px; left: 10%;
     border: 2px solid #000000;
     border-radius: 30%;
     padding: 15px 32px;
+}
+
+.textbox {
+    height:46px;
+    border-width: medium;
+    font-family: "Lucida Grande";
 }
