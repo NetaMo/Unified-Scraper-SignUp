@@ -141,7 +141,7 @@ class WhatsAppDB:
         checks if the contacts data frame text fields has hebrew chars
         :return: True if has hebrew
         """
-        data = {"hebrew": False, "user_whatsapp_name":self.user_whatsapp_name, "user_os": "android"}
+        data = {"hebrew": False, "user_whatsapp_name":self.user_whatsapp_name, "user_os":self.phone}
         for text in list(self.contacts_df.head(10).text.values):
             if self.is_language_hebrew(text):
                 data["hebrew"] = True

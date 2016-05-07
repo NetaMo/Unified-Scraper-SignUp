@@ -53,6 +53,7 @@ class IphoneHandler(tornado.web.RequestHandler):
 
     def get(self):
         print("Stage 6: Iphone Chosen")
+        DB.phone = "ios"
         self.finish()
 
 
@@ -60,6 +61,7 @@ class AndroidHandler(tornado.web.RequestHandler):
 
     def get(self):
         print("Stage 6: Android Chosen")
+        DB.phone = "android"
         self.finish()
 
 
