@@ -355,7 +355,9 @@ class WhatsAppDB:
         del df['interest_grade']
 
         # Get name of interesting contact, his messages and the ID of the last message from him
-        contact_name_interesting_message = df.iloc[interesting_message_row_id]['contactName']
+        interesting_message = df.iloc[interesting_message_row_id]
+        print('The interesting message is: {}'.format(interesting_message))
+        contact_name_interesting_message = interesting_message['contactName']
         messages_of_contact = df[df.contactName.str.contains(contact_name_interesting_message)]
         index_last_message_from_contact = len(messages_of_contact) - 1
 
@@ -384,7 +386,17 @@ class WhatsAppDB:
         # Slice the interesting message, before and after
         interesting_messages = df.iloc[index_interesting_row_before:index_interesting_row_after]
 
+        # Get the length of the DataFrame
+        df_len = len(df)
+        half_len = int(df_len/2)
+        # The first and second half of it
+        first_half_df = df.iloc[0:half_len]
+        second_half = df.iloc[half_len:df_len - 1]
+
+        # Append the first half, interesting messages and then second half
+        df_with_interesting_messages_in_middle = first_half_df.append(interesting_messages, ignore_index=True).append(second_half, ignore_index=True)
+
         # Sort the DataFrame, for usage in future methods
         self.sort()
 
-        return interesting_messages.to_json(date_format='iso', double_precision=0, date_unit='s', )
+        return df_with_interesting_messages_in_middle.to_json(date_format='iso', double_precision=0, date_unit='s', )
