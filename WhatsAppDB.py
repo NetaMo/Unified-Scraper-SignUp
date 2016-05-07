@@ -110,14 +110,15 @@ class WhatsAppDB:
     def save_db_to_files(self, path):
         self.contacts_df.to_pickle(path + "saved_contacts_df")
         self.groups_df.to_pickle(path + "saved_groups_df")
-        with open(path + "user name", 'w+', encoding='utf8') as file:
-            file.write(self.user_name)
+        # with open(path + "user name", 'w+', encoding='utf8') as file:
+        #     file.writelines(self.user_first_name, self.user_last_name, self.user_whatsapp_name, self.user_nicknames, self.phone)
+
 
     def load_db_from_files(self, path):
         self.contacts_df = pd.read_pickle(path + "saved_contacts_df")
         self.groups_df = pd.read_pickle(path + "saved_groups_df")
-        with open(path + "user name", 'r', encoding='utf8') as file:
-            self.user_name = file.read()
+        # with open(path + "user name", 'r', encoding='utf8') as file:
+        #     self.user_name = file.read()
 
     """""
     data analysis methods
@@ -281,26 +282,18 @@ class WhatsAppDB:
         :param max_number_of_groups: how much groups to return
         :return: a json with the data
         """
-
-        # TODO if we load same number of messages for each group- then we need to change the sort of the active groups
-        # TODO so we can sort the intensity of the groups by the earliest date found in each group.
         self.groups_df.sort_values(['totalMessages', 'groupName', 'messagesCount'], ascending=False, inplace=True)
         group_names = self.groups_df.groupName.unique()[:max_number_of_groups]
 
         result_df = self.groups_df.loc[self.groups_df['groupName'].isin(group_names)]
         sliced_df = result_df[['groupName', 'name']]
 
-        # print(sliced_df) TODO check its correct!
-
-        # sliced_df = sliced_df.append({'WhatsAppUserName': self.user_whatsapp_name}, ignore_index=True)
-        # res_dict = sliced_df.to_dict(orient='records')
-        # res_dict["WhatsAppUserName"] = self.user_whatsapp_name
-
-        json = sliced_df.to_json(date_format='iso', double_precision=0, date_unit='s', )
+        json = sliced_df.to_json(date_format='iso', double_precision=0, date_unit='s')
         return self._clean_hidden_chars(json)
         # return json.dumps(res_dict)
 
-    def _clean_hidden_chars(self, s):
+    @staticmethod
+    def _clean_hidden_chars(s):
         hiddens = ['\\xa0']  # In case we find more of them, use \\ and not \
         for hidden in hiddens:
             s = s.replace(hidden, '')
@@ -407,4 +400,6 @@ class WhatsAppDB:
         # Sort the DataFrame, for usage in future methods
         self.sort()
 
-        return df_with_interesting_messages_in_middle.to_json(date_format='iso', double_precision=0, date_unit='s', )
+        resulted_sliced_df = df_with_interesting_messages_in_middle[["name", "text"]]
+
+        return resulted_sliced_df.to_json(date_format='iso', double_precision=0, date_unit='s')

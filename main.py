@@ -143,53 +143,42 @@ class GiveLatestChatsHandler(tornado.web.RequestHandler):
 
     def get(self):
         print("GetLatestChatsHandler")
-        # self.finish(DB.latest_chats)
-        self.finish()
+        self.finish(DB.latest_chats)
 
 class GiveClosestPersonsAndMsgs(tornado.web.RequestHandler):
     def get(self):
         print("GetClosestPersonsAndMsgs")
-        # self.finish(DB.closest_persons_and_msg)
-        self.finish()
+        self.finish(DB.closest_persons_and_msg)
 
 
 class HaveHebrew(tornado.web.RequestHandler):
 
     def get(self):
         print("HaveHebrew")
-        # self.finish(DB.have_hebrew)
-        self.finish()
-
-
+        self.finish(DB.have_hebrew)
 
 class GiveGoodNightMessages(tornado.web.RequestHandler):
     def get(self):
         print("GiveGoodNightMessages")
-        # self.finish(DB.good_night_messages)
-        self.finish()
-
-
+        self.finish(DB.good_night_messages)
 
 class GiveDreamsOrOldMessages(tornado.web.RequestHandler):
 
     def get(self):
         print("GiveDreamsOrOldMessages")
-        # self.finish(DB.dreams_or_old_messages)
-        self.finish()
+        self.finish(DB.dreams_or_old_messages)
 
 class GiveMostActiveGroupsAndUserGroups(tornado.web.RequestHandler):
 
     def get(self):
         print("GiveMostActiveGroupsAndUserGroups")
-        # self.finish(DB.most_active_groups_and_user_groups)
-        self.finish()
+        self.finish(DB.most_active_groups_and_user_groups)
 
 class GiveChatArchive(tornado.web.RequestHandler):
 
     def get(self):
         print("GiveChatArchive")
-        # self.finish(DB.chat_archive)
-        self.finish()
+        self.finish(DB.chat_archive)
 
 class ResetHandler(tornado.web.RequestHandler):
     """
