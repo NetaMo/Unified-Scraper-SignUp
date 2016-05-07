@@ -76,7 +76,7 @@ class WhatsAppWebScraper:
     # ===================================================================
 
     def scrape(self, DB):
-        self._guess_hebrew_interface(DB)
+        time.sleep(3)
 
         print("Scraper: scrape: starting...")
         scrapeStartTime, scrapeTotalMsgs = time.time(), 0
@@ -436,17 +436,6 @@ class WhatsAppWebScraper:
         if contactType == "person":
             return self.person_count < self.MAX_PERSONS
         return self.group_count < self.MAX_GROUPS
-
-    def _guess_hebrew_interface(self, DB):
-        """
-        Guess if we're going to handle an interface in Hebrew or not.
-        If yes, sleep for 3 seconds to let the interface refresh to Hebrew
-        """
-        for nickname in DB.user_nicknames:
-            if DB.is_language_hebrew(nickname):
-                self.probably_hebrew_interface = True
-                time.sleep(3)
-                break
 
     # ===================================================================
     #   Webdriver helper functions
