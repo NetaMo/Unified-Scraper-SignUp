@@ -90,6 +90,14 @@ body {
     -o-background-size: cover;
 }
 
+.videostart {
+    background: url("/static/images/cleanstart.jpg") no-repeat center center fixed;
+    -webkit-background-size: cover;
+    -moz-background-size: cover;
+    background-size: cover;
+    -o-background-size: cover;
+}
+
 .bottomaligned {
 position:absolute; bottom:20%;  margin-bottom:7px; left: 47%;
 }
@@ -122,4 +130,17 @@ position:absolute; bottom:10%;  margin-bottom:7px; left: 56%;
 
 .terms {
 position:absolute; bottom:30%;  margin-bottom:7px; left: 10%;
+}
+
+.startvideo {
+position:absolute; bottom:30%;  margin-bottom:7px; left: 10%;
+}
+
+.buttonagree{
+    font-size: 24px;
+    background-color: white;
+    color: black;
+    border: 2px solid #000000;
+    border-radius: 30%;
+    padding: 15px 32px;
 }
