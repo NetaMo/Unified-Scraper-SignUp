@@ -202,10 +202,8 @@ class WhatsAppWebScraper:
         max_load_chat_time = self._get_max_load_chat_time(contactType)
 
         # Get messages from current chat
-        print("Scraper: scrape: Get messages for: " + str(contactName))
-        startTime = time.time()
+
         messages = self.__get_messages(contactType, contactName)
-        totalMsgTime = time.time() - startTime
 
         # Check contact rank
         if contactType == 'person':
@@ -219,6 +217,11 @@ class WhatsAppWebScraper:
             if time.time() - startTime > max_load_chat_time:
                 break
             time.sleep(0.001)
+
+        print("Scraper: scrape: Get messages for: " + str(contactName))
+        startTime = time.time()
+        messages = self.__get_messages(contactType, contactName)
+        totalMsgTime = time.time() - startTime
 
         return contactName, contactType, messages, totalMsgTime
 
