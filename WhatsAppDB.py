@@ -44,7 +44,7 @@ class WhatsAppDB:
         appends the dictionary data to the groups data frame.
         :param data_dict: the dictionary to append
         """
-        print("append_to_groups_df")
+        # print("append_to_groups_df")
         # print("data: " + str(data_dict))
 
         group_name = data_dict["contactName"]
@@ -61,7 +61,7 @@ class WhatsAppDB:
         appends the dictionary data to the contacts data frame.
         :param data_dict: the dictionary to append
         """
-        print("append_to_contacts_df")
+        # print("append_to_contacts_df")
         # print("data: " + str(data_dict))
         contact_name = data_dict["contact"]["name"]
         for message in data_dict["messages"][0]:
@@ -319,7 +319,6 @@ class WhatsAppDB:
         INTERESTING_ROWS_EXTRA_AFTER = 20
 
         df = self.contacts_df
-        print(df.loc[[7]])
 
         # (+) add column: message length
         df['mes_len'] = df.text.apply(len)
@@ -359,7 +358,7 @@ class WhatsAppDB:
         print('The interesting message is: {}'.format(interesting_message))
         contact_name_interesting_message = interesting_message['contactName']
         messages_of_contact = df[df.contactName.str.contains(contact_name_interesting_message)]
-        index_last_message_from_contact = len(messages_of_contact) - 1
+        index_last_message_from_contact = int(messages_of_contact.tail(1).index.values[0])
 
         # Indexes of messages before and after the interesting message
         index_interesting_row_before = interesting_message_row_id - INTERESTING_ROWS_EXTRA_BEFORE
