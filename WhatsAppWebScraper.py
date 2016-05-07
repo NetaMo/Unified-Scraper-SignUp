@@ -202,10 +202,8 @@ class WhatsAppWebScraper:
         max_load_chat_time = self._get_max_load_chat_time(contactType)
 
         # Get messages from current chat
-        print("Scraper: scrape: Get messages for: " + str(contactName))
-        startTime = time.time()
+
         messages = self.__get_messages(contactType, contactName)
-        totalMsgTime = time.time() - startTime
 
         # Check contact rank
         if contactType == 'person':
@@ -219,6 +217,11 @@ class WhatsAppWebScraper:
             if time.time() - startTime > max_load_chat_time:
                 break
             time.sleep(0.001)
+
+        print("Scraper: scrape: Get messages for: " + str(contactName))
+        startTime = time.time()
+        messages = self.__get_messages(contactType, contactName)
+        totalMsgTime = time.time() - startTime
 
         return contactName, contactType, messages, totalMsgTime
 
@@ -489,10 +492,10 @@ class WhatsAppWebScraper:
             bag_of_words.update(words_list)
 
         # Find the avg messages per day ''
-        date_start = datetime.strptime(messages[0]['time'], '%H:%M, %m/%d/%Y')
-        date_end = datetime.strptime(messages[-1]['time'], '%H:%M, %m/%d/%Y')
+        date_start = datetime.strptime(messages[0]['time'], '%H:%M, %d/%m/%Y')
+        date_end = datetime.strptime(messages[-1]['time'], '%H:%M, %d/%m/%Y')
         days_count = (date_end - date_start).days
-        
+
         # Final data we will use to calculate the rank
         long_messages_rank = long_messages_count / len(messages)
         bag_rank = self.bag_rank(bag_of_words)
