@@ -406,7 +406,7 @@ class WhatsAppWebScraper:
         while (True):
             try:
                 ActionChains(self.browser).click(
-                    self.wait_for_element('#main .message-list', 1)).perform()
+                    self.wait_for_element('#main .pane-chat-empty', 1)).perform()
                 print("Scraper: stubbornClick finished on iteration: " + str(i))
                 return
             except StaleElementReferenceException:
