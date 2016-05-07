@@ -18,9 +18,13 @@ def test_data_analysis(DB):
     print(DB.groups_df)
     print("=============================================")
 
-    # print("Me:")
-    # print(DB.contacts_df[DB.contacts_df["name"] == 'Me'])
-    # print("=============================================")
+    print("get_chat_archive")
+    print(DB.get_chat_archive())
+    print("----------------------------------")
+
+    print("Me:")
+    print(DB.contacts_df[DB.contacts_df["name"] == 'Me'])
+    print("=============================================")
 
     print("get_last_chats")
     print(json.loads(DB.get_latest_chats(6)))
@@ -48,8 +52,4 @@ def test_data_analysis(DB):
     print("get_most_active_groups_and_user_groups")
     max_num_of_groups = 5
     print(json.loads(DB.get_most_active_groups_and_user_groups(max_num_of_groups)))
-    print("----------------------------------")
-
-    print("get_chat_archive")
-    print(json.loads(DB.get_chat_archive()))
     print("----------------------------------")

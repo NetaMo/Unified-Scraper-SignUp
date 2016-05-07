@@ -27,7 +27,7 @@ def scrape_whatsapp_and_analyze_db():
     #     continue
     driver.close()  # close driver
 
-    DB.convert_to_datetime_and_sort()
+    DB.convert_to_datetime()
 
     DB.run_data_analysis_and_store_results()
 
@@ -263,7 +263,7 @@ if __name__ == "__main__":
 
         import DataAnalysisTestDriver
         DataAnalysisTestDriver.test_data_analysis(DB)
-        print("server keeps running for unity get requests")
+        exit()
 
     # just runs the scrapping and analysis
     else:

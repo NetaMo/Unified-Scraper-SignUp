@@ -1,8 +1,10 @@
 import json
-from datetime import date, datetime
+from datetime import date, datetime, time as dt
+from itertools import groupby
 
 import pandas as pd
 from pandas.tseries.frequencies import to_offset
+import numpy as np
 
 
 class WhatsAppDB:
@@ -73,17 +75,22 @@ class WhatsAppDB:
         # print(self.contacts_df)
         # print("===================================================")
 
-    def convert_to_datetime_and_sort(self):
+    def convert_to_datetime(self):
         """
-        converts the time series to the datetime format and sorts the df descending by time
+        converts the time series to the datetime format
         """
         self.contacts_df.time = pd.to_datetime(self.contacts_df.time)
+
+    def sort(self):
+        # sorts the df descending by time
         self.contacts_df.sort_values('time', ascending=False, inplace=True)
 
     def run_data_analysis_and_store_results(self):
         """
         runs all of the data analysis methods and store the resulted json outputs
         """
+        self.chat_archive = self.get_chat_archive()
+
         self.latest_chats = self.get_latest_chats(6)
 
         number_of_contacts = 150
@@ -99,8 +106,6 @@ class WhatsAppDB:
 
         max_num_of_groups = 5
         self.most_active_groups_and_user_groups = self.get_most_active_groups_and_user_groups(max_num_of_groups)
-
-        self.chat_archive = self.get_chat_archive()
 
     def save_db_to_files(self, path):
         self.contacts_df.to_pickle(path + "saved_contacts_df")
@@ -293,18 +298,93 @@ class WhatsAppDB:
         return sliced_df.to_json(date_format='iso', double_precision=0, date_unit='s', )
         # return json.dumps(res_dict)
 
+    def amount_of_letter_sequences(self, str):
+        ''' Helper Function. returns the amount of letter sequences longer than min_amount '''
+
+        LETTER_SEQ_MIN_LEN = 6
+
+        letters_legend = [[letter, len(list(amount))] for letter, amount in groupby(str)]
+        amount_of_seq = [c[1]>=LETTER_SEQ_MIN_LEN for c in letters_legend].count(True)
+        return amount_of_seq
+
     def get_chat_archive(self):
         """
-        returns all of the chat history excluding groups
-        :return: the data above in a json
+        Mostly written by Daniel the neighbor, ask him for the logic
         """
-        # TODO add a feature for interesting part to start with
-        self.contacts_df.sort_values('contactName', ascending=True, inplace=True)
-        sliced_df = self.contacts_df[['name', 'text']]
-        # sliced_df = sliced_df.append({'WhatsAppUserName': self.user_whatsapp_name}, ignore_index=True)
-        #
-        # res_dict = sliced_df.to_dict(orient='records')
-        # res_dict["WhatsAppUserName"] = self.user_whatsapp_name
 
-        return sliced_df.to_json(date_format='iso', double_precision=0, date_unit='s', orient='records')
-        # return json.dumps(res_dict)
+        START_INTERESTING_TIME = dt(00, 1, 0)
+        END_INTERESTING_TIME = dt(4, 00, 0)
+        ENVIRONMENT_SIZE = 3    # one-sided (i.e. environment is actually twice bigger)
+        INTERESTING_ROWS_EXTRA_BEFORE = 20
+        INTERESTING_ROWS_EXTRA_AFTER = 20
+
+        df = self.contacts_df
+        print(df.loc[[7]])
+
+        # (+) add column: message length
+        df['mes_len'] = df.text.apply(len)
+
+        # (+) add column: is time of message between START_INTERESTING_TIME and END_INTERESTING_TIME (True if yes)
+        # returns boolean mask (is brackets) of True where 'time' is within boundaries
+        df['is_night'] = df.isin(
+            df.set_index(keys='time').between_time(START_INTERESTING_TIME, END_INTERESTING_TIME).index.tolist()
+        ).time
+
+        # (+) add column: does contain long letter sequence (longer than LETTER_SEQ_LEN)
+        df['amount_of_letter_seq'] = df.text.apply(self.amount_of_letter_sequences)
+
+        # >>> compute grade; how interesting is the message by itself (w.o. context)?    higher is better. <<<
+        # you can use adjust weights
+        df['self_interest_grade'] = 1 * df.mes_len \
+                                    + 400 * df.is_night \
+                                    - 5 * df.amount_of_letter_seq
+
+        # (+) add column: is message part of sequence of interesting messages (relying on self_interest_grade)
+        #   notice that it doesn't calculate for the first and last ENVIRONMENT_SIZE rows (you wouldn't use them anyway)
+        l = df.self_interest_grade.tolist()
+        df['interest_grade'] = [np.sum(l[i[0]-ENVIRONMENT_SIZE:i[0]+ENVIRONMENT_SIZE]) for i in enumerate(l)]
+
+        # Get the ID of the interesting message
+        interesting_message_row_id = int(df.interest_grade.idxmax())
+
+        # Remove the columns that were used for calculations
+        del df['mes_len']
+        del df['is_night']
+        del df['amount_of_letter_seq']
+        del df['self_interest_grade']
+        del df['interest_grade']
+
+        # Get name of interesting contact, his messages and the ID of the last message from him
+        contact_name_interesting_message = df.iloc[interesting_message_row_id]['contactName']
+        messages_of_contact = df[df.contactName.str.contains(contact_name_interesting_message)]
+        index_last_message_from_contact = len(messages_of_contact) - 1
+
+        # Indexes of messages before and after the interesting message
+        index_interesting_row_before = interesting_message_row_id - INTERESTING_ROWS_EXTRA_BEFORE
+        index_interesting_row_after = interesting_message_row_id + INTERESTING_ROWS_EXTRA_AFTER
+
+        # Check if the index before isn't before 0
+        if index_interesting_row_before < 0:
+            diff = abs(index_interesting_row_before)
+
+            # Check if the index after isn't above the last message index
+            if index_interesting_row_after + diff < index_last_message_from_contact:
+                index_interesting_row_after += diff
+            index_interesting_row_before = 0
+
+        # Check if index after isn't over the last message index
+        if index_interesting_row_after > index_last_message_from_contact:
+            diff = index_interesting_row_after - index_last_message_from_contact
+
+            # Check if the index before isn't below zero if we remove the diff from it
+            if index_interesting_row_before - diff >= 0:
+                index_interesting_row_before -= diff
+            index_interesting_row_after = index_last_message_from_contact - 1
+
+        # Slice the interesting message, before and after
+        interesting_messages = df.iloc[index_interesting_row_before:index_interesting_row_after]
+
+        # Sort the DataFrame, for usage in future methods
+        self.sort()
+
+        return interesting_messages.to_json(date_format='iso', double_precision=0, date_unit='s', )
