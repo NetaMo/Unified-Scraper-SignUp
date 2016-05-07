@@ -106,7 +106,7 @@ class WhatsAppWebScraper:
 
             try:
                 # load all conversations for current open chat
-                contactName, contactType, messages, totalMsgTime = self.__load_chat()
+                contactName, contactType, messages, totalMsgTime = self._load_chat()
             except IOError:
                 print("Already scraped enough contacts from this type")
                 continue
@@ -121,13 +121,13 @@ class WhatsAppWebScraper:
             # If the user received message while scraping we don't want to scrape it again
             if contactName in self.scrapedContacts:
                 print('this contact is scraped', contactName)
-                self.__go_to_next_contact()
+                self._go_to_next_contact()
                 continue
 
             # Check if we already have enough of this contactType
             if not self._check_max_persons_groups(contactType):
                 print('max persons', contactName, contactType)
-                self.__go_to_next_contact()
+                self._go_to_next_contact()
                 continue
 
             # Initialize data item to store chat
@@ -162,7 +162,7 @@ class WhatsAppWebScraper:
 
                 # get the avatar of the first X persons
                 if avatar_count < self.NUMBER_OF_PERSON_CONTACT_PICTURES:
-                    cropped = self.__get_contact_avatar()
+                    cropped = self._get_contact_avatar()
                     if cropped is not None:
                         cropped.save(self.TEMP_AVATAR_PATH + str(avatar_count) + ".jpg")
                     else:
@@ -173,7 +173,7 @@ class WhatsAppWebScraper:
             self.scrapedContacts.append(contactName)
 
             # go to next chat
-            self.__go_to_next_contact()
+            self._go_to_next_contact()
 
         # Set user whastapp name
         DB.set_user_whatsapp_name(self.user_whatsapp_name)
@@ -181,23 +181,23 @@ class WhatsAppWebScraper:
         scrapeTotalTime = time.time() - scrapeStartTime
         print("... Scraper finished. Got " + str(scrapeTotalMsgs) + " messages in " +
               str(scrapeTotalTime) + " seconds, at a rate of " + str(round(
-                scrapeTotalMsgs / scrapeTotalTime, 3)) + "messages/second.\n")
+                scrapeTotalMsgs / scrapeTotalTime, 3)) + " messages/second.\n")
 
     # ===================================================================
     #   Scraper helper functions
     # ===================================================================
 
-    def __load_chat(self):
+    def _load_chat(self):
         """
         Load to page all message for current open chat.
         """
 
-        self.__stubborn_load_click()
+        self._stubborn_load_click()
 
         self.wait_for_element('.btn-more')
 
         # Get contact name and type (person/group).
-        contactName, contactType = self.__get_contact_details()
+        contactName, contactType = self._get_contact_details()
 
         # Check if we already have enough of this contactType
         if not self._check_max_persons_groups(contactType):
@@ -207,14 +207,14 @@ class WhatsAppWebScraper:
         max_load_chat_time = self._get_max_load_chat_time(contactType)
 
         # Get messages from current chat
-        messages = self.__get_messages(contactType, contactName)
+        messages = self._get_messages(contactType, contactName)
 
         # Check contact rank
         if contactType == 'person':
             rank = self._get_rank(messages)
             if rank > self.THRESHOLD_RANK:
                 max_load_chat_time += self.GOOD_RANK_ADDITIONAL_SECONDS
-            print("The next contact's rank is", round(rank, 3))
+            print("...... The next contact's rank is", round(rank, 3))
 
         startTime = time.time()
         while self.browser.execute_script("return $('.btn-more').click();"):
@@ -224,7 +224,7 @@ class WhatsAppWebScraper:
 
         # print("...... Get messages for: " + str(contactName))
         startTime = time.time()
-        messages = self.__get_messages(contactType, contactName)
+        messages = self._get_messages(contactType, contactName)
         totalMsgTime = time.time() - startTime
 
         return self.clean_hidden_chars(contactName), \
@@ -232,7 +232,7 @@ class WhatsAppWebScraper:
                messages, \
                round(totalMsgTime, 6)
 
-    def __get_contact_details(self):
+    def _get_contact_details(self):
         """
         Get contact name and type (contact/group). This is done by clicking on Chat Menu button and
         opening a submenu which contains the word Contact or Group and extracting that word.
@@ -251,18 +251,18 @@ class WhatsAppWebScraper:
 
         return contactName, "group" if is_group else "person"
 
-    def __get_messages(self, contactType, contactName):
+    def _get_messages(self, contactType, contactName):
         """
         Given a chat with a contact, return all messages formatted to be sent to server.
         """
 
         # Group chat case
         if contactType == 'group':
-            return self.__get_group_messages()
+            return self._get_group_messages()
         # Person chat case
-        return self.__get_person_messages()
+        return self._get_person_messages()
 
-    def __get_person_messages(self):
+    def _get_person_messages(self):
         """
         Get all messages from current open chat, parse to fields name, datetime and text.
         :return: list of messages [{"name":name, "text": text, "time":time}, {"name":name,
@@ -275,12 +275,12 @@ class WhatsAppWebScraper:
         if self.user_whatsapp_name is None:
             outMsg = self.browser.execute_script(scrapingScripts.getSingleOutgoingMessage())
             if outMsg is not None:
-                self.user_whatsapp_name, a, b = self.__parse_message(outMsg)
+                self.user_whatsapp_name, a, b = self._parse_message(outMsg)
 
         # Extract data from raw message
         for msg in rawMessages:
 
-            name, text, dateandtime = self.__parse_message(msg)
+            name, text, dateandtime = self._parse_message(msg)
 
             # Unsupported message
             if name is None:
@@ -291,7 +291,7 @@ class WhatsAppWebScraper:
 
         return messages
 
-    def __get_group_messages(self):
+    def _get_group_messages(self):
         """
         Returns summary of group chat: each group member name and how many msgs they sent.
         @:return list of len 2: [int totalMessages , dict {"Asaf":360, "Neta":180,...}]
@@ -304,7 +304,7 @@ class WhatsAppWebScraper:
 
         for msg in rawMessages:
 
-            name, text, dateandtime = self.__parse_message(msg)
+            name, text, dateandtime = self._parse_message(msg)
 
             # In case of images
             if name is None:
@@ -320,7 +320,7 @@ class WhatsAppWebScraper:
         # print(str(groupData))
         return [ totalMessages, groupData ]
 
-    def __parse_message(self, msgRaw):
+    def _parse_message(self, msgRaw):
         try:
             # Unsupported messages of type image, video, audio, etc
             if msgRaw is None or len(msgRaw) == 0:
@@ -349,7 +349,7 @@ class WhatsAppWebScraper:
         return name, text, dateandtime
 
     @staticmethod
-    def __trim_avatar(im):
+    def _trim_avatar(im):
         """
         Helper function that trims white margins from the given image
         :return:
@@ -364,7 +364,7 @@ class WhatsAppWebScraper:
             print("DEBUGGING: Failed in _trim_avatr on image: ", im)
             return im
 
-    def __get_contact_avatar(self):
+    def _get_contact_avatar(self):
         """
         Sends to db the avatar of current loaded chat.
         """
@@ -406,9 +406,9 @@ class WhatsAppWebScraper:
         self.browser.close()
         self.browser.switch_to_window(defWin)
 
-        return self.__trim_avatar(cropped)
+        return self._trim_avatar(cropped)
 
-    def __go_to_next_contact(self):
+    def _go_to_next_contact(self):
         """
         Goes to next contact chat in contact list. This is done by locating the "search" box and
         pressing tab and then arrow down.
@@ -425,7 +425,7 @@ class WhatsAppWebScraper:
             actions.click(self.wait_for_element('.input.input-search')).send_keys(Keys.TAB).send_keys(
                 Keys.ARROW_DOWN).perform()
 
-    def __stubborn_load_click(self):
+    def _stubborn_load_click(self):
         # print("Scraper: stubbornClick starting...")
         i = 0
 
@@ -472,6 +472,37 @@ class WhatsAppWebScraper:
             s = s.replace(hidden, "")
         return s
 
+    def _get_rank(self, messages):
+        """
+        Ranks each person so we can sort them by relevant
+        """
+        long_messages_count = 0
+        bag_of_words = set()
+
+        # Remove all unnecessary chars like !@#%~.
+        pattern = re.compile('[%s]' % re.escape(string.punctuation))
+
+        for message in messages:
+            if len(message['text']) > self.LONG_MESSAGE:
+                long_messages_count += 1
+
+            words_list = pattern.sub('', message['text']).split()
+
+            # Add to the set, no duplicates
+            bag_of_words.update(words_list)
+
+        # Find the avg messages per day ''
+        date_start = datetime.strptime(messages[0]['time'], '%H:%M %m/%d/%Y')
+        date_end = datetime.strptime(messages[-1]['time'], '%H:%M %m/%d/%Y')
+        days_count = (date_end - date_start).days
+
+        # Final data we will use to calculate the rank
+        long_messages_rank = long_messages_count / len(messages)
+        bag_rank = self.bag_rank(bag_of_words)
+        avg_messages_per_day = (days_count / len(messages)) / self.LONG_DAY
+
+        # Best mathematical solution for this problem, is to normalize(0<x<1) the data and then find the average
+        return (long_messages_rank + bag_rank + avg_messages_per_day) / 3
 
     # ===================================================================
     #   Webdriver helper functions
@@ -507,38 +538,6 @@ class WhatsAppWebScraper:
                 return None
 
         return elements
-
-    def _get_rank(self, messages):
-        """
-        Ranks each person so we can sort them by relevant
-        """
-        long_messages_count = 0
-        bag_of_words = set()
-
-        # Remove all unnecessary chars like !@#%~.
-        pattern = re.compile('[%s]' % re.escape(string.punctuation))
-
-        for message in messages:
-            if len(message['text']) > self.LONG_MESSAGE:
-                long_messages_count += 1
-
-            words_list = pattern.sub('', message['text']).split()
-
-            # Add to the set, no duplicates
-            bag_of_words.update(words_list)
-
-        # Find the avg messages per day ''
-        date_start = datetime.strptime(messages[0]['time'], '%H:%M %m/%d/%Y')
-        date_end = datetime.strptime(messages[-1]['time'], '%H:%M %m/%d/%Y')
-        days_count = (date_end - date_start).days
-
-        # Final data we will use to calculate the rank
-        long_messages_rank = long_messages_count / len(messages)
-        bag_rank = self.bag_rank(bag_of_words)
-        avg_messages_per_day = (days_count / len(messages)) / self.LONG_DAY
-
-        # Best mathematical solution for this problem, is to normalize(0<x<1) the data and then find the average
-        return (long_messages_rank + bag_rank + avg_messages_per_day) / 3
 
     @staticmethod
     def bag_rank(bag_of_words):
