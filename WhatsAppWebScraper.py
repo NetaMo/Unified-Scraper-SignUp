@@ -91,9 +91,6 @@ class WhatsAppWebScraper:
             time.sleep(3)
             actions.click(self.wait_for_element('.input.input-search')).send_keys(Keys.TAB).perform()
 
-        # List of contacts we already scraped, in case user get new message while scraping
-        scraped_contacts = []
-
         # We want to scrape just NUMBER_OF_CONTACT_PICTURES
         avatar_count = 0
 
@@ -104,13 +101,20 @@ class WhatsAppWebScraper:
         while time.time() - running_time_start < self.RUNNING_TIME:
             contact_iteration_start = time.time()
 
-            # load all conversations for current open chat
-            contactName, contactType, messages, totalMsgTime = self.__load_chat()
+            try:
+                # load all conversations for current open chat
+                contactName, contactType, messages, totalMsgTime = self.__load_chat()
+            except IOError:
+                print("Already scraped enough contacts from this type")
+                continue
+            except:  # We had general error, we want to go to the next contact
+                print("##General Error### Going to next contact")
+                continue
 
             print("Loaded chat in " + str(time.time() - contact_iteration_start) + "seconds")
 
             # If the user received message while scraping we don't want to scrape it again
-            if contactName in scraped_contacts:
+            if contactName in self.scrapedContacts:
                 print('this contact is scraped', contactName)
                 self.__go_to_next_contact()
                 continue
@@ -151,9 +155,6 @@ class WhatsAppWebScraper:
                 DB.append_to_contacts_df(contactData)  # add data to the data frame
                 self.person_count += 1
 
-            # Set as scraped
-            self.scrapedContacts.append(contactName)
-
             # get the avatar of the contact
             if avatar_count < NUMBER_OF_CONTACT_PICTURES:
                 cropped = self.__get_contact_avatar()
@@ -162,8 +163,8 @@ class WhatsAppWebScraper:
                 else:
                     self.defaultAvatar.save(TEMP_AVATAR_PATH + str(avatar_count) + ".jpg")
 
-            # After we have the data we add it to scraped contacts
-            scraped_contacts.append(contactName)
+            # Set as scraped
+            self.scrapedContacts.append(contactName)
 
             # go to next chat
             self.__go_to_next_contact()
@@ -196,7 +197,7 @@ class WhatsAppWebScraper:
 
         # Check if we already have enough of this contactType
         if not self._check_max_persons_groups(contactType):
-            return contactName, contactType
+            raise IOError("Reached max persons/groups")
 
         # How long we should keep clicking "Load More"
         max_load_chat_time = self._get_max_load_chat_time(contactType)
@@ -300,6 +301,10 @@ class WhatsAppWebScraper:
 
             name, text, dateandtime = self.__parse_message(msg)
 
+            # In case of images
+            if name is None:
+                continue
+
             # update contact if exists otherwise create
             if name in groupData:
                 groupData[ name ] += 1
@@ -311,21 +316,24 @@ class WhatsAppWebScraper:
         return [ totalMessages, groupData ]
 
     def __parse_message(self, msg):
-        # Unsupported messages of type image, video, audio, etc
-        if msg is None or len(msg) == 0:
-            return None, None, None
+        try:
+            # Unsupported messages of type image, video, audio, etc
+            if msg is None or len(msg) == 0:
+                return None, None, None
 
-        datetimeEnd = msg[0].find("]")
-        dateandtime = msg[0][3:datetimeEnd]
+            datetimeEnd = msg[0].find("]")
+            dateandtime = msg[0][3:datetimeEnd]
 
-        name = msg[0][datetimeEnd + 2:]
-        nameEnd = name.find(":")
-        name = name[:nameEnd]
+            name = msg[0][datetimeEnd + 2:]
+            nameEnd = name.find(":")
+            name = name[:nameEnd]
 
-        text = msg[0][datetimeEnd + nameEnd + 7:]
+            text = msg[0][datetimeEnd + nameEnd + 7:]
 
-        # Unsupported messages of type emoji
-        if text == "":
+            # Unsupported messages of type emoji
+            if text == "":
+                return None, None, None
+        except:  # In case we had new format we don't support
             return None, None, None
 
         return name, text, dateandtime
