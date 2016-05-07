@@ -295,8 +295,15 @@ class WhatsAppDB:
         # res_dict = sliced_df.to_dict(orient='records')
         # res_dict["WhatsAppUserName"] = self.user_whatsapp_name
 
-        return sliced_df.to_json(date_format='iso', double_precision=0, date_unit='s', )
+        json = sliced_df.to_json(date_format='iso', double_precision=0, date_unit='s', )
+        return self._clean_hidden_chars(json)
         # return json.dumps(res_dict)
+
+    def _clean_hidden_chars(self, s):
+        hiddens = ['\\xa0']  # In case we find more of them, use \\ and not \
+        for hidden in hiddens:
+            s = s.replace(hidden, '')
+        return s
 
     def amount_of_letter_sequences(self, str):
         ''' Helper Function. returns the amount of letter sequences longer than min_amount '''
@@ -319,7 +326,6 @@ class WhatsAppDB:
         INTERESTING_ROWS_EXTRA_AFTER = 20
 
         df = self.contacts_df
-        print(df.loc[[7]])
 
         # (+) add column: message length
         df['mes_len'] = df.text.apply(len)
