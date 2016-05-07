@@ -99,15 +99,15 @@ body {
 }
 
 .bottomaligned {
-position:absolute; bottom:20%;  margin-bottom:7px; left: 47%;
+position:absolute; bottom:20%;  margin-bottom:7px; left: 46%;
 }
 
 .bottomnick {
-position:absolute; bottom:13%;  margin-bottom:7px; left: 20%;
+position:absolute; bottom:13%;  margin-bottom:7px; left: 45%;
 }
 
 .bottomlegalagree {
-position:absolute; bottom:50%;  margin-bottom:7px; left: 60%;
+position:absolute; bottom:28%;  margin-bottom:7px; left: 65%;
 }
 
 .bottomlegaldoc {
@@ -116,24 +116,34 @@ position:absolute; bottom:30%;  margin-bottom:7px; left: 10%;
 
 
 .bottomfullname {
-position:absolute; bottom:34%;  margin-bottom:7px; left: 45%;
+position:absolute; bottom:36%;  margin-bottom:7px; left: 50%;
 }
 
 
 .iphone {
-position:absolute; bottom:10%;  margin-bottom:7px; left: 37.5%;
+position:absolute; bottom:10%;  margin-bottom:7px; left: 40%;
 }
 
 .android {
 position:absolute; bottom:10%;  margin-bottom:7px; left: 56%;
 }
 
+.letsgobutton {
+    position:absolute; bottom:20%;  margin-bottom:7px; left: 47%;
+    width:150px;
+    height:100px;
+    background: #ffffff;
+    font-size: 20px;
+    border: 1px solid #d3d3d3;
+    border-radius:10px
+}
+
 .terms {
-position:absolute; bottom:30%;  margin-bottom:7px; left: 10%;
+position:absolute; bottom:30%;  margin-bottom:7px; left: 8%;
 }
 
 .startvideo {
-position:absolute; bottom:30%;  margin-bottom:7px; left: 10%;
+position:absolute; bottom:1%;  margin-bottom:7px; left: 7%;
 }
 
 .buttonagree{
@@ -143,4 +153,17 @@ position:absolute; bottom:30%;  margin-bottom:7px; left: 10%;
     border: 2px solid #000000;
     border-radius: 30%;
     padding: 15px 32px;
+}
+
+.textbox {
+    height:46px;
+    border-width: thin;
+    font-family: "Verdana";
+}
+
+.btn-terms{
+    background: #000000;
+    color: #ffffff;
+    font-size: 30px;
+    font-family: "Verdana";
 }
