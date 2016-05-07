@@ -519,9 +519,19 @@ class WhatsAppWebScraper:
         float number between 0 to 1
         """
         # Find how many words has intersection with the interesting words
-        interesting_words = {'love', 'hate', 'girfriend', '1337'}  # TODO We need so many more
+        interesting_words = {'love', 'hate', 'girlfriend'}  # TODO We need so many more
+
+        # Find how many words has intersection with the super duper words
+        interesting_words_super = {'1337', '9000'}  # TODO We need so many more
+        intersection_count_super = len(interesting_words_super.intersection(bag_of_words))
+
+        # If we found any super duper word, return 999 as a rank
+        if intersection_count_super:
+            return 999
+
         intersection_count = len(interesting_words.intersection(bag_of_words))
 
         # Normalize
         return intersection_count/len(bag_of_words)
+
 
