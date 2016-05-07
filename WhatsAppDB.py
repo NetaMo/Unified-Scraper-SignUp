@@ -385,6 +385,7 @@ class WhatsAppDB:
 
         # Slice the interesting message, before and after
         interesting_messages = df.iloc[index_interesting_row_before:index_interesting_row_after]
+        print("The interesting messages are: \n{}".format(interesting_messages))
 
         # Get the length of the DataFrame
         df_len = len(df)
