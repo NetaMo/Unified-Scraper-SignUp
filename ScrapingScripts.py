@@ -13,16 +13,21 @@ def getTextMessages():
             var b = [];
             var a = A[i].getElementsByClassName('message-text');
             for (var j = 0; j < a.length; j++) {
+                end_pos = a[0].innerText.indexOf("]");
 
-                var currentDate = a[0].innerText.slice(0, 19).replace(",", "").replace("[", "").replace("]", "");
+                var currentDate = a[0].innerText.slice(0, end_pos).replace(",", "").replace("[", "").replace("]", "");
                 console.log("OLD:" + currentDate);
+                if (currentDate.indexOf("2015") == -1 && currentDate.indexOf("2016") == -1) {
+                    //console.log(currentDate)
+                }
+
                 var formattedDate = this.moment(currentDate, moment.localeData()._longDateFormat.LT + ' ' + moment.localeData()._longDateFormat.l).format("HH:mm MM/DD/YYYY")
                 b.push(a[j].innerText);
             }
             console.log("NEW" + formattedDate);
             if (b.length != 0) {
-                console.log(b[0]);
-                b[0] = '[' + formattedDate + '] ' + b[0].slice(20);
+                //console.log(b[0]);
+                b[0] = '[' + formattedDate + '] ' + b[0].slice(end_pos+1);
             }
             B.push(b);
             if (A[i].getElementsByClassName('message-text message-link').length != 0) {

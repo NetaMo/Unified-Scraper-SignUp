@@ -322,7 +322,8 @@ class WhatsAppWebScraper:
                 return None, None, None
 
             datetimeEnd = msg[0].find("]")
-            dateandtime = msg[0][1:datetimeEnd]
+            datetimeStart = msg[0].find("[")
+            dateandtime = msg[0][datetimeStart+1:datetimeEnd]
 
             name = msg[0][datetimeEnd + 2:]
             nameEnd = name.find(":")
