@@ -2,9 +2,9 @@ import json
 from datetime import date, datetime, time as dt
 from itertools import groupby
 
+import numpy as np
 import pandas as pd
 from pandas.tseries.frequencies import to_offset
-import numpy as np
 
 
 class WhatsAppDB:
@@ -141,7 +141,7 @@ class WhatsAppDB:
         checks if the contacts data frame text fields has hebrew chars
         :return: True if has hebrew
         """
-        data = {"hebrew": False, "user_whatsapp_name":self.user_whatsapp_name, "user_os": "android"}
+        data = {"hebrew": False, "user_whatsapp_name":self.user_whatsapp_name, "user_os":self.phone}
         for text in list(self.contacts_df.head(10).text.values):
             if self.is_language_hebrew(text):
                 data["hebrew"] = True
@@ -173,6 +173,7 @@ class WhatsAppDB:
         :return: json with the latest 'number_of_chats' with name, text and time
         """
         latest_msgs_df = self.contacts_df.drop_duplicates(subset='contactName').head(number_of_chats)
+
         latest_msgs_df.time = latest_msgs_df.time.apply(self.correct_time_for_whatsapp)
         sliced_df = latest_msgs_df[['contactName', 'text', 'time']]
         return latest_msgs_df.to_json(date_format='iso', double_precision=0, date_unit='s', orient='records')
@@ -362,7 +363,7 @@ class WhatsAppDB:
 
         # Get name of interesting contact, his messages and the ID of the last message from him
         interesting_message = df.iloc[interesting_message_row_id]
-        print('The interesting message is: {}'.format(interesting_message))
+        print('\nThe interesting message is: {}'.format(interesting_message))
         contact_name_interesting_message = interesting_message['contactName']
         messages_of_contact = df[df.contactName.str.contains(contact_name_interesting_message)]
         index_last_message_from_contact = int(messages_of_contact.tail(1).index.values[0])
