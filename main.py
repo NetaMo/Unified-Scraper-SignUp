@@ -1,12 +1,13 @@
-import sys
-import os
 import glob
-from Webdriver import Webdriver
-import WhatsAppWebScraper
+import os
+import sys
+
 import tornado.ioloop
 import tornado.web
+
+import WhatsAppWebScraper
+from Webdriver import Webdriver
 from WhatsAppDB import WhatsAppDB
-import pandas
 
 """
 run the WhatsApp web scrapper.
@@ -37,7 +38,7 @@ def InitializeDBAndAvatars():
     Initialize a new DB instance,
     and remove all avatars
     """
-    global DB
+    global DB  # TODO
     DB = WhatsAppDB()
     files = glob.glob('static/tempAvatars/*')
     for f in files:
@@ -206,11 +207,13 @@ class ResetHandler(tornado.web.RequestHandler):
 make_app, settings, main
 """""
 
+# Allows access to static directory to any http request
 settings = dict(static_path=os.path.join(os.path.dirname(__file__), "static"))
 
 
+# Create tornado web application
 def make_app():
-    print("make_app")
+    # print("make_app")
     return tornado.web.Application([(
         # web page handlers
         (r"/", LandingHandler)),
@@ -244,19 +247,16 @@ if __name__ == "__main__":
     app = make_app()
 
     # enter webPage as the first argument to run the web page
-    # TODO decide where to place in order to have good functionality
     if sys.argv[1] == 'WebPage':
-        # A Chrome window to navigate to our site
         print("web Page")
-        #TODO delete this if we use normal browser
+        # A Chrome window to navigate to our site
         driver1 = Webdriver()
-        driver1.browser.get("localhost:8888")  # TODO read about passing the DB to the handlers
+        driver1.browser.get("localhost:8888")
 
-    # save the data for future work
+    # save the data to a file for future work
     elif sys.argv[1] == 'SaveData':
         print("scrapping and saving data to pickle")
         scrape_whatsapp_and_analyze_db()
-
         DB.save_db_to_files(".\\stored data\\")
         sys.exit()
 
@@ -265,23 +265,26 @@ if __name__ == "__main__":
         print('loading the data')
         DB.load_db_from_files(".\\stored data\\")
 
+        # Print data
         import DataAnalysisTestDriver
         DataAnalysisTestDriver.test_data_analysis(DB)
-        exit()
+        # Save data
+        DB.run_data_analysis_and_store_results()
 
     # just runs the scrapping and analysis
     else:
         print("scrape_whatsapp")
         scrape_whatsapp_and_analyze_db()
 
+        # Print data
         import DataAnalysisTestDriver
         DataAnalysisTestDriver.test_data_analysis(DB)
 
         print("server keeps running for unity get requests")
 
     app.listen(port)
+    # app.listen(port, address="10.0.0.11") # listen to ip
     tornado.ioloop.IOLoop.current().start()
-
 
 
 

@@ -1,8 +1,7 @@
+import re
 import string
 import time
 from datetime import datetime
-
-import re
 
 from PIL import Image, ImageChops
 from selenium.common.exceptions import StaleElementReferenceException
@@ -12,16 +11,6 @@ from selenium.webdriver.common.keys import Keys
 import ScrapingScripts as scrapingScripts
 from Webdriver import Webdriver
 
-# ===================================================================
-# Global variables
-# ===================================================================
-# Server data
-SERVER_POST_HEADERS = {'Content-type': 'application/json', 'Accept': 'text/plain'}
-# how much profile images to save
-NUMBER_OF_CONTACT_PICTURES = 6
-# Where to save temporary images for avatars
-TEMP_AVATAR_PATH = "static/tempAvatars/contact_avatar"
-TEMP_SCREENSHOT_PATH = "full_screen_shot_temp.png"
 
 # ===================================================================
 # Scraper class
@@ -31,6 +20,16 @@ class WhatsAppWebScraper:
     Main class for scraping whatsapp. Receives open browser, goes to WhatsApp Web page, scrapes data
     and sends one contact at a time to the server.
     """
+    # Server data
+    SERVER_POST_HEADERS = {'Content-type': 'application/json', 'Accept': 'text/plain'}
+
+    # how much profile images to save
+    NUMBER_OF_CONTACT_PICTURES = 6
+
+    # Where to save temporary images for avatars
+    TEMP_AVATAR_PATH = "static/tempAvatars/contact_avatar"
+    TEMP_SCREENSHOT_PATH = "full_screen_shot_temp.png"
+
     # Total time for the chat scraper
     RUNNING_TIME = 40
 
@@ -58,7 +57,8 @@ class WhatsAppWebScraper:
         self.browser.execute_script(scrapingScripts.initJQuery())  # active the jquery lib
         self.scrapedContacts = [ ]  # List of scraped contacts
         self.defaultAvatar = Image.open("defaultAvatar.jpg")
-        self.user_whatsapp_name = None
+        self.user_whatsapp_name = None  # what is the user's whatsapp outgoing messages name
+        # How many contact we scraped already
         self.person_count = 0
         self.group_count = 0
 
@@ -69,7 +69,7 @@ class WhatsAppWebScraper:
 
         # Move browser out of screen scope
         # We don't want to resize the window, otherwise avatars don't work
-        self.browser.set_window_position(-999999, 999999)
+        # self.browser.set_window_position(-999999, 999999)
 
     # ===================================================================
     #   Main scraper function
@@ -154,12 +154,12 @@ class WhatsAppWebScraper:
                 self.person_count += 1
 
             # get the avatar of the contact
-            if avatar_count < NUMBER_OF_CONTACT_PICTURES:
+            if avatar_count < self.NUMBER_OF_CONTACT_PICTURES:
                 cropped = self.__get_contact_avatar()
                 if cropped is not None:
-                    cropped.save(TEMP_AVATAR_PATH + str(avatar_count) + ".jpg")
+                    cropped.save(self.TEMP_AVATAR_PATH + str(avatar_count) + ".jpg")
                 else:
-                    self.defaultAvatar.save(TEMP_AVATAR_PATH + str(avatar_count) + ".jpg")
+                    self.defaultAvatar.save(self.TEMP_AVATAR_PATH + str(avatar_count) + ".jpg")
             avatar_count += 1
 
             # Set as scraped
@@ -173,7 +173,7 @@ class WhatsAppWebScraper:
 
         scrapeTotalTime = time.time() - scrapeStartTime
         print("Scraper: scrape: finished. Got " + str(scrapeTotalMsgs) + "messages in " +
-              str(scrapeTotalTime) + " seconds.")
+              str(scrapeTotalTime) + " seconds.\n")
 
     # ===================================================================
     #   Scraper helper functions
@@ -209,7 +209,7 @@ class WhatsAppWebScraper:
             rank = self._get_rank(messages)
             if rank > self.THRESHOLD_RANK:
                 max_load_chat_time += self.GOOD_RANK_ADDITIONAL_SECONDS
-            print("Contact rank is", rank)
+            print("The next contact's rank is", rank)
 
         startTime = time.time()
         while self.browser.execute_script("return $('.btn-more').click();"):
@@ -222,7 +222,7 @@ class WhatsAppWebScraper:
         messages = self.__get_messages(contactType, contactName)
         totalMsgTime = time.time() - startTime
 
-        return contactName, contactType, messages, totalMsgTime
+        return contactName, contactType, messages, round(totalMsgTime, 6)
 
     def __get_contact_details(self):
         """
@@ -342,11 +342,15 @@ class WhatsAppWebScraper:
         Helper function that trims white margins from the given image
         :return:
         """
-        bg = Image.new(im.mode, im.size, im.getpixel((0, 0)))
-        diff = ImageChops.difference(im, bg)
-        diff = ImageChops.add(diff, diff, 2.0, -100)
-        bbox = diff.getbbox()
-        return im.crop(bbox)
+        try:
+            bg = Image.new(im.mode, im.size, im.getpixel((0, 0)))
+            diff = ImageChops.difference(im, bg)
+            diff = ImageChops.add(diff, diff, 2.0, -100)
+            bbox = diff.getbbox()
+            return im.crop(bbox)
+        except IndexError:
+            print("DEBUGGING: Failed in _trim_avatr on image: ", im)
+            exit()
 
     def __get_contact_avatar(self):
         """
@@ -381,7 +385,7 @@ class WhatsAppWebScraper:
         width = img.get_attribute("width")
         height = img.get_attribute("height")
 
-        self.browser.save_screenshot(TEMP_SCREENSHOT_PATH)
+        self.browser.save_screenshot(self.TEMP_SCREENSHOT_PATH)
         # Cropping
         screenshot = Image.open("full_screen_shot_temp.png")
         cropped = screenshot.crop((0, 0, int(width), int(height)))

@@ -95,3 +95,10 @@ def getIncomingMessages():
     #                     console.log(error);\
     #                 }\
     #             });"
+
+
+def getBagOfWords():
+    return
+
+
+{}
