@@ -31,7 +31,8 @@ def test_data_analysis(DB):
     # print("get_last_chats")
     print("These are the first 6 people you talked to - this does not include groups!")
     print(json.loads(
-        DB.get_latest_chats(WhatsAppWebScraper.WhatsAppWebScraper.NUMBER_OF_CONTACT_PICTURES)))
+            DB.get_latest_chats(
+                WhatsAppWebScraper.WhatsAppWebScraper.NUMBER_OF_PERSON_CONTACT_PICTURES)))
     print("----------------------------------\n")
 
     print("These are the last " + str(number_of_contacts) + " people you talked to and one message.")
