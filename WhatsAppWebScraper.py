@@ -35,7 +35,7 @@ class WhatsAppWebScraper:
     RUNNING_TIME = 40
 
     # How much time of the RUNNING_TIME we will dedicate for persons
-    FRACTION_PERSON = 0.90
+    FRACTION_PERSON = 0.80
 
     # Maximum groups and persons we want
     MAX_GROUPS = 5
@@ -111,7 +111,7 @@ class WhatsAppWebScraper:
                 print("##General Error### Going to next contact")
                 continue
 
-            print("Loaded chat in " + str(time.time() - contact_iteration_start) + "seconds")
+            # print("Loaded chat in " + str(time.time() - contact_iteration_start) + "seconds")
 
             # If the user received message while scraping we don't want to scrape it again
             if contactName in self.scrapedContacts:
@@ -126,12 +126,10 @@ class WhatsAppWebScraper:
                 continue
 
             if contactType == 'group':
-                print(
-                    "Scraper: scrape: Got " + str(messages[ 0 ]) + " messages in " + str(totalMsgTime))
+                print("Scraper: scrape: Got " + str(messages[ 0 ]) + " messages in " + str(totalMsgTime) +" for contact " + str(contactName))
                 scrapeTotalMsgs += messages[0]
             else:
-                print("Scraper: scrape: Got " + str(len(messages)) + " messages in " + str(
-                    totalMsgTime))
+                print("Scraper: scrape: Got " + str(len(messages)) + " messages in " + str(totalMsgTime) +" for contact " + str(contactName))
                 scrapeTotalMsgs += len(messages)
 
             # Initialize data item to store chat
@@ -162,6 +160,7 @@ class WhatsAppWebScraper:
                     cropped.save(TEMP_AVATAR_PATH + str(avatar_count) + ".jpg")
                 else:
                     self.defaultAvatar.save(TEMP_AVATAR_PATH + str(avatar_count) + ".jpg")
+            avatar_count += 1
 
             # Set as scraped
             self.scrapedContacts.append(contactName)
@@ -173,7 +172,7 @@ class WhatsAppWebScraper:
         DB.set_user_whatsapp_name(self.user_whatsapp_name)
 
         scrapeTotalTime = time.time() - scrapeStartTime
-        print("Scraper: scrape: finished. Messages and seconds: " + str(scrapeTotalMsgs) + " in " +
+        print("Scraper: scrape: finished. Got " + str(scrapeTotalMsgs) + "messages in " +
               str(scrapeTotalTime) + " seconds.")
 
     # ===================================================================
@@ -184,7 +183,6 @@ class WhatsAppWebScraper:
         """
         Load to page all message for current open chat.
         """
-        print("Load chat")
 
         self.__stubborn_load_click()
 
@@ -193,7 +191,7 @@ class WhatsAppWebScraper:
         # Get contact name and type (person/group).
         get_contact_time = time.time()
         contactName, contactType = self.__get_contact_details()
-        print("Got Contact details in " + str(time.time() - get_contact_time) + "seconds")
+        # print("Got Contact details in " + str(time.time() - get_contact_time) + "seconds")
 
         # Check if we already have enough of this contactType
         if not self._check_max_persons_groups(contactType):
@@ -219,7 +217,7 @@ class WhatsAppWebScraper:
                 break
             time.sleep(0.001)
 
-        print("Scraper: scrape: Get messages for: " + str(contactName))
+        # print("Scraper: scrape: Get messages for: " + str(contactName))
         startTime = time.time()
         messages = self.__get_messages(contactType, contactName)
         totalMsgTime = time.time() - startTime
@@ -354,7 +352,7 @@ class WhatsAppWebScraper:
         """
         Sends to db the avatar of current loaded chat.
         """
-        print("In getContactAvatar")
+        # print("In getContactAvatar")
 
         # Getting the small image's url and switching to the large image
         avatar_url = self.wait_for_element('#main .chat-avatar img', 2)
@@ -412,21 +410,21 @@ class WhatsAppWebScraper:
                 Keys.ARROW_DOWN).perform()
 
     def __stubborn_load_click(self):
-        print("Scraper: stubbornClick starting...")
+        # print("Scraper: stubbornClick starting...")
         i = 0
 
         while (True):
             try:
                 ActionChains(self.browser).click(
                     self.wait_for_element('#main .pane-chat-empty', 1)).perform()
-                print("Scraper: stubbornClick finished on iteration: " + str(i))
+                # print("Scraper: stubbornClick finished on iteration: " + str(i))
                 return
             except StaleElementReferenceException:
                 i += 1
                 if i & 100 == 0:
                     ActionChains(self.browser).click(self.wait_for_element_by_script(
                         "return $('#main .message-list');")[0]).perform()
-                print("Scraper: stubbornClick iteration " + str(i))
+                # print("Scraper: stubbornClick iteration " + str(i))
                 continue
 
     def _get_max_load_chat_time(self, contentType):
