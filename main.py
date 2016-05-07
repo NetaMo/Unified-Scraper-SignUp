@@ -18,7 +18,7 @@ def scrape_whatsapp_and_analyze_db():
     runs the whatsapp web scrapping procedure.
     :param db: the WhatsAppDB object
     """
-    print("create driver")
+    # print("create driver")
     driver = Webdriver()  # create new driver
     scraper = WhatsAppWebScraper.WhatsAppWebScraper(driver)  # create new WhatsApp scraper
     scraper.scrape(DB)  # scrape
@@ -123,7 +123,7 @@ class ChoosePhoneHandler(tornado.web.RequestHandler):
 class LetsGoHandler(tornado.web.RequestHandler):
 
     def get(self):
-        print("Stage 7: Lets Fucking GO!, Load whatssapp web!")
+        print("Stage 7: Lets GO!, Load whatssapp web!")
         # Insert whats up web run here
         scrape_whatsapp_and_analyze_db()
 
@@ -140,48 +140,53 @@ class GiveLatestChatsHandler(tornado.web.RequestHandler):
 
     def get(self):
         print("GetLatestChatsHandler")
-        self.finish(DB.latest_chats)
-
+        # self.finish(DB.latest_chats)
+        self.finish()
 
 class GiveClosestPersonsAndMsgs(tornado.web.RequestHandler):
     def get(self):
         print("GetClosestPersonsAndMsgs")
-        self.finish(DB.closest_persons_and_msg)
+        # self.finish(DB.closest_persons_and_msg)
+        self.finish()
 
 
 class HaveHebrew(tornado.web.RequestHandler):
 
     def get(self):
         print("HaveHebrew")
-        self.finish(DB.have_hebrew)
+        # self.finish(DB.have_hebrew)
+        self.finish()
+
 
 
 class GiveGoodNightMessages(tornado.web.RequestHandler):
     def get(self):
         print("GiveGoodNightMessages")
-        self.finish(DB.good_night_messages)
+        # self.finish(DB.good_night_messages)
+        self.finish()
+
 
 
 class GiveDreamsOrOldMessages(tornado.web.RequestHandler):
 
     def get(self):
         print("GiveDreamsOrOldMessages")
-        self.finish(DB.dreams_or_old_messages)
-
+        # self.finish(DB.dreams_or_old_messages)
+        self.finish()
 
 class GiveMostActiveGroupsAndUserGroups(tornado.web.RequestHandler):
 
     def get(self):
         print("GiveMostActiveGroupsAndUserGroups")
-        self.finish(DB.most_active_groups_and_user_groups)
-
+        # self.finish(DB.most_active_groups_and_user_groups)
+        self.finish()
 
 class GiveChatArchive(tornado.web.RequestHandler):
 
     def get(self):
         print("GiveChatArchive")
-        self.finish(DB.chat_archive)
-
+        # self.finish(DB.chat_archive)
+        self.finish()
 
 class ResetHandler(tornado.web.RequestHandler):
     """
@@ -196,7 +201,6 @@ class ResetHandler(tornado.web.RequestHandler):
         }, 2000);
         ''')
         self.finish('')
-
 
 """""
 make_app, settings, main
