@@ -7,21 +7,30 @@ def initJQuery():
 
 def getTextMessages():
     return '''
-           var B = [];
-           var A = document.getElementsByClassName('message');   
-           for (var i = 0; i < A.length; i++){  
-               var b = [];  
-               var a = A[i].getElementsByClassName('message-text');   
-               for (var j = 0; j < a.length; j++){   
-                   b.push( a[j].innerText);  
-               }   
-               B.push(b);
-               if (A[i].getElementsByClassName('message-text message-link').length != 0){
-                   B[i] = [];
-               };
+        var B = [];
+        var A = document.getElementsByClassName('message');
+        for (var i = 0; i < A.length; i++) {
+            var b = [];
+            var a = A[i].getElementsByClassName('message-text');
+            for (var j = 0; j < a.length; j++) {
 
-           };
-           return B;
+                var currentDate = a[0].innerText.slice(0, 19).replace(",", "").replace("[", "").replace("]", "");
+                console.log("OLD:" + currentDate);
+                var formattedDate = this.moment(currentDate, moment.localeData()._longDateFormat.LT + ' ' + moment.localeData()._longDateFormat.l).format("HH:mm MM/DD/YYYY")
+                b.push(a[j].innerText);
+            }
+            console.log("NEW" + formattedDate);
+            if (b.length != 0) {
+                console.log(b[0]);
+                b[0] = '[' + formattedDate + '] ' + b[0].slice(20);
+            }
+            B.push(b);
+            if (A[i].getElementsByClassName('message-text message-link').length != 0) {
+                B[i] = [];
+            };
+
+        };
+        return B;
            '''
 
 
@@ -33,9 +42,20 @@ def getSingleOutgoingMessage():
                }
                return B;
             '''
-
 def getIncomingMessages():
-    return "var B = []; var A = document.getElementsByClassName('message-in');  for (var i = 0; i < A.length; i++){ var b = []; var a = A[i].getElementsByClassName('emojitext');  for (var j = 0; j < a.length; j++){  b.push( a[j].innerText); }  B.push(b); };;return B"
+    return """"
+        var B = [];
+        var A = document.getElementsByClassName('message-in');
+        for (var i = 0; i < A.length; i++) {
+            var b = [];
+            var a = A[i].getElementsByClassName('emojitext');
+            for (var j = 0; j < a.length; j++) {
+                b.push(a[j].innerText);
+            }
+            B.push(b);
+        };;
+        return B
+    """
 
     # def initJQuery():
     #     return "var jq = document.createElement('script');" \

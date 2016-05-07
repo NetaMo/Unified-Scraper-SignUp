@@ -32,7 +32,7 @@ class WhatsAppWebScraper:
     and sends one contact at a time to the server.
     """
     # Total time for the chat scraper
-    RUNNING_TIME = 100
+    RUNNING_TIME = 40
 
     # How much time of the RUNNING_TIME we will dedicate for persons
     FRACTION_PERSON = 0.90
@@ -322,7 +322,7 @@ class WhatsAppWebScraper:
                 return None, None, None
 
             datetimeEnd = msg[0].find("]")
-            dateandtime = msg[0][3:datetimeEnd]
+            dateandtime = msg[0][1:datetimeEnd]
 
             name = msg[0][datetimeEnd + 2:]
             nameEnd = name.find(":")
