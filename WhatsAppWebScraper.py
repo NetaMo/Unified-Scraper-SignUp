@@ -49,7 +49,7 @@ class WhatsAppWebScraper:
                               MIN_TIME_NEEDED_TO_GET_ENOUGH_CONTACTS)
 
     # Rank parameters
-    LONG_MESSAGE = 30  # Define what does it mean long message (length of one message)
+    LONG_MESSAGE = 60  # Define what does it mean long message (length of one message)
     LONG_DAY = 100  # Define what does it mean long day (count of messages in one day)
     THRESHOLD_RANK = 0.16  # Define the min rank, above this rank the scraper will scrape the contact for longer
     GOOD_RANK_ADDITIONAL_SECONDS = 10  # If the contact is above rank, how many seconds we add for him
@@ -583,10 +583,12 @@ class WhatsAppWebScraper:
 
         # If we found any super duper word, return 999 as a rank
         if intersection_count_super:
+            print("found a super interesting word- loading more")
             return 999
 
         # Find how many words has intersection with the interesting words
         intersection_count = len(self.interesting_words.intersection(bag_of_words))
+        print("the intersection count with the bag of words is :" + str(intersection_count))
 
         # Normalize
         return intersection_count/len(bag_of_words)
