@@ -233,7 +233,7 @@ class WhatsAppDB:
         # print(good_night_df.sort_values('contactName').contactName.value_counts())
         good_night_df['count_val'] = good_night_df.groupby(['contactName']).transform('count')
         good_night_df = good_night_df.sort_values(['count_val', 'contactName'], ascending=False).groupby('contactName').head(5)
-        print(good_night_df.loc[good_night_df['contactName'].isin(good_night_df['contactName'].unique()[:7])])
+        print(good_night_df.loc[good_night_df['contactName'].isin(good_night_df['contactName'].unique()[:6])])
 
         return good_night_df.to_json(date_format='iso', double_precision=0, date_unit='s', orient='records')
 
