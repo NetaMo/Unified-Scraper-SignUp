@@ -273,8 +273,11 @@ if __name__ == "__main__":
 
         print("server keeps running for unity get requests")
 
+    print("listening")
     app.listen(port)
-    # app.listen(port, address="10.0.0.11") # listen to ip
+
+    # app.listen(port, address="192.168.173.1")  # listen to ip
+
     tornado.ioloop.IOLoop.current().start()
 
 
