@@ -31,14 +31,14 @@ class WhatsAppWebScraper:
     TEMP_SCREENSHOT_PATH = "full_screen_shot_temp.png"
 
     # Total time for the chat scraper
-    RUNNING_TIME = 100
+    RUNNING_TIME = 300
 
     # How much time of the RUNNING_TIME we will dedicate for persons
     FRACTION_PERSON = 0.80
 
     # Maximum groups and persons we want
-    MAX_GROUPS = 15
-    MAX_PERSONS = 40
+    MAX_GROUPS = 8
+    MAX_PERSONS = 400
 
     # Maximum time tha scraper keep clicking load more and get more messages
     MIN_TIME_NEEDED_TO_GET_ENOUGH_CONTACTS = int(RUNNING_TIME / NUMBER_OF_PERSON_CONTACT_PICTURES)
@@ -103,12 +103,13 @@ class WhatsAppWebScraper:
         # Iterate over the contacts until we reach our RUNNING_TIME
         while time.time() - running_time_start < self.RUNNING_TIME:
             contact_iteration_start = time.time()
-
             try:
                 # load all conversations for current open chat
-                contactName, contactType, messages, totalMsgTime = self._load_chat()
+                contactName, contactType, messages = self._load_chat()
             except IOError:
-                print("Already scraped enough contacts from this type")
+                print("...... Already scraped enough contacts of type", contactType, "sorry",
+                      contactName)
+                self._go_to_next_contact()
                 continue
             except Exception as e:  # We had general error, we want to go to the next contact
                 print("### Fault redundancy ### Contact failed for unknown reason, going to next "
@@ -116,6 +117,7 @@ class WhatsAppWebScraper:
                       contactName,
                       contactType,
                       messages)
+                self._go_to_next_contact()
                 continue
 
             # If the user received message while scraping we don't want to scrape it again
@@ -156,8 +158,8 @@ class WhatsAppWebScraper:
                 DB.append_to_contacts_df(contactData)
                 # add data to the data frame
                 self.person_count += 1
-                print("...... Got " + str(len(messages)) + " messages in " + str(
-                    contact_scrape_time) + " for contact " + str(contactName))
+                print("...... Got " + str(len(messages)) + " messages in " + str(round(
+                        contact_scrape_time, 3)) + " for contact " + str(contactName))
                 scrapeTotalMsgs += len(messages)
 
                 # get the avatar of the first X persons
@@ -214,6 +216,7 @@ class WhatsAppWebScraper:
             rank = self._get_rank(messages)
             if rank > self.THRESHOLD_RANK:
                 max_load_chat_time += self.GOOD_RANK_ADDITIONAL_SECONDS
+                print("...... This contact is interseting... scraping more nom nom.")
             print("...... The next contact's rank is", round(rank, 3))
 
         startTime = time.time()
@@ -222,15 +225,9 @@ class WhatsAppWebScraper:
                 break
             time.sleep(0.001)
 
-        # print("...... Get messages for: " + str(contactName))
-        startTime = time.time()
         messages = self._get_messages(contactType, contactName)
-        totalMsgTime = time.time() - startTime
 
-        return self.clean_hidden_chars(contactName), \
-               self.clean_hidden_chars(contactType), \
-               messages, \
-               round(totalMsgTime, 6)
+        return self.clean_hidden_chars(contactName), self.clean_hidden_chars(contactType), messages
 
     def _get_contact_details(self):
         """
@@ -316,8 +313,6 @@ class WhatsAppWebScraper:
             else:
                 groupData[ name ] = 1
 
-        # print("getGroupMessages got " + str(len(incomingMessages)) + " messages, here they are:")
-        # print(str(groupData))
         return [ totalMessages, groupData ]
 
     def _parse_message(self, msgRaw):
