@@ -222,13 +222,19 @@ class WhatsAppDB:
 
     def get_good_night_messages(self):
         """
-        finds messages containing good night words
+        finds messages containing good night word
         :return: json with the data
         """
-        good_night_df = self.contacts_df[self.contacts_df.text.str.lower().str.contains("good night|לילה טוב|bonne nuit|sweet dreams|ליל "
-                                                                             "מנוחה")]
+        good_night_df = self.contacts_df[self.contacts_df.text.str.lower().str.contains("good night|לילה טוב|bonne nuit|sweet dreams")]
 
         good_night_df = good_night_df[['contactName', 'text']]
+        # print(good_night_df['contactName'].value_counts())
+        # print(good_night_df.groupby(['contactName']).transform('count'))
+        # print(good_night_df.sort_values('contactName').contactName.value_counts())
+        good_night_df['count_val'] = good_night_df.groupby(['contactName']).transform('count')
+        good_night_df = good_night_df.sort_values(['count_val', 'contactName'], ascending=False).groupby('contactName').head(5)
+        print(good_night_df.loc[good_night_df['contactName'].isin(good_night_df['contactName'].unique()[:7])])
+
         return good_night_df.to_json(date_format='iso', double_precision=0, date_unit='s', orient='records')
 
     def get_dream_messages(self):  # todo check the results and decide on size
@@ -254,6 +260,20 @@ class WhatsAppDB:
         past_chats_threshold_date = min(self.contacts_df.time) + to_offset(past_chats_threshold_days)
         # print(past_chats_threshold_date)
         df_past_chats = self.contacts_df.where(self.contacts_df.time <= past_chats_threshold_date).dropna()
+        # res_df = pd.DataFrame()
+        # stop_flag = False
+        # FROM = 0
+        # TO = 1
+        # TXT = 2
+        # for msg in df_past_chats.get_values():
+        #     print("from: {0:20}\tto: {1:20}\ttext: {2}".format(msg[FROM], msg[TO], msg[TXT]))
+        #     # print(type(msg))
+        #     # if fdsafds:
+        #     #     res_df.
+        #     # if not ..:
+        #     #     break
+        # # while not stop_flag:
+
         return df_past_chats[['contactName', 'text']]  # todo check how to filter good past msgs
     
     def get_dreams_or_old_messages(self, past_fraction_param):

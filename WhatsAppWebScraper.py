@@ -38,7 +38,7 @@ class WhatsAppWebScraper:
     FRACTION_PERSON = 0.80
 
     # Maximum groups and persons we want
-    MAX_GROUPS = 8
+    MAX_GROUPS = 6
     MAX_PERSONS = 400
 
     # Maximum time tha scraper keep clicking load more and get more messages
@@ -49,8 +49,8 @@ class WhatsAppWebScraper:
                               MIN_TIME_NEEDED_TO_GET_ENOUGH_CONTACTS)
 
     # Rank parameters
-    LONG_MESSAGE = 60  # Define what does it mean long message (length of one message)
-    LONG_DAY = 100  # Define what does it mean long day (count of messages in one day)
+    LONG_MESSAGE = 40  # Define what does it mean long message (length of one message)
+    LONG_DAY = 80  # Define what does it mean long day (count of messages in one day)
     THRESHOLD_RANK = 0.16  # Define the min rank, above this rank the scraper will scrape the contact for longer
     GOOD_RANK_ADDITIONAL_SECONDS = 10  # If the contact is above rank, how many seconds we add for him
 
