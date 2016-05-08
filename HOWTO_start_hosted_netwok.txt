@@ -1,0 +1,60 @@
+erez.levanon 08/05/2016
+
+############# follow these steps to start a hosted network on this PC ##################
+	1. connect the USB wifi network to the NUC PC.
+	2. type "View Network Connections" in the windows search bar and select it.
+	3. right-click on "Wi-Fi" (make sure it says "intel(R) Dual band Wireles.." and not "802.11n USB Wireles.."
+	4. select "Disable"
+	5. type "cmd" in the windows search bar, right click on "command prompt" and choose "run as administrator"
+	6. choose "yes" if asked something.
+	7. to create a new hosted network (optional, you probably don't have to do it):
+		a. type:
+			netsh wlan set hostednetwork mode=allow ssid=newSsid key=newkey123 keyUsage=persistent
+		    "newSsid" will be the name of the network when others try to connect to it.
+		     	can be any string of chraracters up to 31 characters.
+		    "newKey123" is the password to connect to the new network
+			8-31 printable characters
+		b. make sure the output is:
+			The hosted network mode has been set to allow.
+			The SSID of the hosted network has been successfully changed.
+			The user key passphrase of the hosted network has been successfully changed.
+	8. start the network by typing:
+		netsh wlan start hostednetwork
+	9. make sure the output is:
+		The hosted network started.
+	10. close the command prompt and go back to "View Network Connections"
+	11. right click on "Wi-Fi" and choose "Enable"
+	12. make sure you see the network from a different device and can connect to it.
+
+
+#################################### extras #########################################
+
+# SEE THE STATUS OF THE CURRENTLY SET NETWORK #
+	1. open the command prompt as administrator
+	2. type:
+		netsh wlan show hostednetwork
+	    results:
+		Mode: 			should be Allowed
+		SSID name: 		the name of the currently set network
+		Max Number of clients:	default is 100 (maybe we could change it later on)
+		Autehntication:		should be WPA2-Personal
+		Cipher:			should be CCMP
+
+		Status:			the status of the set netwok
+					Started 	= is running, should be able to connect
+					Not started 	= not running, but can be started by typing:
+							      netsh wlan start hostednetwork
+					Not availabe	= can't start the network, something is wrong;
+							  go back to the begining of this file and repeat the
+							  steps.
+
+# SEE THE CURRENT NETWORKS PASSWORD #
+	1. open the command prompt as administrator
+	2. type:
+		netsh wlan show hostednetwork security
+	   results (what's interesting):
+		User security key:		the current password
+		User security key usage:	should be "Persistent"
+		 
+# GET THE HOST IP ON THE HOSTEDNETWORK #
+	1. the default hostednetwrok host IP is 192.168.137.1
