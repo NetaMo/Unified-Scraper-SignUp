@@ -1,7 +1,7 @@
 erez.levanon 08/05/2016
 
 ############# follow these steps to start a hosted network on this PC ##################
-	1. connect the USB wifi network to the NUC PC.
+	1. connect the USB wifi adaptor to the NUC PC.
 	2. type "View Network Connections" in the windows search bar and select it.
 	3. right-click on "Wi-Fi" (make sure it says "intel(R) Dual band Wireles.." and not "802.11n USB Wireles.."
 	4. select "Disable"
@@ -38,7 +38,7 @@ erez.levanon 08/05/2016
 		SSID name: 		the name of the currently set network
 		Max Number of clients:	default is 100 (maybe we could change it later on)
 		Autehntication:		should be WPA2-Personal
-		Cipher:			should be CCMP
+		Cipher:			sshould be CCMP
 
 		Status:			the status of the set netwok
 					Started 	= is running, should be able to connect
@@ -57,4 +57,4 @@ erez.levanon 08/05/2016
 		User security key usage:	should be "Persistent"
 		 
 # GET THE HOST IP ON THE HOSTEDNETWORK #
-	1. the default hostednetwrok host IP is 192.168.137.1
+	1. the default hostednetwrok host IP is 192.168.173.1
