@@ -1,3 +1,4 @@
+import codecs
 import re
 import string
 import time
@@ -31,24 +32,27 @@ class WhatsAppWebScraper:
     TEMP_SCREENSHOT_PATH = "full_screen_shot_temp.png"
 
     # Total time for the chat scraper
-    RUNNING_TIME = 40
+    RUNNING_TIME = 250
 
     # How much time of the RUNNING_TIME we will dedicate for persons
     FRACTION_PERSON = 0.80
 
     # Maximum groups and persons we want
-    MAX_GROUPS = 5
-    MAX_PERSONS = 5
+    MAX_GROUPS = 6
+    MAX_PERSONS = 20
 
     # Maximum time tha scraper keep clicking load more and get more messages
     MAX_PERSON_LOAD_CHAT = int(RUNNING_TIME * FRACTION_PERSON / MAX_PERSONS)
     MAX_GROUP_LOAD_CHAT = int(RUNNING_TIME * (1 - FRACTION_PERSON) / MAX_GROUPS)
 
     # Rank parameters
-    LONG_MESSAGE = 20  # Define what does it mean long message (length of one message)
-    LONG_DAY = 200  # Define what does it mean long day (count of messages in one day)
+    LONG_MESSAGE = 30  # Define what does it mean long message (length of one message)
+    LONG_DAY = 100  # Define what does it mean long day (count of messages in one day)
     THRESHOLD_RANK = 0.16  # Define the min rank, above this rank the scraper will scrape the contact for longer
     GOOD_RANK_ADDITIONAL_SECONDS = 10  # If the contact is above rank, how many seconds we add for him
+
+    # set of the interesting words for the dynamic chat loading
+    interesting_words = set(codecs.open('bag of words', encoding='utf-8').read().split())
 
     def __init__(self, webdriver):
         self.browser = Webdriver.getBrowser(webdriver)  # Get browser
@@ -515,24 +519,23 @@ class WhatsAppWebScraper:
         # Best mathematical solution for this problem, is to normalize(0<x<1) the data and then find the average
         return (long_messages_rank + bag_rank + avg_messages_per_day) / 3
 
-    @staticmethod
-    def bag_rank(bag_of_words):
+    def bag_rank(self, bag_of_words):
         """"
         Returns the rank of the bag_of_ words set object.
         float number between 0 to 1
         """
-        # Find how many words has intersection with the interesting words
-        interesting_words = {'love', 'hate', 'girlfriend'}  # TODO We need so many more
 
         # Find how many words has intersection with the super duper words
-        interesting_words_super = {'1337', '9000'}  # TODO We need so many more
+        interesting_words_super = {"חלמתי", "חלומות", "חלמת", "dream", "dreamt", "dreaming", "dreams", "rêver", "rêves", "rêvé", "rêve",
+                                   "reve", "reves", "rever", "dreamed", "good night", "לילה טוב", "bonne nuit", "sweet dreams"}
         intersection_count_super = len(interesting_words_super.intersection(bag_of_words))
 
         # If we found any super duper word, return 999 as a rank
         if intersection_count_super:
             return 999
 
-        intersection_count = len(interesting_words.intersection(bag_of_words))
+        # Find how many words has intersection with the interesting words
+        intersection_count = len(self.interesting_words.intersection(bag_of_words))
 
         # Normalize
         return intersection_count/len(bag_of_words)

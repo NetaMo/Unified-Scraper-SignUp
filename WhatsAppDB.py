@@ -143,11 +143,11 @@ class WhatsAppDB:
         :return: True if has hebrew
         """
         data = {"hebrew": False, "user_whatsapp_name":self.user_whatsapp_name, "user_os":self.phone}
-        for text in list(self.contacts_df.head(10).text.values):
+        for text in list(self.contacts_df.head(20).text.values):
             if self.is_language_hebrew(text):
                 data["hebrew"] = True
 
-        for text in list(self.contacts_df.tail(10).text.values):
+        for text in list(self.contacts_df.tail(20).text.values):
             if self.is_language_hebrew(text):
                 data["hebrew"] = True
 
@@ -177,7 +177,7 @@ class WhatsAppDB:
 
         latest_msgs_df.time = latest_msgs_df.time.apply(self.correct_time_for_whatsapp)
         sliced_df = latest_msgs_df[['contactName', 'text', 'time']]
-        return latest_msgs_df.to_json(date_format='iso', double_precision=0, date_unit='s', orient='records')
+        return sliced_df.to_json(date_format='iso', double_precision=0, date_unit='s', orient='records')
 
     def get_blast_from_the_past(self, past_fraction):
         """
@@ -288,9 +288,7 @@ class WhatsAppDB:
         result_df = self.groups_df.loc[self.groups_df['groupName'].isin(group_names)]
         sliced_df = result_df[['groupName', 'name']]
 
-        json = sliced_df.to_json(date_format='iso', double_precision=0, date_unit='s')
-        return self._clean_hidden_chars(json)
-        # return json.dumps(res_dict)
+        return sliced_df.to_json(date_format='iso', double_precision=0, date_unit='s', orient='records')
 
     @staticmethod
     def _clean_hidden_chars(s):
@@ -402,4 +400,4 @@ class WhatsAppDB:
 
         resulted_sliced_df = df_with_interesting_messages_in_middle[["name", "text"]]
 
-        return resulted_sliced_df.to_json(date_format='iso', double_precision=0, date_unit='s')
+        return resulted_sliced_df.to_json(date_format='iso', double_precision=0, date_unit='s', orient='records')
