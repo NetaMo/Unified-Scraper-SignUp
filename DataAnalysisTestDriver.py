@@ -35,11 +35,11 @@ def test_data_analysis(DB):
                 WhatsAppWebScraper.WhatsAppWebScraper.NUMBER_OF_PERSON_CONTACT_PICTURES)))
     print("----------------------------------\n")
 
-    print("These are the last " + str(number_of_contacts) + " people you talked to and one message.")
+    print("These are the " + str(number_of_contacts) + " people you talked to the most and one message from each.")
     print(json.loads(DB.get_closest_persons_and_msg(number_of_contacts, past_fraction)))
     print("----------------------------------\n")
 
-    print("Chakchakot ktanot.")
+    print("some info")
     print(json.loads(DB.does_df_has_hebrew()))
     print("----------------------------------\n")
 
@@ -58,4 +58,3 @@ def test_data_analysis(DB):
                                                       "also sorted by number of messages they sent.")
     print(json.loads(DB.get_most_active_groups_and_user_groups(max_num_of_groups)))
     print("----------------------------------\n")
-    print("--------------AWESOMMMEEE - ROTEM WE LOVE YOU SEAN MARRY ME--------------------\n")
