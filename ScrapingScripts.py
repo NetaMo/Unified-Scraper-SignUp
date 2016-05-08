@@ -4,7 +4,6 @@ def initJQuery():
         jquery = jquery_js.read()  # read the jquery from a file
         return jquery
 
-
 def getTextMessages():
     return '''
         var B = [];
@@ -38,15 +37,17 @@ def getTextMessages():
         return B;
            '''
 
-
 def getSingleOutgoingMessage():
-    return '''    var B = [];
-               var A = document.getElementsByClassName('message message-out')[0].getElementsByClassName('message-text');
-               for (var j = 0; j < A.length; j++){
-                   B.push( A[j].innerText);
+    return ''' var A = document.getElementsByClassName('message message-out')
+               if (A.length != 0){
+                    A = A[0].getElementsByClassName('message-text');
+                    if(A.length != 0 ){
+                        A = A[0].innerText;
+                    }
                }
-               return B;
+               return A;
             '''
+
 def getIncomingMessages():
     return """"
         var B = [];
@@ -96,9 +97,5 @@ def getIncomingMessages():
     #                 }\
     #             });"
 
-
 def getBagOfWords():
-    return
-
-
-{}
+    pass

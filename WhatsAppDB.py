@@ -290,13 +290,6 @@ class WhatsAppDB:
 
         return sliced_df.to_json(date_format='iso', double_precision=0, date_unit='s', orient='records')
 
-    @staticmethod
-    def _clean_hidden_chars(s):
-        hiddens = ['\\xa0']  # In case we find more of them, use \\ and not \
-        for hidden in hiddens:
-            s = s.replace(hidden, '')
-        return s
-
     def amount_of_letter_sequences(self, str):
         ''' Helper Function. returns the amount of letter sequences longer than min_amount '''
 
