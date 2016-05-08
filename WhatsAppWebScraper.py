@@ -588,7 +588,7 @@ class WhatsAppWebScraper:
 
         # Find how many words has intersection with the interesting words
         intersection_count = len(self.interesting_words.intersection(bag_of_words))
-        print("the intersection count with the bag of words is :" + str(intersection_count))
+        print("...... the intersection count with the bag of words is :" + str(intersection_count))
 
         # Normalize
         return intersection_count/len(bag_of_words)
