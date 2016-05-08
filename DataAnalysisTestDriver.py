@@ -28,33 +28,54 @@ def test_data_analysis(DB):
     # print(DB.get_chat_archive())
     # print("----------------------------------\n")
 
+    print()
+    print("----------------------------------\n")
     # print("get_last_chats")
-    print("These are the first 6 people you talked to - this does not include groups!")
-    print(json.loads(
-            DB.get_latest_chats(
-                WhatsAppWebScraper.WhatsAppWebScraper.NUMBER_OF_PERSON_CONTACT_PICTURES)))
+    print("These are the first 6 people you talked to - this does not include groups!\n")
+    for i in json.loads(DB.get_latest_chats(WhatsAppWebScraper.WhatsAppWebScraper.NUMBER_OF_PERSON_CONTACT_PICTURES)):
+        print("\t{0}".format(i["contactName"]))
+        for j in i["text"].split("\n"):
+            print("\t\t{0}".format(j))
+    print()
     print("----------------------------------\n")
 
-    print("These are the " + str(number_of_contacts) + " people you talked to the most and one message from each.")
-    print(json.loads(DB.get_closest_persons_and_msg(number_of_contacts, past_fraction)))
+    print("These are the " + str(number_of_contacts) + " people you talked to the most and one message from each.\n")
+    for i in json.loads(DB.get_closest_persons_and_msg(number_of_contacts, past_fraction)):
+        print("\t{0}".format(i["contactName"]))
+        for j in i["text"].split("\n"):
+            print("\t\t{0}".format(j))
     print("----------------------------------\n")
 
-    print("some info")
+    print("some info\n")
     print(json.loads(DB.does_df_has_hebrew()))
     print("----------------------------------\n")
 
-    print("Messages containing the words good night.")
-    print(json.loads(DB.get_good_night_messages()))
+    print("Messages containing the words good night.\n")
+    for i in json.loads(DB.get_good_night_messages()):
+        print("\t{0}".format(i["contactName"]))
+        for j in i["text"].split("\n"):
+            print("\t\t{0}".format(j))
+    print()
     print("----------------------------------\n")
 
-    print("Messages containing the words dream or very old messages.")
+    print("Messages containing the words dream or very old messages.\n")
     past_fraction = 0.25
-    print(json.loads(DB.get_dreams_or_old_messages(past_fraction)))
+    for i in json.loads(DB.get_dreams_or_old_messages(past_fraction)):
+        print("\t{0}".format(i["contactName"]))
+        for j in i["text"].split("\n"):
+            print("\t\t{0}".format(j))
+    print()
     print("----------------------------------\n")
 
     max_num_of_groups = 5
     print("These are the " + str(max_num_of_groups) + " groups you talk to the most sorted by "
                                                       "activity, and the people in each group are "
                                                       "also sorted by number of messages they sent.")
-    print(json.loads(DB.get_most_active_groups_and_user_groups(max_num_of_groups)))
+    groups = []
+    for i in json.loads(DB.get_most_active_groups_and_user_groups(max_num_of_groups)):
+        if i["groupName"] not in groups:
+            groups += [i["groupName"]]
+            print("\n\t{0}".format(i["groupName"]))
+        print("\t\t{0}".format(i["name"]))
+    print()
     print("----------------------------------\n")
