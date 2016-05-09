@@ -281,7 +281,6 @@ class WhatsAppDB:
             return self.get_old_messages(past_fraction_param).to_json(date_format='iso', double_precision=0,
                                                                                      date_unit='s', orient='records')
 
-
     def get_most_active_groups_and_user_groups(self, max_number_of_groups):
         """
         finds the most active groups and gets the users inside by their activity
