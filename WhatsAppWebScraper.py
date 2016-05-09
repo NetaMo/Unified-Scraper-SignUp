@@ -502,7 +502,12 @@ class WhatsAppWebScraper:
         # Final data we will use to calculate the rank
         long_messages_rank = long_messages_count / len(messages)
         bag_rank = self.bag_rank(bag_of_words)
-        avg_messages_per_day = (days_count / len(messages)) / self.LONG_DAY
+        avg_messages_per_day = (len(messages) / days_count)
+
+        # For log purposes
+        print("...... The next contact rank is:\n......"
+              "long_messages_rank: " + str(long_messages_rank) + ", bag_rank: " + str(bag_rank) +
+              ", avg_messages_per_day: " + str(avg_messages_per_day))
 
         # Best mathematical solution for this problem, is to normalize(0<x<1) the data and then find the average
         return (long_messages_rank + bag_rank + avg_messages_per_day) / 3
@@ -542,42 +547,42 @@ class WhatsAppWebScraper:
 
         return elements
 
-    def _get_rank(self, messages):
-        """
-        Ranks each person so we can sort them by relevant
-        """
-        long_messages_count = 0
-        bag_of_words = set()
-
-        # Remove all unnecessary chars like !@#%~.
-        pattern = re.compile('[%s]' % re.escape(string.punctuation))
-
-        for message in messages:
-            if len(message['text']) > self.LONG_MESSAGE:
-                long_messages_count += 1
-
-            words_list = pattern.sub('', message['text']).split()
-
-            # Add to the set, no duplicates
-            bag_of_words.update(words_list)
-
-        # Find the avg messages per day ''
-        date_start = datetime.strptime(messages[0]['time'], '%H:%M %m/%d/%Y')
-        date_end = datetime.strptime(messages[-1]['time'], '%H:%M %m/%d/%Y')
-        days_count = (date_end - date_start).days
-
-        # Final data we will use to calculate the rank
-        long_messages_rank = long_messages_count / len(messages)
-        bag_rank = self.bag_rank(bag_of_words)
-        avg_messages_per_day = (len(messages) / days_count)
-
-        # For log purposes
-        print("...... The next contact rank is:\n......"
-              "long_messages_rank: " + str(long_messages_rank) + ", bag_rank: " + str(bag_rank) +
-              ", avg_messages_per_day: " + str(avg_messages_per_day))
-
-        # Best mathematical solution for this problem, is to normalize(0<x<1) the data and then find the average
-        return (long_messages_rank + bag_rank + avg_messages_per_day) / 3
+    # def _get_rank(self, messages):
+    #     """
+    #     Ranks each person so we can sort them by relevant
+    #     """
+    #     long_messages_count = 0
+    #     bag_of_words = set()
+    #
+    #     # Remove all unnecessary chars like !@#%~.
+    #     pattern = re.compile('[%s]' % re.escape(string.punctuation))
+    #
+    #     for message in messages:
+    #         if len(message['text']) > self.LONG_MESSAGE:
+    #             long_messages_count += 1
+    #
+    #         words_list = pattern.sub('', message['text']).split()
+    #
+    #         # Add to the set, no duplicates
+    #         bag_of_words.update(words_list)
+    #
+    #     # Find the avg messages per day ''
+    #     date_start = datetime.strptime(messages[0]['time'], '%H:%M %m/%d/%Y')
+    #     date_end = datetime.strptime(messages[-1]['time'], '%H:%M %m/%d/%Y')
+    #     days_count = (date_end - date_start).days
+    #
+    #     # Final data we will use to calculate the rank
+    #     long_messages_rank = long_messages_count / len(messages)
+    #     bag_rank = self.bag_rank(bag_of_words)
+    #     avg_messages_per_day = (days_count / len(messages)) / self.LONG_DAY
+    #
+    #     # For log purposes
+    #     print("...... The next contact rank is:\n......"
+    #           "long_messages_rank: " + str(long_messages_rank) + ", bag_rank: " + str(bag_rank) +
+    #           ", avg_messages_per_day: " + str(avg_messages_per_day))
+    #
+    #     # Best mathematical solution for this problem, is to normalize(0<x<1) the data and then find the average
+    #     return (long_messages_rank + bag_rank + avg_messages_per_day) / 3
 
     def bag_rank(self, bag_of_words):
         """"
@@ -601,5 +606,3 @@ class WhatsAppWebScraper:
 
         # Normalize
         return intersection_count/len(bag_of_words)
-
-
