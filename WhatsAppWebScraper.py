@@ -32,10 +32,10 @@ class WhatsAppWebScraper:
     TEMP_SCREENSHOT_PATH = "full_screen_shot_temp.png"
 
     # Total time for the chat scraper
-    RUNNING_TIME = 10
+    RUNNING_TIME = 100
 
     # How much time of the RUNNING_TIME we will dedicate for persons
-    FRACTION_PERSON = 0.80
+    FRACTION_PERSON = 0.8
 
     # Maximum groups and persons we want
     MAX_GROUPS = 6
@@ -110,24 +110,24 @@ class WhatsAppWebScraper:
         # Iterate over the contacts until we reach our RUNNING_TIME
         while time.time() - running_time_start < self.RUNNING_TIME:
             contact_iteration_start = time.time()
-            # try:
-            # load all conversations for current open chat
-            contact_name, contact_type, messages = self._load_chat()
+            try:
+                # load all conversations for current open chat
+                contact_name, contact_type, messages = self._load_chat()
 
-            # If we scraped enough of this contact load chat will return None-s
-            if (contact_name, contact_type, messages) == (None, None, None):
-                print("...... Already scraped enough contacts of type", contact_type, "sorry",
-                      contact_name)
+                # If we scraped enough of this contact load chat will return None-s
+                if (contact_name, contact_type, messages) == (None, None, None):
+                    print("...... Already scraped enough contacts of type", contact_type, "sorry",
+                          contact_name)
+                    self._go_to_next_contact()
+                    continue
+            except Exception as e:  # We had unknown error, we want to go to the next contact
+                print("### Fault redundancy ### Contact failed for unknown reason, going to next "
+                      "contact. Hug yourself and debug. Details:",
+                      contact_name,
+                      contact_type,
+                      messages)
                 self._go_to_next_contact()
                 continue
-            # except Exception as e:  # We had unknown error, we want to go to the next contact
-            #     print("### Fault redundancy ### Contact failed for unknown reason, going to next "
-            #           "contact. Hug yourself and debug. Details:",
-            #           contact_name,
-            #           contact_type,
-            #           messages)
-            #     self._go_to_next_contact()
-            #     continue
 
             # If the user received message while scraping we don't want to scrape it again
             if contact_name in self.scrapedContacts:
@@ -587,12 +587,12 @@ class WhatsAppWebScraper:
 
         # If we found any super duper word, return 999 as a rank
         if intersection_count_super:
-            print("found a super interesting word- loading more")
+            # print("found a super interesting word- loading more")
             return 999
 
         # Find how many words has intersection with the interesting words
         intersection_count = len(self.interesting_words.intersection(bag_of_words))
-        print("...... the intersection count with the bag of words is :" + str(intersection_count))
+        # print("...... the intersection count with the bag of words is :" + str(intersection_count))
 
         # Normalize
         return intersection_count/len(bag_of_words)
