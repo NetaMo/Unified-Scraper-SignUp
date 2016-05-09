@@ -32,10 +32,10 @@ class WhatsAppWebScraper:
     TEMP_SCREENSHOT_PATH = "full_screen_shot_temp.png"
 
     # Total time for the chat scraper
-    RUNNING_TIME = 300
+    RUNNING_TIME = 50
 
     # How much time of the RUNNING_TIME we will dedicate for persons
-    FRACTION_PERSON = 0.80
+    FRACTION_PERSON = 0.9
 
     # Maximum groups and persons we want
     MAX_GROUPS = 6
@@ -275,15 +275,14 @@ class WhatsAppWebScraper:
         :return: list of messages [{"name":name, "text": text, "time":time}, {"name":name,
         "text": text, "time":time}, ...]
         """
-        messages = [ ]
+        messages = []
         rawMessages = self.browser.execute_script(scrapingScripts.getTextMessages())
 
         # Onetime update for user whatsapp name
         if self.user_whatsapp_name is None:
             outMsg = self.browser.execute_script(scrapingScripts.getSingleOutgoingMessage())
             if outMsg is not None:
-                self.user_whatsapp_name, a, b = self._parse_message([outMsg])  # parse_msg gets list
-
+                self.user_whatsapp_name = outMsg[outMsg.find("\xa0")+1: outMsg.find("\xa0", outMsg.find("\xa0")+2)-1]
         # Extract data from raw message
         for msg in rawMessages:
 
