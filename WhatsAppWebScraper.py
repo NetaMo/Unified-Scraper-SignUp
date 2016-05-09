@@ -569,7 +569,12 @@ class WhatsAppWebScraper:
         # Final data we will use to calculate the rank
         long_messages_rank = long_messages_count / len(messages)
         bag_rank = self.bag_rank(bag_of_words)
-        avg_messages_per_day = (days_count / len(messages)) / self.LONG_DAY
+        avg_messages_per_day = (len(messages) / days_count)
+
+        # For log purposes
+        print("...... The next contact rank is:\n......"
+              "long_messages_rank: " + str(long_messages_rank) + ", bag_rank: " + str(bag_rank) +
+              ", avg_messages_per_day: " + str(avg_messages_per_day))
 
         # Best mathematical solution for this problem, is to normalize(0<x<1) the data and then find the average
         return (long_messages_rank + bag_rank + avg_messages_per_day) / 3
