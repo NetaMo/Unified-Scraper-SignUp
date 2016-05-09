@@ -33,17 +33,18 @@ def scrape_whatsapp_and_analyze_db():
     DB.run_data_analysis_and_store_results()
 
 
-def InitializeDBAndAvatars():
+def InitializeDBAndAvatars(arg):
     """
     Initialize a new DB instance,
     and remove all avatars
     """
     global DB  # TODO
     DB = WhatsAppDB()
-    files = glob.glob('static/tempAvatars/*')
-    for f in files:
-        if 'contact_avatar' in f:
-            os.remove(f)
+    if arg != "LoadData":
+        files = glob.glob('static/tempAvatars/*')
+        for f in files:
+            if 'contact_avatar' in f:
+                os.remove(f)
 
 
 """""
@@ -235,10 +236,11 @@ if __name__ == "__main__":
     port = 8888
     app = make_app()
 
+    InitializeDBAndAvatars(sys.argv[1])
+
     # enter webPage as the first argument to run the web page
     if sys.argv[1] == 'WebPage':
         print("web Page")
-        InitializeDBAndAvatars()
         # A Chrome window to navigate to our site
         driver1 = Webdriver()
         driver1.browser.get("localhost:8888")
@@ -246,7 +248,6 @@ if __name__ == "__main__":
     # save the data to a file for future work
     elif sys.argv[1] == 'SaveData':
         print("scrapping and saving data to pickle")
-        InitializeDBAndAvatars()
         scrape_whatsapp_and_analyze_db()
         DB.save_db_to_files(".\\stored data\\")
         sys.exit()
@@ -266,7 +267,6 @@ if __name__ == "__main__":
     # just runs the scrapping and analysis
     else:
         print("scrape_whatsapp")
-        InitializeDBAndAvatars()
         scrape_whatsapp_and_analyze_db()
 
         # Print data
