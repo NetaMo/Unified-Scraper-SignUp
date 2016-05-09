@@ -13,7 +13,7 @@ import ScrapingScripts as scrapingScripts
 from Webdriver import Webdriver
 
 
-# ===================================================================
+# ====================================================================
 # Scraper class
 # ===================================================================
 class WhatsAppWebScraper:
