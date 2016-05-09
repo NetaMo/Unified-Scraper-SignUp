@@ -32,7 +32,7 @@ class WhatsAppWebScraper:
     TEMP_SCREENSHOT_PATH = "full_screen_shot_temp.png"
 
     # Total time for the chat scraper
-    RUNNING_TIME = 5
+    RUNNING_TIME = 300
 
     # How much time of the RUNNING_TIME we will dedicate for persons
     FRACTION_PERSON = 0.80
@@ -546,6 +546,10 @@ class WhatsAppWebScraper:
         """
         Ranks each person so we can sort them by relevant
         """
+
+        if len(messages) == 0:
+            return 0.001
+
         long_messages_count = 0
         bag_of_words = set()
 
