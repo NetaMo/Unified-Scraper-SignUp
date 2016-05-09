@@ -35,17 +35,17 @@ def getTextMessages():
 
         };
         return B;
-           '''
+        '''
 
 def getSingleOutgoingMessage():
     return ''' var A = document.getElementsByClassName('message message-out')
                if (A.length != 0){
-                    A = A[0].getElementsByClassName('message-text');
-                    if(A.length != 0 ){
-                        A = A[0].innerText;
+                    a = A[0].getElementsByClassName('message-text');
+                    if(a.length != 0 ){
+                        return A[0].innerText;
                     }
-               }
-               return A;
+                }
+                return [];
             '''
 
 def getIncomingMessages():
