@@ -543,36 +543,33 @@ class WhatsAppWebScraper:
         return elements
 
     def _get_rank(self, messages):
-        """
-        Ranks each person so we can sort them by relevant
-        """
-        long_messages_count = 0
-        bag_of_words = set()
+         ''' Daniel the neighbour 4life '''
 
-        # Remove all unnecessary chars like !@#%~.
-        pattern = re.compile('[%s]' % re.escape(string.punctuation))
+            w1, w2, w3 = 30, 10, 1        # collaboration weights
 
-        for message in messages:
-            if len(message['text']) > self.LONG_MESSAGE:
-                long_messages_count += 1
+            # read messages (dict) to pandas Dataframe
+            import pandas as pd
+            import numpy as np
+            df = pd.DataFrame.from_dict(messages)
 
-            words_list = pattern.sub('', message['text']).split()
+            # (+) compute average messages length
+            df['mes_len'] = df.text.apply(len)
+            avg_mes_len = np.mean(df.mes_len) / w1
+            del df['mes_len']
 
-            # Add to the set, no duplicates
-            bag_of_words.update(words_list)
+            # (-) was the last message recently? amount of seconds from last message
+            # sec_from_last_mes = (datetime.now() - datetime.strptime(df.tail(1).time.values[0], '%H:%M %m/%d/%Y')).total_seconds()
+            # sec_ratio = sec_from_last_mes / w2
 
-        # Find the avg messages per day ''
-        date_start = datetime.strptime(messages[0]['time'], '%H:%M %m/%d/%Y')
-        date_end = datetime.strptime(messages[-1]['time'], '%H:%M %m/%d/%Y')
-        days_count = (date_end - date_start).days
+            # (+) size of intersection with bag_of_words
+            bag_rank = self.bag_rank( set([j for k in [i.split() for i in df.text.values] for j in k]) ) / w3
 
-        # Final data we will use to calculate the rank
-        bag_rank = self.bag_rank(bag_of_words)
-        avg_messages_per_day = (days_count / len(messages)) / self.LONG_DAY
-        long_messages_rank = long_messages_count / len(messages)
+            date_start = datetime.strptime(messages[0]['time'], '%H:%M %m/%d/%Y')
+            date_end = datetime.strptime(messages[-1]['time'], '%H:%M %m/%d/%Y')
+            days_count = (date_end - date_start).days
+            avg_messages_per_day = w2 * (days_count / len(messages)) / self.LONG_DAY
 
-        # Best mathematical solution for this problem, is to normalize(0<x<1) the data and then find the average
-        return (long_messages_rank + bag_rank + avg_messages_per_day) / 3
+            return avg_mes_len + avg_messages_per_day + bag_rank
 
     def bag_rank(self, bag_of_words):
         """"
