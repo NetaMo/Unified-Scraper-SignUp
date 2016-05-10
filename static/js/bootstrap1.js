@@ -2411,12 +2411,19 @@ if (typeof jQuery === 'undefined') {
   function letsgo()
   {
     window.location.href = 'letsgo.html';
-
-
   }
 
   function getletsgo()
   {
-  $.get("/letsgo");
+    $.get("/letsgo");
   }
 
+  function headset()
+  {
+    window.location.href = 'headset2.html';
+  }
+
+  function callreset()
+  {
+    $.get("/reset");
+  }

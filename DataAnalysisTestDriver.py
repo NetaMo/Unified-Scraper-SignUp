@@ -44,10 +44,12 @@ def test_data_analysis(DB):
         print("\t{0}".format(i["contactName"]))
         for j in i["text"].split("\n"):
             print("\t\t{0}".format(j))
+    print()
     print("----------------------------------\n")
 
     print("some info\n")
     print(json.loads(DB.does_df_has_hebrew()))
+    print()
     print("----------------------------------\n")
 
     print("Messages containing the words good night.\n")
@@ -78,4 +80,4 @@ def test_data_analysis(DB):
             print("\n\t{0}".format(i["groupName"]))
         print("\t\t{0}".format(i["name"]))
     print()
-    print("----------------------------------\n")
+    print("----------------------------------")

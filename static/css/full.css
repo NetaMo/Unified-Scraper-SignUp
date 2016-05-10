@@ -98,6 +98,22 @@ body {
     -o-background-size: cover;
 }
 
+.headset {
+    background: url("/static/images/putonvrheadset.jpg") no-repeat center center fixed;
+    -webkit-background-size: cover;
+    -moz-background-size: cover;
+    background-size: cover;
+    -o-background-size: cover;
+}
+
+.reset1 {
+    background: url("/static/images/thankyou.jpg") no-repeat center center fixed;
+    -webkit-background-size: cover;
+    -moz-background-size: cover;
+    background-size: cover;
+    -o-background-size: cover;
+}
+
 .bottomaligned {
 position:absolute; bottom:20%;  margin-bottom:7px; left: 46%;
 }
@@ -114,11 +130,9 @@ position:absolute; bottom:28%;  margin-bottom:7px; left: 65%;
 position:absolute; bottom:30%;  margin-bottom:7px; left: 10%;
 }
 
-
 .bottomfullname {
 position:absolute; bottom:36%;  margin-bottom:7px; left: 50%;
 }
-
 
 .iphone {
 position:absolute; bottom:10%;  margin-bottom:7px; left: 40%;

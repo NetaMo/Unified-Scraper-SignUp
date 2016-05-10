@@ -35,7 +35,7 @@ class WhatsAppWebScraper:
     RUNNING_TIME = 300
 
     # How much time of the RUNNING_TIME we will dedicate for persons
-    FRACTION_PERSON = 0.8
+    FRACTION_PERSON = 0.9
 
     # Maximum groups and persons we want
     MAX_GROUPS = 6
@@ -128,6 +128,14 @@ class WhatsAppWebScraper:
                       messages)
                 self._go_to_next_contact()
                 continue
+            # except Exception as e:  # We had unknown error, we want to go to the next contact
+            #     print("### Fault redundancy ### Contact failed for unknown reason, going to next "
+            #           "contact. Hug yourself and debug. Details:",
+            #           contact_name,
+            #           contact_type,
+            #           messages)
+            #     self._go_to_next_contact()
+            #     continue
 
             # If the user received message while scraping we don't want to scrape it again
             if contact_name in self.scrapedContacts:
@@ -275,15 +283,14 @@ class WhatsAppWebScraper:
         :return: list of messages [{"name":name, "text": text, "time":time}, {"name":name,
         "text": text, "time":time}, ...]
         """
-        messages = [ ]
+        messages = []
         rawMessages = self.browser.execute_script(scrapingScripts.getTextMessages())
 
         # Onetime update for user whatsapp name
         if self.user_whatsapp_name is None:
             outMsg = self.browser.execute_script(scrapingScripts.getSingleOutgoingMessage())
             if outMsg is not None:
-                self.user_whatsapp_name, a, b = self._parse_message([outMsg])  # parse_msg gets list
-
+                self.user_whatsapp_name = outMsg[outMsg.find("\xa0")+1: outMsg.find("\xa0", outMsg.find("\xa0")+2)-1]
         # Extract data from raw message
         for msg in rawMessages:
 
@@ -546,6 +553,10 @@ class WhatsAppWebScraper:
         """
         Ranks each person so we can sort them by relevant
         """
+
+        if len(messages) == 0:
+            return 0.001
+
         long_messages_count = 0
         bag_of_words = set()
 
