@@ -5,6 +5,7 @@ from itertools import groupby
 import numpy as np
 import pandas as pd
 from pandas.tseries.frequencies import to_offset
+from WhatsAppWebScraper import WhatsAppWebScraper
 
 
 class WhatsAppDB:
@@ -89,22 +90,27 @@ class WhatsAppDB:
         """
         runs all of the data analysis methods and store the resulted json outputs
         """
+        # How many contacts to show in coloseum
+        number_of_contacts = 40
+        # Tells blast from the past from which part of entire chat to look in
+        past_fraction = 0.75
+        # the maximum number of groups to output in the get_most_active_groups_and_user_groups function
+        max_num_of_groups = 5
+
+        self.convert_to_datetime()
+
         self.chat_archive = self.get_chat_archive()
 
-        self.latest_chats = self.get_latest_chats(6)
+        self.latest_chats = self.get_latest_chats(WhatsAppWebScraper.NUMBER_OF_PERSON_CONTACT_PICTURES)
 
-        number_of_contacts = 150
-        past_fraction = 0.75
         self.closest_persons_and_msg = self.get_closest_persons_and_msg(number_of_contacts, past_fraction)
 
         self.have_hebrew = self.does_df_has_hebrew()
 
         self.good_night_messages = self.get_good_night_messages()
 
-        past_fraction = 0.25
-        self.dreams_or_old_messages = self.get_dreams_or_old_messages(past_fraction)
+        self.dreams_or_old_messages = self.get_dreams_or_old_messages()
 
-        max_num_of_groups = 5
         self.most_active_groups_and_user_groups = self.get_most_active_groups_and_user_groups(max_num_of_groups)
 
     def save_db_to_files(self, path):
@@ -254,21 +260,19 @@ class WhatsAppDB:
             if len(row.get_value("text").strip().split()) > 2:
                 dreams_df.drop(index, inplace=True)
 
-        print('1')
-        dreams_df.loc[:,'word_count'] = dreams_df.text.apply(self.get_word_count)
-        print('2')
+        # dreams_df['word_count'] = dreams_df.text.apply(self.get_word_count)
+        count_series = dreams_df.text.apply(self.get_word_count)
+        dreams_df.insert(0, "word_count", count_series)
+
         dreams_df = dreams_df.sort_values('word_count')
-        print('3')
         dreams_df = dreams_df[['contactName', 'text']]
-        print('4')
         res_df = dreams_df.tail(5)
-        print('5')
 
         return res_df
 
     def get_old_messages(self):
         """
-        finds old messages
+        finds old    messages
         :param past_fraction: the fraction part to look at from the oldest msg
         :return: dataframe of the data above
         """
@@ -283,20 +287,17 @@ class WhatsAppDB:
 
         old_messages_df = self.contacts_df[self.contacts_df['contactName'] == self.contacts_df['name']].drop_duplicates("contactName",
                                                                                                                         keep='last')
-        print("7")
         earlist_messages_df = old_messages_df.tail(20)
-        print("8")
-        print(earlist_messages_df)
-        earlist_messages_df.loc[:,'word_count'] = earlist_messages_df.text.apply(self.get_word_count)
-        print(earlist_messages_df)
-        print("9")
+
+        # earlist_messages_df.loc['word_count'] = earlist_messages_df.text.apply(self.get_word_count)
+        count_series = earlist_messages_df.text.apply(self.get_word_count)
+        earlist_messages_df.insert(0, "word_count", count_series)
         earlist_messages_df = earlist_messages_df.sort_values("word_count")
-        print("10")
 
         return earlist_messages_df[['contactName', 'text']]
 
     
-    def get_dreams_or_old_messages(self, past_fraction_param):
+    def get_dreams_or_old_messages(self):
         """
         decides what is better- old msgs or dream msgs and returns it
         :param past_fraction_param:
@@ -304,14 +305,19 @@ class WhatsAppDB:
         """
         dreams_df = self.get_dream_messages()
 
-        old_messages_df = pd.DataFrame()
-        if dreams_df.size < 5:
-            old_messages_df = self.get_old_messages()
+        # old_messages_df = pd.DataFrame()
+        # if dreams_df.size < 5:
+        old_messages_df = self.get_old_messages()
 
-        while dreams_df.size < 5:
-            dreams_df.append(old_messages_df.tail(1))
+        initial_size = dreams_df.size
+        while initial_size < 5:
+            dreams_df =  dreams_df.append(old_messages_df.tail(1))
             old_messages_df = old_messages_df.iloc[:-1]
 
+            initial_size = dreams_df.size
+
+        print("dreams df:")
+        print(dreams_df)
         return dreams_df.to_json(date_format='iso', double_precision=0, date_unit='s', orient='records')
 
     def get_most_active_groups_and_user_groups(self, max_number_of_groups): # TODO add the user to each group at the end if he isnt listed on them

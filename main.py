@@ -1,21 +1,20 @@
 import glob
 import os
 import sys
-import time
-
 import tornado.ioloop
 import tornado.web
-
 import WhatsAppWebScraper
 from Webdriver import Webdriver
 from WhatsAppDB import WhatsAppDB
+
+import DataAnalysisTestDriver # TODO remove wehn not needed
 
 """
 run the WhatsApp web scrapper.
 """
 
 
-def scrape_whatsapp_and_analyze_db():
+def scrape_whatsapp():
     """
     runs the whatsapp web scrapping procedure.
     :param db: the WhatsAppDB object
@@ -26,8 +25,6 @@ def scrape_whatsapp_and_analyze_db():
     scraper.scrape(DB)  # scrape
     print("finished scraping,load headset instructions")
     driver.close()  # close driver
-    DB.convert_to_datetime()
-    DB.run_data_analysis_and_store_results()
 
 def InitializeDBAndAvatars():
     """
@@ -125,12 +122,15 @@ class LetsGoHandler(tornado.web.RequestHandler):
     def get(self):
         print("Stage 7: Lets GO!, Load whatssapp web!")
         # Insert whats up web run here
-        scrape_whatsapp_and_analyze_db()
+        scrape_whatsapp()
 
         # if mainDriver is not None:
         #     mainDriver.getBrowser().get("localhost:8888/static/headset2.html")
         # mainDriver.getBrowser().refresh()
-        import DataAnalysisTestDriver
+
+        # analyze and Save the results
+        DB.run_data_analysis_and_store_results()
+
         DataAnalysisTestDriver.test_data_analysis(DB)
         print("going out of handler letsGo")
         self.finish()
@@ -260,7 +260,8 @@ if __name__ == "__main__":
     # save the data to a file for future work
     elif sys.argv[1] == 'SaveData':
         print("scrapping and saving data to pickle")
-        scrape_whatsapp_and_analyze_db()
+        scrape_whatsapp()
+
         DB.save_db_to_files(".\\stored data\\")
         sys.exit()
 
@@ -269,19 +270,22 @@ if __name__ == "__main__":
         print('loading the data')
         DB.load_db_from_files(".\\stored data\\")
 
-        # Print data
-        import DataAnalysisTestDriver
-        DataAnalysisTestDriver.test_data_analysis(DB)
-        # Save data
+        # analyze and Save the results
         DB.run_data_analysis_and_store_results()
+
+        # Print data
+        DataAnalysisTestDriver.test_data_analysis(DB)
+
 
     # just runs the scrapping and analysis
     else:
         print("scrape_whatsapp")
-        scrape_whatsapp_and_analyze_db()
+        scrape_whatsapp()
+
+        # analyze and Save the results
+        DB.run_data_analysis_and_store_results()
 
         # Print data
-        import DataAnalysisTestDriver
         DataAnalysisTestDriver.test_data_analysis(DB)
 
         print("server keeps running for unity get requests")
