@@ -237,6 +237,10 @@ class WhatsAppDB:
 
         return res_df.to_json(date_format='iso', double_precision=0, date_unit='s', orient='records')
 
+    @staticmethod
+    def get_word_count(string):
+        return len(string.strip().split())
+
     def get_dream_messages(self):
         """
         finds messages containing dream words
@@ -250,12 +254,15 @@ class WhatsAppDB:
             if len(row.get_value("text").strip().split()) > 2:
                 dreams_df.drop(index, inplace=True)
 
-        dreams_df['word_count'] = dreams_df.text.apply(str.strip)
-        dreams_df['word_count'] = dreams_df['word_count'].apply(str.split)
-        dreams_df['word_count'] = dreams_df['word_count'].apply(len)
-        dreams_df.sort_values("word_count", inplace=True)
+        print('1')
+        dreams_df.loc[:,'word_count'] = dreams_df.text.apply(self.get_word_count)
+        print('2')
+        dreams_df = dreams_df.sort_values('word_count')
+        print('3')
         dreams_df = dreams_df[['contactName', 'text']]
+        print('4')
         res_df = dreams_df.tail(5)
+        print('5')
 
         return res_df
 
@@ -276,11 +283,15 @@ class WhatsAppDB:
 
         old_messages_df = self.contacts_df[self.contacts_df['contactName'] == self.contacts_df['name']].drop_duplicates("contactName",
                                                                                                                         keep='last')
+        print("7")
         earlist_messages_df = old_messages_df.tail(20)
-        earlist_messages_df['word_count'] = earlist_messages_df.text.apply(str.strip)
-        earlist_messages_df['word_count'] = earlist_messages_df['word_count'].apply(str.split)
-        earlist_messages_df['word_count'] = earlist_messages_df['word_count'].apply(len)
-        earlist_messages_df.sort_values("word_count", inplace=True)
+        print("8")
+        print(earlist_messages_df)
+        earlist_messages_df.loc[:,'word_count'] = earlist_messages_df.text.apply(self.get_word_count)
+        print(earlist_messages_df)
+        print("9")
+        earlist_messages_df = earlist_messages_df.sort_values("word_count")
+        print("10")
 
         return earlist_messages_df[['contactName', 'text']]
 
@@ -293,6 +304,7 @@ class WhatsAppDB:
         """
         dreams_df = self.get_dream_messages()
 
+        old_messages_df = pd.DataFrame()
         if dreams_df.size < 5:
             old_messages_df = self.get_old_messages()
 
