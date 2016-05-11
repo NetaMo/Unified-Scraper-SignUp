@@ -1,20 +1,20 @@
 import glob
 import os
 import sys
-
 import tornado.ioloop
 import tornado.web
-
 import WhatsAppWebScraper
 from Webdriver import Webdriver
 from WhatsAppDB import WhatsAppDB
+
+import DataAnalysisTestDriver # TODO remove wehn not needed
 
 """
 run the WhatsApp web scrapper.
 """
 
 
-def scrape_whatsapp_and_analyze_db():
+def scrape_whatsapp():
     """
     runs the whatsapp web scrapping procedure.
     :param db: the WhatsAppDB object
@@ -23,33 +23,29 @@ def scrape_whatsapp_and_analyze_db():
     driver = Webdriver()  # create new driver
     scraper = WhatsAppWebScraper.WhatsAppWebScraper(driver)  # create new WhatsApp scraper
     scraper.scrape(DB)  # scrape
-    # TODO for debugging, delete
-    # while(True):
-    #     continue
+    print("finished scraping,load headset instructions")
     driver.close()  # close driver
 
-    DB.convert_to_datetime()
 
-    DB.run_data_analysis_and_store_results()
-
-
-def InitializeDBAndAvatars(arg):
+def InitializeDBAndAvatars():
     """
     Initialize a new DB instance,
     and remove all avatars
     """
+    print("InitializeDBAndAvatars")
     global DB  # TODO
     DB = WhatsAppDB()
-    if arg != "LoadData":
-        files = glob.glob('static/tempAvatars/*')
-        for f in files:
-            if 'contact_avatar' in f:
-                os.remove(f)
+    files = glob.glob('static/tempAvatars/*')
+    for f in files:
+        if 'contact_avatar' in f:
+            os.remove(f)
 
 
 """""
 web page handlers:
 """""
+
+
 class IphoneHandler(tornado.web.RequestHandler):
 
     def get(self):
@@ -127,13 +123,22 @@ class ChoosePhoneHandler(tornado.web.RequestHandler):
 class LetsGoHandler(tornado.web.RequestHandler):
 
     def get(self):
+
         print("Stage 7: Lets GO!, Load whatssapp web!")
         # Insert whats up web run here
-        scrape_whatsapp_and_analyze_db()
+        scrape_whatsapp()
 
-        self.finish()
-        import DataAnalysisTestDriver
+        # if mainDriver is not None:
+        #     mainDriver.getBrowser().get("localhost:8888/static/headset2.html")
+        # mainDriver.getBrowser().refresh()
+
+        # analyze and Save the results
+        DB.run_data_analysis_and_store_results()
+
         DataAnalysisTestDriver.test_data_analysis(DB)
+        print("going out of handler letsGo")
+        self.finish()
+
 
 """
 unity communication handlers
@@ -146,7 +151,9 @@ class GiveLatestChatsHandler(tornado.web.RequestHandler):
         print("GetLatestChatsHandler")
         self.finish(DB.latest_chats)
 
+
 class GiveClosestPersonsAndMsgs(tornado.web.RequestHandler):
+
     def get(self):
         print("GetClosestPersonsAndMsgs")
         self.finish(DB.closest_persons_and_msg)
@@ -158,10 +165,12 @@ class HaveHebrew(tornado.web.RequestHandler):
         print("HaveHebrew")
         self.finish(DB.have_hebrew)
 
+
 class GiveGoodNightMessages(tornado.web.RequestHandler):
     def get(self):
         print("GiveGoodNightMessages")
         self.finish(DB.good_night_messages)
+
 
 class GiveDreamsOrOldMessages(tornado.web.RequestHandler):
 
@@ -169,17 +178,20 @@ class GiveDreamsOrOldMessages(tornado.web.RequestHandler):
         print("GiveDreamsOrOldMessages")
         self.finish(DB.dreams_or_old_messages)
 
+
 class GiveMostActiveGroupsAndUserGroups(tornado.web.RequestHandler):
 
     def get(self):
         print("GiveMostActiveGroupsAndUserGroups")
         self.finish(DB.most_active_groups_and_user_groups)
 
+
 class GiveChatArchive(tornado.web.RequestHandler):
 
     def get(self):
         print("GiveChatArchive")
         self.finish(DB.chat_archive)
+
 
 class ResetHandler(tornado.web.RequestHandler):
     """
@@ -188,12 +200,17 @@ class ResetHandler(tornado.web.RequestHandler):
     def get(self):
         print("ResetHandler")
         InitializeDBAndAvatars()
-        driver1.browser.execute_async_script('''
-        setTimeout(function(){
-            window.location = '/';
-        }, 2000);
-        ''')
-        self.finish('')
+        try:
+            mainDriver.getBrowser().execute_async_script('''
+            setTimeout(function(){
+                window.location = '/static/reset.html';
+            }, 1000);
+            ''')
+        except Exception as e:
+            print(e)
+
+        self.finish()
+
 
 """""
 make_app, settings, main
@@ -227,28 +244,32 @@ def make_app():
 
 # Initialize and empty DB variable for future use
 DB = None
+
 # Initialize an empty driver for the user.
 # We'll use this to send the user back to the main page when we reset the experience
 driver_user = None
 
 if __name__ == "__main__":
 
+    InitializeDBAndAvatars()
+    global mainDriver
+
     port = 8888
     app = make_app()
-
-    InitializeDBAndAvatars(sys.argv[1])
 
     # enter webPage as the first argument to run the web page
     if sys.argv[1] == 'WebPage':
         print("web Page")
         # A Chrome window to navigate to our site
-        driver1 = Webdriver()
-        driver1.browser.get("localhost:8888")
+
+        mainDriver = Webdriver()
+        mainDriver.browser.get("localhost:" + str(port))
 
     # save the data to a file for future work
     elif sys.argv[1] == 'SaveData':
         print("scrapping and saving data to pickle")
-        scrape_whatsapp_and_analyze_db()
+        scrape_whatsapp()
+
         DB.save_db_to_files(".\\stored data\\")
         sys.exit()
 
@@ -257,20 +278,22 @@ if __name__ == "__main__":
         print('loading the data')
         DB.load_db_from_files(".\\stored data\\")
 
+        # analyze and Save the results
+        DB.run_data_analysis_and_store_results()
+
         # Print data
-        import DataAnalysisTestDriver
         DataAnalysisTestDriver.test_data_analysis(DB)
 
-        # Save data
-        DB.run_data_analysis_and_store_results()  # TODO is this just duplicating analyzed data?
 
     # just runs the scrapping and analysis
     else:
         print("scrape_whatsapp")
-        scrape_whatsapp_and_analyze_db()
+        scrape_whatsapp()
+
+        # analyze and Save the results
+        DB.run_data_analysis_and_store_results()
 
         # Print data
-        import DataAnalysisTestDriver
         DataAnalysisTestDriver.test_data_analysis(DB)
 
         print("server keeps running for unity get requests")
@@ -281,6 +304,5 @@ if __name__ == "__main__":
     # app.listen(port, address="192.168.173.1")  # listen to ip
 
     tornado.ioloop.IOLoop.current().start()
-
 
 

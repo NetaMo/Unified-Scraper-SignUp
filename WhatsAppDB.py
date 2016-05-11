@@ -1,10 +1,10 @@
 import json
 from datetime import date, datetime, time as dt
 from itertools import groupby
-
 import numpy as np
 import pandas as pd
 from pandas.tseries.frequencies import to_offset
+import WhatsAppWebScraper
 
 
 class WhatsAppDB:
@@ -16,14 +16,14 @@ class WhatsAppDB:
 
         self.contacts_df = pd.DataFrame(data=None, columns=["contactName", "name", "text", "time"])
         self.contacts_df.name.astype('category')
-        
+
         self.groups_df = pd.DataFrame(columns=["groupName", "name", "messagesCount", "totalMessages"])
         self.groups_df.messagesCount.astype(int)
         self.groups_df.totalMessages.astype(int)
 
         self.user_first_name = ""
         self.user_last_name = ""
-        self.user_whatsapp_name = ""
+        self.user_whatsapp_name = "+972 54-750-8445"
         self.user_nicknames = []
         self.phone = ""
 
@@ -89,22 +89,27 @@ class WhatsAppDB:
         """
         runs all of the data analysis methods and store the resulted json outputs
         """
+        # How many contacts to show in coloseum
+        number_of_contacts = 40
+        # Tells blast from the past from which part of entire chat to look in
+        past_fraction = 0.75
+        # the maximum number of groups to output in the get_most_active_groups_and_user_groups function
+        max_num_of_groups = 5
+
+        self.convert_to_datetime()
+
         self.chat_archive = self.get_chat_archive()
 
-        self.latest_chats = self.get_latest_chats(6)
+        self.latest_chats = self.get_latest_chats(WhatsAppWebScraper.WhatsAppWebScraper.NUMBER_OF_PERSON_CONTACT_PICTURES)
 
-        number_of_contacts = 150
-        past_fraction = 0.75
         self.closest_persons_and_msg = self.get_closest_persons_and_msg(number_of_contacts, past_fraction)
 
         self.have_hebrew = self.does_df_has_hebrew()
 
         self.good_night_messages = self.get_good_night_messages()
 
-        past_fraction = 0.25
-        self.dreams_or_old_messages = self.get_dreams_or_old_messages(past_fraction)
+        self.dreams_or_old_messages = self.get_dreams_or_old_messages()
 
-        max_num_of_groups = 5
         self.most_active_groups_and_user_groups = self.get_most_active_groups_and_user_groups(max_num_of_groups)
 
     def save_db_to_files(self, path):
@@ -179,7 +184,7 @@ class WhatsAppDB:
         sliced_df = latest_msgs_df[['contactName', 'text', 'time']]
         return sliced_df.to_json(date_format='iso', double_precision=0, date_unit='s', orient='records')
 
-    def get_blast_from_the_past(self, past_fraction):
+    def get_blast_from_the_past(self, past_fraction): # TODO rewrite if we scrape the bottom of the archive
         """
         gets a contact that the user talked to a lot in the past
         :param past_fraction: the fraction part to go back in time
@@ -194,7 +199,7 @@ class WhatsAppDB:
         df_past_chats = self.contacts_df.where(self.contacts_df.time <= past_chats_threshold_date).dropna()
         return df_past_chats.contactName.value_counts().head(1).index[0]
 
-    def get_closest_persons_and_msg(self, number_of_persons, past_fraction_param):
+    def get_closest_persons_and_msg(self, number_of_persons, past_fraction_param): # TODO rewrite more efficiently
         """
         finds the number_of_persons most talked persons and a message that has the user name in it.
         :param number_of_persons: the number of close persons to find.
@@ -209,7 +214,7 @@ class WhatsAppDB:
         closest_persons_df = pd.DataFrame()
         for contactName in closest_persons_ndarray:
             closest_persons_df = closest_persons_df.append({'contactName': contactName, 'text': self.user_first_name}, ignore_index=True)
-            for index, col in self.contacts_df.iterrows():
+            for index, col in self.contacts_df[self.contacts_df['contactName'] == self.contacts_df['name']].iterrows():
                 if col['contactName'] == contactName:
                     if any(word in col['text'] for word in self.user_nicknames):
                         closest_persons_df.iloc[i].text = col['text']
@@ -237,52 +242,79 @@ class WhatsAppDB:
 
         return res_df.to_json(date_format='iso', double_precision=0, date_unit='s', orient='records')
 
-    def get_dream_messages(self):  # todo check the results and decide on size
+    @staticmethod
+    def get_word_count(string):
+        return len(string.strip().split())
+
+    def get_dream_messages(self):
         """
         finds messages containing dream words
         :return: dataframe of the data above
         """
-        good_night_df = self.contacts_df[self.contacts_df.text.str.lower().str.contains(
+        dreams_df = self.contacts_df[['contactName', 'text']]
+        dreams_df = dreams_df[self.contacts_df.text.str.lower().str.contains(
             "חלמתי|חלומות|חלמת|dream|dreamt|dreaming|dreams|rêver|rêves|rêvé|rêve|reve|reves|rever|dreamed")]
-        good_night_df = good_night_df[['contactName', 'text']]
-        return good_night_df[['contactName', 'text']]
 
-    def get_old_messages(self, past_fraction):
+        for index, row in dreams_df.iterrows():
+            if len(row.get_value("text").strip().split()) > 2:
+                dreams_df.drop(index, inplace=True)
+
+        # dreams_df['word_count'] = dreams_df.text.apply(self.get_word_count)
+        count_series = dreams_df.text.apply(self.get_word_count)
+        dreams_df.insert(0, "word_count", count_series)
+
+        dreams_df = dreams_df.sort_values('word_count')
+        dreams_df = dreams_df[['contactName', 'text']]
+        res_df = dreams_df.tail(5)
+
+        return res_df
+
+    def get_old_messages(self):
         """
-        finds old messages
+        finds old    messages
         :param past_fraction: the fraction part to look at from the oldest msg
         :return: dataframe of the data above
         """
         # noinspection PyTypeChecker
-        past_chats_threshold_days = past_fraction * (
-            pd.Timestamp(date(datetime.today().year, datetime.today().month, datetime.today().day)).date() - (
-                min(self.contacts_df.time).date()))
-        past_chats_threshold_date = min(self.contacts_df.time) + to_offset(past_chats_threshold_days)
-        # print(past_chats_threshold_date)
-        df_past_chats = self.contacts_df.where(self.contacts_df.time <= past_chats_threshold_date).dropna()
-        return df_past_chats[['contactName', 'text']]  # todo check how to filter good past msgs
-    
-    def get_dreams_or_old_messages(self, past_fraction_param):
+        # past_chats_threshold_days = past_fraction * (
+        #     pd.Timestamp(date(datetime.today().year, datetime.today().month, datetime.today().day)).date() - (
+        #         min(self.contacts_df.time).date()))
+        # past_chats_threshold_date = min(self.contacts_df.time) + to_offset(past_chats_threshold_days)
+        # # print(past_chats_threshold_date)
+        # df_past_chats = self.contacts_df.where(self.contacts_df.time <= past_chats_threshold_date).dropna()
+        # return df_past_chats[['contactName', 'text']]
+
+        old_messages_df = self.contacts_df[self.contacts_df['contactName'] == self.contacts_df['name']].drop_duplicates("contactName",
+                                                                                                                        keep='last')
+        earlist_messages_df = old_messages_df.tail(20)
+
+        # earlist_messages_df.loc['word_count'] = earlist_messages_df.text.apply(self.get_word_count)
+        count_series = earlist_messages_df.text.apply(self.get_word_count)
+        earlist_messages_df.insert(0, "word_count", count_series)
+        earlist_messages_df = earlist_messages_df.sort_values("word_count")
+
+        return earlist_messages_df[['contactName', 'text']]
+
+    def get_dreams_or_old_messages(self):
         """
         decides what is better- old msgs or dream msgs and returns it
-        :param past_fraction_param:
         :return: json with the data
         """
         dreams_df = self.get_dream_messages()
 
-        num_of_sentences = 0
-        for text in dreams_df.text:  # todo check the results of this logic
-            if len(text.strip().split()) > 2:
-                num_of_sentences += 1
+        old_messages_df = self.get_old_messages()
 
-        if num_of_sentences >= 5:
-            return dreams_df.to_json(date_format='iso', double_precision=0, date_unit='s', orient='records')
-        else:
-            return self.get_old_messages(past_fraction_param).to_json(date_format='iso', double_precision=0,
-                                                                                     date_unit='s', orient='records')
+        initial_size = len(dreams_df.index)
+        while initial_size < 5:
+            dreams_df = dreams_df.append(old_messages_df.tail(1))
 
+            old_messages_df = old_messages_df[:-1]
 
-    def get_most_active_groups_and_user_groups(self, max_number_of_groups):
+            initial_size = len(dreams_df.index)
+
+        return dreams_df.to_json(date_format='iso', double_precision=0, date_unit='s', orient='records')
+
+    def get_most_active_groups_and_user_groups(self, max_number_of_groups): # TODO add the user to each group at the end if he isnt listed on them
         """
         finds the most active groups and gets the users inside by their activity
         :param max_number_of_groups: how much groups to return
@@ -293,6 +325,12 @@ class WhatsAppDB:
 
         result_df = self.groups_df.loc[self.groups_df['groupName'].isin(group_names)]
         sliced_df = result_df[['groupName', 'name']]
+
+        # for each group, if user (i.e. 'self.user_whatsapp_name') isn't in it, add it (with a brand new index)
+        for group_name in sliced_df.groupName.unique():
+            if self.user_whatsapp_name not in sliced_df[sliced_df.groupName == group_name].name.tolist():
+                sliced_df = pd.concat([sliced_df, pd.DataFrame([[group_name, self.user_whatsapp_name]],
+                                                               columns=(['groupName', 'name']))], ignore_index=True)
 
         return sliced_df.to_json(date_format='iso', double_precision=0, date_unit='s', orient='records')
 

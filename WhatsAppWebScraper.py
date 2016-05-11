@@ -6,7 +6,6 @@ from PIL import Image, ImageChops
 from selenium.common.exceptions import StaleElementReferenceException
 from selenium.webdriver import ActionChains
 from selenium.webdriver.common.keys import Keys
-
 import ScrapingScripts as scrapingScripts
 from Webdriver import Webdriver
 
@@ -30,14 +29,14 @@ class WhatsAppWebScraper:
     TEMP_SCREENSHOT_PATH = "full_screen_shot_temp.png"
 
     # Total time for the chat scraper
-    RUNNING_TIME = 10
+    RUNNING_TIME = 300
 
     # How much time of the RUNNING_TIME we will dedicate for persons
-    FRACTION_PERSON = 0.80
+    FRACTION_PERSON = 0.9
 
     # Maximum groups and persons we want
     MAX_GROUPS = 6
-    MAX_PERSONS = 400
+    MAX_PERSONS = 6
 
     # Maximum time tha scraper keep clicking load more and get more messages
     MIN_TIME_NEEDED_TO_GET_ENOUGH_CONTACTS = int(RUNNING_TIME / NUMBER_OF_PERSON_CONTACT_PICTURES)
@@ -50,7 +49,7 @@ class WhatsAppWebScraper:
     LONG_MESSAGE = 40  # Define what does it mean long message (length of one message)
     LONG_DAY = 80  # Define what does it mean long day (count of messages in one day)
     THRESHOLD_RANK = 0.16  # Define the min rank, above this rank the scraper will scrape the contact for longer
-    GOOD_RANK_ADDITIONAL_SECONDS = 10  # If the contact is above rank, how many seconds we add for him
+    GOOD_RANK_ADDITIONAL_SECONDS = 200  # If the contact is above rank, how many seconds we add for him
 
     # set of the interesting words for the dynamic chat loading
     interesting_words = set(codecs.open('bag of words', encoding='utf-8').read().split())
@@ -108,14 +107,22 @@ class WhatsAppWebScraper:
         # Iterate over the contacts until we reach our RUNNING_TIME
         while time.time() - running_time_start < self.RUNNING_TIME:
             contact_iteration_start = time.time()
-            # try:
-            # load all conversations for current open chat
-            contact_name, contact_type, messages = self._load_chat()
+            try:
+                # load all conversations for current open chat
+                contact_name, contact_type, messages = self._load_chat()
 
-            # If we scraped enough of this contact load chat will return None-s
-            if (contact_name, contact_type, messages) == (None, None, None):
-                print("...... Already scraped enough contacts of type", contact_type, "sorry",
-                      contact_name)
+                # If we scraped enough of this contact load chat will return None-s
+                if (contact_name, contact_type, messages) == (None, None, None):
+                    print("...... Already scraped enough contacts of type", contact_type, "sorry",
+                          contact_name)
+                    self._go_to_next_contact()
+                    continue
+            except Exception as e:  # We had unknown error, we want to go to the next contact
+                print("### Fault redundancy ### Contact failed for unknown reason, going to next "
+                      "contact. Hug yourself and debug. Details:",
+                      contact_name,
+                      contact_type,
+                      messages)
                 self._go_to_next_contact()
                 continue
             # except Exception as e:  # We had unknown error, we want to go to the next contact
@@ -223,7 +230,7 @@ class WhatsAppWebScraper:
         if contactType == 'person':
             rank = self._get_rank(messages)
             if rank > self.THRESHOLD_RANK:
-                max_load_chat_time += self.GOOD_RANK_ADDITIONAL_SECONDS * 10  # TODO delete
+                max_load_chat_time += self.GOOD_RANK_ADDITIONAL_SECONDS
                 print("...... The next contact is interesting... scraping more nom nom.")
             print("...... The next contact's rank is", round(rank, 3))
 
@@ -273,15 +280,14 @@ class WhatsAppWebScraper:
         :return: list of messages [{"name":name, "text": text, "time":time}, {"name":name,
         "text": text, "time":time}, ...]
         """
-        messages = [ ]
+        messages = []
         rawMessages = self.browser.execute_script(scrapingScripts.getTextMessages())
 
         # Onetime update for user whatsapp name
         if self.user_whatsapp_name is None:
             outMsg = self.browser.execute_script(scrapingScripts.getSingleOutgoingMessage())
             if outMsg is not None:
-                self.user_whatsapp_name, a, b = self._parse_message([outMsg])  # parse_msg gets list
-
+                self.user_whatsapp_name = outMsg[outMsg.find("\xa0")+1: outMsg.find("\xa0", outMsg.find("\xa0")+2)-1]
         # Extract data from raw message
         for msg in rawMessages:
 
