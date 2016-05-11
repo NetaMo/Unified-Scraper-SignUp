@@ -44,13 +44,14 @@ def InitializeDBAndAvatars():
 """""
 web page handlers:
 """""
+
+
 class IphoneHandler(tornado.web.RequestHandler):
 
     def get(self):
         print("Stage 6: Iphone Chosen")
         DB.phone = "ios"
         self.finish()
-
 
 
 class AndroidHandler(tornado.web.RequestHandler):
@@ -149,6 +150,7 @@ class GiveLatestChatsHandler(tornado.web.RequestHandler):
         print("GetLatestChatsHandler")
         self.finish(DB.latest_chats)
 
+
 class GiveClosestPersonsAndMsgs(tornado.web.RequestHandler):
 
     def get(self):
@@ -162,10 +164,12 @@ class HaveHebrew(tornado.web.RequestHandler):
         print("HaveHebrew")
         self.finish(DB.have_hebrew)
 
+
 class GiveGoodNightMessages(tornado.web.RequestHandler):
     def get(self):
         print("GiveGoodNightMessages")
         self.finish(DB.good_night_messages)
+
 
 class GiveDreamsOrOldMessages(tornado.web.RequestHandler):
 
@@ -173,17 +177,20 @@ class GiveDreamsOrOldMessages(tornado.web.RequestHandler):
         print("GiveDreamsOrOldMessages")
         self.finish(DB.dreams_or_old_messages)
 
+
 class GiveMostActiveGroupsAndUserGroups(tornado.web.RequestHandler):
 
     def get(self):
         print("GiveMostActiveGroupsAndUserGroups")
         self.finish(DB.most_active_groups_and_user_groups)
 
+
 class GiveChatArchive(tornado.web.RequestHandler):
 
     def get(self):
         print("GiveChatArchive")
         self.finish(DB.chat_archive)
+
 
 class ResetHandler(tornado.web.RequestHandler):
     """
@@ -200,10 +207,6 @@ class ResetHandler(tornado.web.RequestHandler):
             ''')
         except Exception as e:
             print("shits")
-
-        # mainDriver.getBrowser().get("localhost:8888/static/reset")
-        # time.sleep(5)
-        # mainDriver.getBrowser().get("localhost:8888")
 
         self.finish()
 
@@ -240,6 +243,8 @@ def make_app():
 
 # Initialize and empty DB variable for future use
 DB = None
+WHATSAPP_RUN_TIME = 10
+
 # Initialize an empty driver for the user.
 # We'll use this to send the user back to the main page when we reset the experience
 driver_user = None
@@ -256,6 +261,7 @@ if __name__ == "__main__":
     if sys.argv[1] == 'WebPage':
         print("web Page")
         # A Chrome window to navigate to our site
+
         mainDriver = Webdriver()
         mainDriver.browser.get("localhost:" + str(port))
 

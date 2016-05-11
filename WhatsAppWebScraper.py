@@ -9,6 +9,7 @@ from selenium.common.exceptions import StaleElementReferenceException
 from selenium.webdriver import ActionChains
 from selenium.webdriver.common.keys import Keys
 
+import main
 import ScrapingScripts as scrapingScripts
 from Webdriver import Webdriver
 
@@ -32,7 +33,7 @@ class WhatsAppWebScraper:
     TEMP_SCREENSHOT_PATH = "full_screen_shot_temp.png"
 
     # Total time for the chat scraper
-    RUNNING_TIME = 300
+    RUNNING_TIME = main.WHATSAPP_RUN_TIME
 
     # How much time of the RUNNING_TIME we will dedicate for persons
     FRACTION_PERSON = 0.9
