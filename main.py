@@ -26,11 +26,13 @@ def scrape_whatsapp():
     print("finished scraping,load headset instructions")
     driver.close()  # close driver
 
+
 def InitializeDBAndAvatars():
     """
     Initialize a new DB instance,
     and remove all avatars
     """
+    print("InitializeDBAndAvatars")
     global DB  # TODO
     DB = WhatsAppDB()
     files = glob.glob('static/tempAvatars/*')
