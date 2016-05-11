@@ -2,19 +2,16 @@
  * Created by elevanon on 5/10/2016.
  */
 
-
-
 // get All first messages (iterating on Chat)
 
 var allContacts = [];
 var curDict;
-var lastContact = "place holder";
-var isGroup;
 var curContactName;
 var curMsgName;
 var curMsgTime;
 var curType;
 var curMsgText;
+var curMsgObject;
 var curMsg;
 var curChat;
 var curNumOfMsgs;
@@ -37,7 +34,8 @@ for (i = 0; i < Store.Chat.models.length; i++) {
     }
     else if (curChat.isGroup)
     {
-        curType = "group"
+        curType = "group";
+        continue;
     }
     else
     {
