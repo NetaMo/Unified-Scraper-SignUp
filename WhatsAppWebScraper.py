@@ -40,7 +40,7 @@ class WhatsAppWebScraper:
 
     # Maximum groups and persons we want
     MAX_GROUPS = 6
-    MAX_PERSONS = 400
+    MAX_PERSONS = 60
 
     # Maximum time tha scraper keep clicking load more and get more messages
     MIN_TIME_NEEDED_TO_GET_ENOUGH_CONTACTS = int(RUNNING_TIME / NUMBER_OF_PERSON_CONTACT_PICTURES)

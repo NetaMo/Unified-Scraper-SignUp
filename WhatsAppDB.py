@@ -17,7 +17,7 @@ class WhatsAppDB:
 
         self.contacts_df = pd.DataFrame(data=None, columns=["contactName", "name", "text", "time"])
         self.contacts_df.name.astype('category')
-        
+
         self.groups_df = pd.DataFrame(columns=["groupName", "name", "messagesCount", "totalMessages"])
         self.groups_df.messagesCount.astype(int)
         self.groups_df.totalMessages.astype(int)
@@ -296,28 +296,23 @@ class WhatsAppDB:
 
         return earlist_messages_df[['contactName', 'text']]
 
-    
     def get_dreams_or_old_messages(self):
         """
         decides what is better- old msgs or dream msgs and returns it
-        :param past_fraction_param:
         :return: json with the data
         """
         dreams_df = self.get_dream_messages()
 
-        # old_messages_df = pd.DataFrame()
-        # if dreams_df.size < 5:
         old_messages_df = self.get_old_messages()
 
-        initial_size = dreams_df.size
+        initial_size = len(dreams_df.index)
         while initial_size < 5:
-            dreams_df =  dreams_df.append(old_messages_df.tail(1))
-            old_messages_df = old_messages_df.iloc[:-1]
+            dreams_df = dreams_df.append(old_messages_df.tail(1))
 
-            initial_size = dreams_df.size
+            old_messages_df = old_messages_df[:-1]
 
-        print("dreams df:")
-        print(dreams_df)
+            initial_size = len(dreams_df.index)
+
         return dreams_df.to_json(date_format='iso', double_precision=0, date_unit='s', orient='records')
 
     def get_most_active_groups_and_user_groups(self, max_number_of_groups): # TODO add the user to each group at the end if he isnt listed on them

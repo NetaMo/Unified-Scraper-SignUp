@@ -26,11 +26,13 @@ def scrape_whatsapp():
     print("finished scraping,load headset instructions")
     driver.close()  # close driver
 
+
 def InitializeDBAndAvatars():
     """
     Initialize a new DB instance,
     and remove all avatars
     """
+    print("InitializeDBAndAvatars")
     global DB  # TODO
     DB = WhatsAppDB()
     files = glob.glob('static/tempAvatars/*')
@@ -204,7 +206,7 @@ class ResetHandler(tornado.web.RequestHandler):
             }, 1000);
             ''')
         except Exception as e:
-            print("shits")
+            print(e)
 
         self.finish()
 
@@ -241,7 +243,7 @@ def make_app():
 
 # Initialize and empty DB variable for future use
 DB = None
-WHATSAPP_RUN_TIME = 10
+WHATSAPP_RUN_TIME = 300
 
 # Initialize an empty driver for the user.
 # We'll use this to send the user back to the main page when we reset the experience
