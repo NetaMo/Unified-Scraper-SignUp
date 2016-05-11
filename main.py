@@ -123,6 +123,7 @@ class ChoosePhoneHandler(tornado.web.RequestHandler):
 class LetsGoHandler(tornado.web.RequestHandler):
 
     def get(self):
+
         print("Stage 7: Lets GO!, Load whatssapp web!")
         # Insert whats up web run here
         scrape_whatsapp()
@@ -243,7 +244,6 @@ def make_app():
 
 # Initialize and empty DB variable for future use
 DB = None
-WHATSAPP_RUN_TIME = 300
 
 # Initialize an empty driver for the user.
 # We'll use this to send the user back to the main page when we reset the experience

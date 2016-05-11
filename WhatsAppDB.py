@@ -1,7 +1,6 @@
 import json
 from datetime import date, datetime, time as dt
 from itertools import groupby
-
 import numpy as np
 import pandas as pd
 from pandas.tseries.frequencies import to_offset
@@ -24,7 +23,7 @@ class WhatsAppDB:
 
         self.user_first_name = ""
         self.user_last_name = ""
-        self.user_whatsapp_name = ""
+        self.user_whatsapp_name = "+972 54-750-8445"
         self.user_nicknames = []
         self.phone = ""
 
@@ -101,7 +100,7 @@ class WhatsAppDB:
 
         self.chat_archive = self.get_chat_archive()
 
-        self.latest_chats = self.get_latest_chats(WhatsAppWebScraper.NUMBER_OF_PERSON_CONTACT_PICTURES)
+        self.latest_chats = self.get_latest_chats(WhatsAppWebScraper.WhatsAppWebScraper.NUMBER_OF_PERSON_CONTACT_PICTURES)
 
         self.closest_persons_and_msg = self.get_closest_persons_and_msg(number_of_contacts, past_fraction)
 
@@ -326,6 +325,12 @@ class WhatsAppDB:
 
         result_df = self.groups_df.loc[self.groups_df['groupName'].isin(group_names)]
         sliced_df = result_df[['groupName', 'name']]
+
+        # for each group, if user (i.e. 'self.user_whatsapp_name') isn't in it, add it (with a brand new index)
+        for group_name in sliced_df.groupName.unique():
+            if self.user_whatsapp_name not in sliced_df[sliced_df.groupName == group_name].name.tolist():
+                sliced_df = pd.concat([sliced_df, pd.DataFrame([[group_name, self.user_whatsapp_name]],
+                                                               columns=(['groupName', 'name']))], ignore_index=True)
 
         return sliced_df.to_json(date_format='iso', double_precision=0, date_unit='s', orient='records')
 

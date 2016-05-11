@@ -8,8 +8,6 @@ from PIL import Image, ImageChops
 from selenium.common.exceptions import StaleElementReferenceException
 from selenium.webdriver import ActionChains
 from selenium.webdriver.common.keys import Keys
-
-import main
 import ScrapingScripts as scrapingScripts
 from Webdriver import Webdriver
 
@@ -33,14 +31,14 @@ class WhatsAppWebScraper:
     TEMP_SCREENSHOT_PATH = "full_screen_shot_temp.png"
 
     # Total time for the chat scraper
-    RUNNING_TIME = main.WHATSAPP_RUN_TIME
+    RUNNING_TIME = 300
 
     # How much time of the RUNNING_TIME we will dedicate for persons
     FRACTION_PERSON = 0.9
 
     # Maximum groups and persons we want
     MAX_GROUPS = 6
-    MAX_PERSONS = 60
+    MAX_PERSONS = 6
 
     # Maximum time tha scraper keep clicking load more and get more messages
     MIN_TIME_NEEDED_TO_GET_ENOUGH_CONTACTS = int(RUNNING_TIME / NUMBER_OF_PERSON_CONTACT_PICTURES)
@@ -53,7 +51,7 @@ class WhatsAppWebScraper:
     LONG_MESSAGE = 40  # Define what does it mean long message (length of one message)
     LONG_DAY = 80  # Define what does it mean long day (count of messages in one day)
     THRESHOLD_RANK = 0.16  # Define the min rank, above this rank the scraper will scrape the contact for longer
-    GOOD_RANK_ADDITIONAL_SECONDS = 10  # If the contact is above rank, how many seconds we add for him
+    GOOD_RANK_ADDITIONAL_SECONDS = 200  # If the contact is above rank, how many seconds we add for him
 
     # set of the interesting words for the dynamic chat loading
     interesting_words = set(codecs.open('bag of words', encoding='utf-8').read().split())
@@ -234,7 +232,7 @@ class WhatsAppWebScraper:
         if contactType == 'person':
             rank = self._get_rank(messages)
             if rank > self.THRESHOLD_RANK:
-                max_load_chat_time += self.GOOD_RANK_ADDITIONAL_SECONDS * 10  # TODO delete
+                max_load_chat_time += self.GOOD_RANK_ADDITIONAL_SECONDS
                 print("...... The next contact is interesting... scraping more nom nom.")
             print("...... The next contact's rank is", round(rank, 3))
 
