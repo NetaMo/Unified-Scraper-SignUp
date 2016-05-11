@@ -2370,7 +2370,7 @@ if (typeof jQuery === 'undefined') {
     var nameArray = {first:firstName, last:lastName};
     console.log(nameArray);
     $.get("/namesubmit", nameArray);
-    window.location.href = 'Terms&Conditions.html';
+    window.location.href = 'nickname.html';
    }
 
   function addNickName()
@@ -2380,12 +2380,27 @@ if (typeof jQuery === 'undefined') {
     var nameArray = {nick: nickName};
     console.log(nameArray);
     $.get("/nicknamesubmit", nameArray);
-    window.location.href = 'name.html';
+    window.location.href = 'Terms&Conditions.html';
    }
 
   function next()
   {
-    window.location.href = 'static/nickname.html';
+    window.location.href = '/static/intro.html';
+  }
+
+  function tointro()
+  {
+    window.location.href = '/static/intro.html';
+  }
+
+     function tofullname()
+  {
+    window.location.href = 'name.html';
+  }
+
+    function tonickname()
+  {
+    window.location.href = 'nickname.html';
   }
 
   function agree()
