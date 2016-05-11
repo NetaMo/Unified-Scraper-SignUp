@@ -144,12 +144,10 @@ position:absolute; bottom:10%;  margin-bottom:7px; left: 56%;
 
 .letsgobutton {
     position:absolute; bottom:20%;  margin-bottom:7px; left: 47%;
-    width:150px;
-    height:100px;
-    background: #ffffff;
-    font-size: 20px;
-    border: 1px solid #d3d3d3;
-    border-radius:10px
+    color: #333;
+    background-color: #fff;
+    border: none;
+    font-family: 'Futura';
 }
 
 .terms {
@@ -255,3 +253,9 @@ position:absolute; bottom:1%;  margin-bottom:7px; left: 7%;
 .timerposition {
 position:absolute; bottom:30%;  margin-bottom:7px; left: 8%;
 }
+
+.startbutton {
+  color: #333;
+  background-color: #fff;
+  border: none;
+  font-family: 'Futura';
