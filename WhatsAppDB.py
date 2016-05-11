@@ -332,6 +332,13 @@ class WhatsAppDB:
         result_df = self.groups_df.loc[self.groups_df['groupName'].isin(group_names)]
 
         sliced_df = result_df[['groupName', 'name']]
+        
+        # for each group, if user (i.e. 'self.user_whatsapp_name') isn't in it, add it (with a brand new index)
+        for group_name in sliced_df.groupName.unique():
+            if not self.user_whatsapp_name in sliced_df[sliced_df.groupName == group_name].name.tolist():
+                sliced_df = pd.concat(
+                    [sliced_df, pd.DataFrame([[group_name, self.user_whatsapp_name]], columns=(['groupName', 'name']))],
+                    ignore_index=True)
 
         return sliced_df.to_json(date_format='iso', double_precision=0, date_unit='s', orient='records')
 
