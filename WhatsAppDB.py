@@ -326,19 +326,68 @@ class WhatsAppDB:
         :param max_number_of_groups: how much groups to return
         :return: a json with the data
         """
+        MAX_GROUP_SIZE = 6                                  # take up
+        # user_whatsapp_name = "+972 54-750-8445"             # delete
+        # groups_df = pd.read_pickle('saved_groups_df')       # delete
+
         self.groups_df.sort_values(['totalMessages', 'groupName', 'messagesCount'], ascending=False, inplace=True)
         group_names = self.groups_df.groupName.unique()[:max_number_of_groups]
 
-        result_df = self.groups_df.loc[self.groups_df['groupName'].isin(group_names)]
+        result_df = self.groups_df.loc[groups_df['groupName'].isin(group_names)]
+
+        arr_of_df_to_return = []
+
+        for group_name in group_names:
+            curr_df = result_df[result_df.groupName == group_name]
+            group_size = len(curr_df)
+
+            # if amount of people in group is smaller than minimum, proceed to next group
+            if group_size <= MAX_GROUP_SIZE:
+                arr_of_df_to_return.append(curr_df)
+                continue
+
+            # narrow the current group to a group of 6 people
+            jump_size = np.round(group_size/6)
+            narrowd_df_idx_list = [0, jump_size, 2*jump_size, 3*jump_size, 4*jump_size, group_size-1]
+
+            # for cases 4*jump_size equals to last index
+            if narrowd_df_idx_list[-2] == narrowd_df_idx_list[-1]:
+                narrowd_df_idx_list[-2] -= 1
+
+            narrowed_df = curr_df.iloc[ narrowd_df_idx_list, :]
+
+            # NOW check is used is in narrowed_df, and insert if not
+            if not user_whatsapp_name in narrowed_df[narrowed_df.groupName == group_name].name.tolist():
+                to_concat = pd.DataFrame([[group_name, user_whatsapp_name, 0, 0]], columns=narrowed_df.columns)
+
+                # if user isn't in the group at all (even before narrowing), replace with last place
+                if not user_whatsapp_name in curr_df.name.tolist():
+                    # messagesCount and totalMessages are set to 0 since no one cares and they're trimmed anyway
+                    narrowed_df = pd.concat( [narrowed_df.iloc[:5],
+                                              pd.DataFrame([[group_name, user_whatsapp_name, 0, 0]], columns=narrowed_df.columns)],
+                                             ignore_index=True)
+
+                # user is in results_df but not in the narrow list, replace with most appropriate one
+                else:
+                    user_amount_of_msg = int(curr_df[curr_df.name == user_whatsapp_name].messagesCount)
+                    narrowed_df['diff_msg'] = narrowed_df['messagesCount']-user_amount_of_msg
+                    narrowed_df.sort_values(['diff_msg'], inplace=True, ascending=False)
+                    del narrowed_df['diff_msg']
+                    narrowed_df = pd.concat( [narrowed_df.iloc[:5],
+                                              pd.DataFrame([[group_name, user_whatsapp_name, user_amount_of_msg, 0]], columns=narrowed_df.columns)],
+                                             ignore_index=True)
+                    narrowed_df.sort_values(['messagesCount'], inplace=True, ascending=False)
+
+            arr_of_df_to_return.append(narrowed_df)
+
+        result_df = pd.concat([df for df in arr_of_df_to_return])
 
         sliced_df = result_df[['groupName', 'name']]
-        
-        # for each group, if user (i.e. 'self.user_whatsapp_name') isn't in it, add it (with a brand new index)
-        for group_name in sliced_df.groupName.unique():
-            if not self.user_whatsapp_name in sliced_df[sliced_df.groupName == group_name].name.tolist():
-                sliced_df = pd.concat(
-                    [sliced_df, pd.DataFrame([[group_name, self.user_whatsapp_name]], columns=(['groupName', 'name']))],
-                    ignore_index=True)
+        print(sliced_df)
+
+        # for group_name in sliced_df.groupName.unique():
+        #     if not user_whatsapp_name in sliced_df[sliced_df.groupName == group_name].name.tolist():
+        #         sliced_df = pd.concat([sliced_df, pd.DataFrame([[group_name, user_whatsapp_name]], columns=(['groupName', 'name']))], ignore_index=True)
 
         return sliced_df.to_json(date_format='iso', double_precision=0, date_unit='s', orient='records')
 
