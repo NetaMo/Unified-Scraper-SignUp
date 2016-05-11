@@ -1,6 +1,4 @@
 import codecs
-import re
-import string
 import time
 from datetime import datetime
 
@@ -475,37 +473,64 @@ class WhatsAppWebScraper:
             s = s.replace(hidden, "")
         return s
 
+    # ===================================================================
+    #   Contact ranking algorithm helper functions
+    # ===================================================================
+
     def _get_rank(self, messages):
-        """
-        Ranks each person so we can sort them by relevant
-        """
-        long_messages_count = 0
-        bag_of_words = set()
+        """ Daniel the neighbour 4life """
 
-        # Remove all unnecessary chars like !@#%~.
-        pattern = re.compile('[%s]' % re.escape(string.punctuation))
+        w1, w2, w3 = 30, 10, 1  # collaboration weights
 
-        for message in messages:
-            if len(message['text']) > self.LONG_MESSAGE:
-                long_messages_count += 1
+        # read messages (dict) to pandas Dataframe
+        import pandas as pd
+        import numpy as np
+        df = pd.DataFrame.from_dict(messages)
 
-            words_list = pattern.sub('', message['text']).split()
+        # (+) compute average messages length
+        df['mes_len'] = df.text.apply(len)
+        avg_mes_len = np.mean(df.mes_len) / w1
+        del df['mes_len']
 
-            # Add to the set, no duplicates
-            bag_of_words.update(words_list)
+        # (-) was the last message recently? amount of seconds from last message
+        # sec_from_last_mes = (datetime.now() - datetime.strptime(df.tail(1).time.values[0], '%H:%M %m/%d/%Y')).total_seconds()
+        # sec_ratio = sec_from_last_mes / w2
 
-        # Find the avg messages per day ''
+        # (+) size of intersection with bag_of_words
+        bag_rank = self.bag_rank(set([j for k in [i.split() for i in df.text.values] for j in k])) / w3
+
         date_start = datetime.strptime(messages[0]['time'], '%H:%M %m/%d/%Y')
         date_end = datetime.strptime(messages[-1]['time'], '%H:%M %m/%d/%Y')
         days_count = (date_end - date_start).days
+        avg_messages_per_day = w2 * (days_count / len(messages)) / self.LONG_DAY
 
-        # Final data we will use to calculate the rank
-        long_messages_rank = long_messages_count / len(messages)
-        bag_rank = self.bag_rank(bag_of_words)
-        avg_messages_per_day = (days_count / len(messages)) / self.LONG_DAY
+        return avg_mes_len + avg_messages_per_day + bag_rank
 
-        # Best mathematical solution for this problem, is to normalize(0<x<1) the data and then find the average
-        return (long_messages_rank + bag_rank + avg_messages_per_day) / 3
+    @staticmethod
+    def bag_rank(self, bag_of_words):
+        """"
+        Returns the rank of the bag_of_ words set object.
+        float number between 0 to 1
+        """
+
+        # Find how many words has intersection with the super duper words
+        interesting_words_super = {"חלמתי", "חלומות", "חלמת", "dream", "dreamt", "dreaming", "dreams",
+                                   "rêver", "rêves", "rêvé", "rêve",
+                                   "reve", "reves", "rever", "dreamed", "good night", "לילה טוב",
+                                   "bonne nuit", "sweet dreams"}
+        intersection_count_super = len(interesting_words_super.intersection(bag_of_words))
+
+        # If we found any super duper word, return 999 as a rank
+        if intersection_count_super:
+            # print("found a super interesting word- loading more")
+            return 999
+
+        # Find how many words has intersection with the interesting words
+        intersection_count = len(self.interesting_words.intersection(bag_of_words))
+        # print("...... the intersection count with the bag of words is :" + str(intersection_count))
+
+        # Normalize
+        return intersection_count / len(bag_of_words)
 
     # ===================================================================
     #   Webdriver helper functions
@@ -541,60 +566,3 @@ class WhatsAppWebScraper:
                 return None
 
         return elements
-
-    def _get_rank(self, messages):
-        """
-        Ranks each person so we can sort them by relevant
-        """
-        long_messages_count = 0
-        bag_of_words = set()
-
-        # Remove all unnecessary chars like !@#%~.
-        pattern = re.compile('[%s]' % re.escape(string.punctuation))
-
-        for message in messages:
-            if len(message['text']) > self.LONG_MESSAGE:
-                long_messages_count += 1
-
-            words_list = pattern.sub('', message['text']).split()
-
-            # Add to the set, no duplicates
-            bag_of_words.update(words_list)
-
-        # Find the avg messages per day ''
-        date_start = datetime.strptime(messages[0]['time'], '%H:%M %m/%d/%Y')
-        date_end = datetime.strptime(messages[-1]['time'], '%H:%M %m/%d/%Y')
-        days_count = (date_end - date_start).days
-
-        # Final data we will use to calculate the rank
-        long_messages_rank = long_messages_count / len(messages)
-        bag_rank = self.bag_rank(bag_of_words)
-        avg_messages_per_day = (days_count / len(messages)) / self.LONG_DAY
-
-        # Best mathematical solution for this problem, is to normalize(0<x<1) the data and then find the average
-        return (long_messages_rank + bag_rank + avg_messages_per_day) / 3
-
-    def bag_rank(self, bag_of_words):
-        """"
-        Returns the rank of the bag_of_ words set object.
-        float number between 0 to 1
-        """
-
-        # Find how many words has intersection with the super duper words
-        interesting_words_super = {"חלמתי", "חלומות", "חלמת", "dream", "dreamt", "dreaming", "dreams", "rêver", "rêves", "rêvé", "rêve",
-                                   "reve", "reves", "rever", "dreamed", "good night", "לילה טוב", "bonne nuit", "sweet dreams"}
-        intersection_count_super = len(interesting_words_super.intersection(bag_of_words))
-
-        # If we found any super duper word, return 999 as a rank
-        if intersection_count_super:
-            print("found a super interesting word- loading more")
-            return 999
-
-        # Find how many words has intersection with the interesting words
-        intersection_count = len(self.interesting_words.intersection(bag_of_words))
-        print("...... the intersection count with the bag of words is :" + str(intersection_count))
-
-        # Normalize
-        return intersection_count/len(bag_of_words)
-
-
