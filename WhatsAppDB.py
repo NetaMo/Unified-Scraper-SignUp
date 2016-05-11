@@ -17,7 +17,7 @@ class WhatsAppDB:
 
         self.contacts_df = pd.DataFrame(data=None, columns=["contactName", "name", "text", "time"])
         self.contacts_df.name.astype('category')
-        
+
         self.groups_df = pd.DataFrame(columns=["groupName", "name", "messagesCount", "totalMessages"])
         self.groups_df.messagesCount.astype(int)
         self.groups_df.totalMessages.astype(int)
