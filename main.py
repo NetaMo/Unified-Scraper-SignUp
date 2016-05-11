@@ -261,6 +261,7 @@ if __name__ == "__main__":
     if sys.argv[1] == 'WebPage':
         print("web Page")
         # A Chrome window to navigate to our site
+
         mainDriver = Webdriver()
         mainDriver.browser.get("localhost:" + str(port))
 

@@ -5,7 +5,7 @@ from itertools import groupby
 import numpy as np
 import pandas as pd
 from pandas.tseries.frequencies import to_offset
-from WhatsAppWebScraper import WhatsAppWebScraper
+import WhatsAppWebScraper
 
 
 class WhatsAppDB:
