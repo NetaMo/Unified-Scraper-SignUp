@@ -32,13 +32,13 @@ class WhatsAppWebScraper:
     TEMP_SCREENSHOT_PATH = "full_screen_shot_temp.png"
 
     # Total time for the chat scraper
-    RUNNING_TIME = 30
+    RUNNING_TIME = 200
 
     # How much time of the RUNNING_TIME we will dedicate for persons
     FRACTION_PERSON = 0.9
 
     # Maximum groups and persons we want
-    MAX_GROUPS = 6
+    MAX_GROUPS = 8
     MAX_PERSONS = 400
 
     # Maximum time tha scraper keep clicking load more and get more messages

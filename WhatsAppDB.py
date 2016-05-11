@@ -22,11 +22,11 @@ class WhatsAppDB:
         self.groups_df.messagesCount.astype(int)
         self.groups_df.totalMessages.astype(int)
 
-        self.user_first_name = ""
-        self.user_last_name = ""
-        self.user_whatsapp_name = ""
-        self.user_nicknames = []
-        self.phone = ""
+        self.user_first_name = "אסף"  # TODO remove all of these
+        self.user_last_name = "עציון"
+        self.user_whatsapp_name = "+972 54-750-8445"
+        self.user_nicknames = ["יוסוף"]
+        self.phone = "android"
 
         # =====data analysis json outputs=====
         self.latest_chats = 0
@@ -330,6 +330,7 @@ class WhatsAppDB:
         group_names = self.groups_df.groupName.unique()[:max_number_of_groups]
 
         result_df = self.groups_df.loc[self.groups_df['groupName'].isin(group_names)]
+
         sliced_df = result_df[['groupName', 'name']]
 
         return sliced_df.to_json(date_format='iso', double_precision=0, date_unit='s', orient='records')
