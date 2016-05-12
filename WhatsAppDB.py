@@ -106,7 +106,7 @@ class WhatsAppDB:
         runs all of the data analysis methods and store the resulted json outputs
         """
         # How many contacts to show in coloseum
-        number_of_contacts = 40
+        number_of_contacts = 60
         # Tells blast from the past from which part of entire chat to look in
         past_fraction = 0.75
         # the maximum number of groups to output in the get_most_active_groups_and_user_groups function
