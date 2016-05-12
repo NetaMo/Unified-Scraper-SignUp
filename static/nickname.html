@@ -10,7 +10,6 @@
     <meta name="description" content="">
     <meta name="author" content="">
 
-    <title>Full - Start Bootstrap Template</title>
 
     <!-- Bootstrap Core CSS -->
     <link href="css/bootstrap.min.css" rel="stylesheet">
@@ -49,9 +48,10 @@
           <div class="form-group">
             <label for="NickName"></label>
             <!--<input type="text"  style="font-size:20px;line-height=30px;" class="textbox" size="40" id="NickName" autocomplete="off" placeholder="Your nickname here">-->
-            <input type="text" class="form-control" size="40" id="NickName" autocomplete="off" placeholder="Your nickname here">
+            <input type="text" class="form-control" id="NickName"  placeholder="Your nickname here" onkeydown = "if (event.keyCode == 13)
+                        document.getElementById('submit').click()">
           </div>
-          <button type="button" style="font-size:20px;" class="startbutton" onclick="addNickName()">Submit</button>
+          <button type="button" style="font-size:20px;" class="startbutton" id="submit" onclick="addNickName()">Submit</button>
         </form>
     </div>
 
