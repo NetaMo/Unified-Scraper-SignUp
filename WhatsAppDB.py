@@ -235,14 +235,20 @@ class WhatsAppDB:
         :param number_of_persons: the number of close persons to find.
         :return: json with the data
         """
-        closest_persons_ndarray = self.contacts_df.contactName.value_counts().head(number_of_persons).index
-
+        closest_df = pd.DataFrame()
+        for dictionary in self.amphi_people:
+            closest_df = closest_df.append(dictionary, ignore_index=True)
+        closest_df.sort_values("rank", ascending=False, inplace=True)
+        most_closest_df = closest_df.head(number_of_persons)
+        closest_list = most_closest_df.name.tolist()
 
         self.user_nicknames.append(self.user_first_name)
+
         i = 0
         closest_persons_df = pd.DataFrame()
-        for contactName in closest_persons_ndarray:
-            closest_persons_df = closest_persons_df.append({'contactName': contactName, 'text': self.user_first_name}, ignore_index=True)
+        for contactName in closest_list:
+            closest_persons_df = closest_persons_df.append({'contactName': contactName, 'text': self.user_first_name},
+                                                           ignore_index=True)
             for index, col in self.contacts_df[self.contacts_df['contactName'] == self.contacts_df['name']].iterrows():
                 if col['contactName'] == contactName:
                     if any(word in col['text'] for word in self.user_nicknames):
