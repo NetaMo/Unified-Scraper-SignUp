@@ -1,9 +1,10 @@
 import json
-from datetime import date, datetime, time as dt
+from datetime import time as dt
 from itertools import groupby
+
 import numpy as np
 import pandas as pd
-from pandas.tseries.frequencies import to_offset
+
 import WhatsAppWebScraper
 
 
@@ -102,7 +103,7 @@ class WhatsAppDB:
 
         self.latest_chats = self.get_latest_chats(WhatsAppWebScraper.WhatsAppWebScraper.NUMBER_OF_PERSON_CONTACT_PICTURES)
 
-        self.closest_persons_and_msg = self.get_closest_persons_and_msg(number_of_contacts, past_fraction)
+        self.closest_persons_and_msg = self.get_closest_persons_and_msg(number_of_contacts)
 
         self.have_hebrew = self.does_df_has_hebrew()
 
@@ -184,26 +185,28 @@ class WhatsAppDB:
         sliced_df = latest_msgs_df[['contactName', 'text', 'time']]
         return sliced_df.to_json(date_format='iso', double_precision=0, date_unit='s', orient='records')
 
-    def get_blast_from_the_past(self, past_fraction): # TODO rewrite if we scrape the bottom of the archive
+    def get_blast_from_the_past(self):
         """
-        gets a contact that the user talked to a lot in the past
-        :param past_fraction: the fraction part to go back in time
-        :return: a row in the df of the person chosen
+        Return name of the last person you talked to.
+        :return: string
         """
-        oldest_time = min(self.contacts_df.time)
 
-        # noinspection PyTypeChecker
-        past_chats_threshold_days = past_fraction * (pd.Timestamp(date(datetime.today().year, datetime.today().month,
-                                                                       datetime.today().day)).date() - (oldest_time.date()))
-        past_chats_threshold_date = oldest_time + to_offset(past_chats_threshold_days)
-        df_past_chats = self.contacts_df.where(self.contacts_df.time <= past_chats_threshold_date).dropna()
-        return df_past_chats.contactName.value_counts().head(1).index[0]
+        # Last night fix - returns last contact name in dictionary
+        return self.contacts_df.tail(1).values[0][0]
 
-    def get_closest_persons_and_msg(self, number_of_persons, past_fraction_param): # TODO rewrite more efficiently
+        # oldest_time = min(self.contacts_df.time)
+        #
+        # # noinspection PyTypeChecker
+        # past_chats_threshold_days = past_fraction * (pd.Timestamp(date(datetime.today().year, datetime.today().month,
+        #                                                                datetime.today().day)).date() - (oldest_time.date()))
+        # past_chats_threshold_date = oldest_time + to_offset(past_chats_threshold_days)
+        # df_past_chats = self.contacts_df.where(self.contacts_df.time <= past_chats_threshold_date).dropna()
+        # return df_past_chats.contactName.value_counts().head(1).index[0]
+
+    def get_closest_persons_and_msg(self, number_of_persons):  # TODO rewrite more efficiently
         """
         finds the number_of_persons most talked persons and a message that has the user name in it.
         :param number_of_persons: the number of close persons to find.
-        :param past_fraction_param: the fraction part to go back in time for the blast from the past
         :return: json with the data
         """
         closest_persons_ndarray = self.contacts_df.contactName.value_counts().head(number_of_persons).index
@@ -220,7 +223,7 @@ class WhatsAppDB:
                         closest_persons_df.iloc[i].text = col['text']
             i += 1
 
-        blast = self.get_blast_from_the_past(past_fraction_param)
+        blast = self.get_blast_from_the_past()
         closest_persons_df = closest_persons_df.append({"contactName": blast, "text": "im the blast from the past"},
                                                        ignore_index=True)
         return closest_persons_df.to_json(date_format='iso', double_precision=0, date_unit='s', orient='records')

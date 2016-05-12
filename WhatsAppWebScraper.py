@@ -61,7 +61,7 @@ class WhatsAppWebScraper:
         self.browser.set_page_load_timeout(150)  # Set timeout to 150 seconds
         self.browser.get("https://web.whatsapp.com/")  # Navigate browser to WhatsApp page
         self.browser.execute_script(scrapingScripts.initJQuery())  # active the jquery lib
-        self.scrapedContacts = [ ]  # List of scraped contacts
+        self.scrapedContacts = []  # List of scraped contacts
         self.defaultAvatar = Image.open("defaultAvatar.jpg")
         self.user_whatsapp_name = None  # what is the user's whatsapp outgoing messages name
         # How many contact we scraped already
@@ -153,8 +153,8 @@ class WhatsAppWebScraper:
             if contact_type == 'group':
                 contactData = {
                     "contactName": contact_name,
-                    "contactMessageTotal": messages[ 0 ],
-                    "contactMessageCounter": messages[ 1 ],
+                    "contactMessageTotal": messages[0],
+                    "contactMessageCounter": messages[1],
                 }
                 DB.append_to_groups_df(contactData)
                 self.group_count += 1
@@ -168,7 +168,7 @@ class WhatsAppWebScraper:
                         "name": contact_name,
                         "type": contact_type
                     },
-                    "messages": [ messages ],
+                    "messages": [messages],
                 }
 
                 # add data to the data frame
@@ -266,7 +266,8 @@ class WhatsAppWebScraper:
         contactName = self.clean_hidden_chars(contactName)
 
         # If this is a contact chat then this field will not appear
-        is_group = self.wait_for_element_by_script("return document.getElementsByClassName('msg-group');", 2)
+        is_group = self.wait_for_element_by_script(
+                "return document.getElementsByClassName('msg-group');", 2)
 
         return contactName, "group" if is_group else "person"
 
@@ -294,7 +295,9 @@ class WhatsAppWebScraper:
         if self.user_whatsapp_name is None:
             outMsg = self.browser.execute_script(scrapingScripts.getSingleOutgoingMessage())
             if outMsg is not None:
-                self.user_whatsapp_name = outMsg[outMsg.find("\xa0")+1: outMsg.find("\xa0", outMsg.find("\xa0")+2)-1]
+                self.user_whatsapp_name = outMsg[outMsg.find("\xa0") + 1: outMsg.find("\xa0",
+                                                                                      outMsg.find(
+                                                                                              "\xa0") + 2) - 1]
         # Extract data from raw message
         for msg in rawMessages:
 
@@ -330,11 +333,11 @@ class WhatsAppWebScraper:
 
             # update contact if exists otherwise create
             if name in groupData:
-                groupData[ name ] += 1
+                groupData[name] += 1
             else:
-                groupData[ name ] = 1
+                groupData[name] = 1
 
-        return [ totalMessages, groupData ]
+        return [totalMessages, groupData]
 
     def _parse_message(self, msgRaw):
         try:
@@ -430,14 +433,14 @@ class WhatsAppWebScraper:
         actions = ActionChains(self.browser)
         try:
             actions.click(self.wait_for_element('.input.input-search')).send_keys(Keys.TAB).send_keys(
-                Keys.ARROW_DOWN).perform()
+                    Keys.ARROW_DOWN).perform()
         except StaleElementReferenceException:
             # Element is removed from the DOM structure, that happens when whatsapp refresh
             # the page and we don't want to break the app. I'm retying again after 2 sec.
             time.sleep(3)
 
             actions.click(self.wait_for_element('.input.input-search')).send_keys(Keys.TAB).send_keys(
-                Keys.ARROW_DOWN).perform()
+                    Keys.ARROW_DOWN).perform()
 
     def _stubborn_load_click(self):
         # print("Scraper: stubbornClick starting...")
@@ -446,14 +449,14 @@ class WhatsAppWebScraper:
         while (True):
             try:
                 ActionChains(self.browser).click(
-                    self.wait_for_element('#main .pane-chat-empty', 1)).perform()
+                        self.wait_for_element('#main .pane-chat-empty', 1)).perform()
                 # print("Scraper: stubbornClick finished on iteration: " + str(i))
                 return
             except StaleElementReferenceException:
                 i += 1
                 if i & 100 == 0:
                     ActionChains(self.browser).click(self.wait_for_element_by_script(
-                        "return $('#main .message-list');")[0]).perform()
+                            "return $('#main .message-list');")[0]).perform()
                 # print("Scraper: stubbornClick iteration " + str(i))
                 continue
 
@@ -537,9 +540,12 @@ class WhatsAppWebScraper:
                 for msg in messages:
                     msg["time"] = self._unix_timestamp_format(msg["time"])
 
+                name = contact["contact"]["name"] if contact["contact"][
+                                                         "name"] != "You" else self.user_whatsapp_name
+
                 contactData = {
                     "contact": {
-                        "name": contact["contact"]["name"],
+                        "name": name,
                         "type": contact["contact"]["type"]
                     },
                     "messages": [messages],
@@ -578,7 +584,7 @@ class WhatsAppWebScraper:
                 return None
             time.sleep(0.001)
 
-        return elements[ 0 ]
+        return elements[0]
 
     def wait_for_element_by_script(self, script, timeout=10):
         """
