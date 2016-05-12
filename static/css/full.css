@@ -144,6 +144,10 @@ position:absolute; bottom:26%;  margin-bottom:7px; left: 64%;
 position:absolute; bottom:30%;  margin-bottom:7px; left: 10%;
 }
 
+.resetbutton {
+position:absolute; bottom:30%;  margin-bottom:7px; left: 30%;
+}
+
 .bottomfullname {
 position:absolute; bottom:36%;  margin-bottom:7px; left: 50%;
 }

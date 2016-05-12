@@ -2442,3 +2442,4 @@ if (typeof jQuery === 'undefined') {
   {
     $.get("/reset");
   }
+
