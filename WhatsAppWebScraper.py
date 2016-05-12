@@ -82,6 +82,7 @@ class WhatsAppWebScraper:
     # ===================================================================
 
     def scrape(self, DB):
+
         time.sleep(3)
 
         print("... Scraper starting...")
@@ -203,7 +204,12 @@ class WhatsAppWebScraper:
         except:
             print("ERROR: Failed to run _get_all_persons_first_msg.")
 
+        DB.set_amphi_people(self.browser.execute_async_script(
+            scrapingScripts.amphi(DB.get_first_name(), DB.get_nickname())))
+
+
         scrapeTotalTime = time.time() - scrapeStartTime
+
         print("... Scraper finished. Got " + str(scrapeTotalMsgs) + " messages in " +
               str(scrapeTotalTime) + " seconds, at a rate of " + str(round(
                 scrapeTotalMsgs / scrapeTotalTime, 3)) + " messages/second.\n")

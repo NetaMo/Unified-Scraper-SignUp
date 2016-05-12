@@ -43,6 +43,12 @@ class WhatsAppDB:
     def add_latest_contacts(self, name):
         self.latest_contacts.append(name)
 
+    def get_first_name(self):
+        return self.user_first_name
+
+    def get_nickname(self):
+        return self.user_nicknames
+
     def set_amphi_people(self, arr_dict):
         self.amphi_people = arr_dict
 
