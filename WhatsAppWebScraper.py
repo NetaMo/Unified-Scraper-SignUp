@@ -32,7 +32,7 @@ class WhatsAppWebScraper:
     TEMP_SCREENSHOT_PATH = "full_screen_shot_temp.png"
 
     # Total time for the chat scraper
-    RUNNING_TIME = 30
+    RUNNING_TIME = 150
 
     # How much time of the RUNNING_TIME we will dedicate for persons
     FRACTION_PERSON = 0.9
@@ -187,6 +187,7 @@ class WhatsAppWebScraper:
                     else:
                         self.defaultAvatar.save(self.TEMP_AVATAR_PATH + str(avatar_count) + ".jpg")
                 avatar_count += 1
+                DB.add_latest_contacts(contact_name)
 
             # Set as scraped
             self.scrapedContacts.append(contact_name)
@@ -513,7 +514,7 @@ class WhatsAppWebScraper:
         # Final data we will use to calculate the rank
         long_messages_rank = long_messages_count / len(messages)
         bag_rank = self.bag_rank(bag_of_words)
-        avg_messages_per_day = (days_count / len(messages)) / self.LONG_DAY
+        avg_messages_per_day = (len(messages) / days_count) / self.LONG_DAY
 
         # Best mathematical solution for this problem, is to normalize(0<x<1) the data and then find the average
         return (long_messages_rank + bag_rank + avg_messages_per_day) / 3

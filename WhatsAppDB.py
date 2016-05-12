@@ -27,6 +27,8 @@ class WhatsAppDB:
         self.user_nicknames = []
         self.phone = ""
 
+        self.latest_contacts = []
+
         # =====data analysis json outputs=====
         self.latest_chats = 0
         self.closest_persons_and_msg = 0
@@ -35,6 +37,9 @@ class WhatsAppDB:
         self.dreams_or_old_messages = 0
         self.most_active_groups_and_user_groups = 0
         self.chat_archive = 0
+
+    def add_latest_contacts(self, name):
+        self.latest_contacts.append(name)
 
     def set_user_whatsapp_name(self, user_whatsapp_name):
         self.user_whatsapp_name = user_whatsapp_name
@@ -96,6 +101,8 @@ class WhatsAppDB:
         # the maximum number of groups to output in the get_most_active_groups_and_user_groups function
         max_num_of_groups = 5
 
+        max_group_size = 6
+
         self.convert_to_datetime()
 
         self.chat_archive = self.get_chat_archive()
@@ -110,7 +117,7 @@ class WhatsAppDB:
 
         self.dreams_or_old_messages = self.get_dreams_or_old_messages()
 
-        self.most_active_groups_and_user_groups = self.get_most_active_groups_and_user_groups(max_num_of_groups)
+        self.most_active_groups_and_user_groups = self.get_most_active_groups_and_user_groups(max_num_of_groups, max_group_size)
 
     def save_db_to_files(self, path):
         self.contacts_df.to_pickle(path + "saved_contacts_df")
@@ -178,10 +185,13 @@ class WhatsAppDB:
         :param number_of_chats: how much chats to return
         :return: json with the latest 'number_of_chats' with name, text and time
         """
-        latest_msgs_df = self.contacts_df.drop_duplicates(subset='contactName').head(number_of_chats)
+        # latest_msgs_df = self.contacts_df.drop_duplicates(subset='contactName').head(number_of_chats)
 
-        latest_msgs_df.time = latest_msgs_df.time.apply(self.correct_time_for_whatsapp)
-        sliced_df = latest_msgs_df[['contactName', 'text', 'time']]
+        latest_msgs_df = self.contacts_df.drop_duplicates(subset='contactName')
+        res_df = latest_msgs_df.loc[latest_msgs_df['contactName'].isin(self.latest_contacts[:6])]
+
+        res_df.time = latest_msgs_df.time.apply(self.correct_time_for_whatsapp)
+        sliced_df = res_df[['contactName', 'text', 'time']]
         return sliced_df.to_json(date_format='iso', double_precision=0, date_unit='s', orient='records')
 
     def get_blast_from_the_past(self, past_fraction): # TODO rewrite if we scrape the bottom of the archive
@@ -314,7 +324,7 @@ class WhatsAppDB:
 
         return dreams_df.to_json(date_format='iso', double_precision=0, date_unit='s', orient='records')
 
-    def get_most_active_groups_and_user_groups(self, max_number_of_groups): # TODO add the user to each group at the end if he isnt listed on them
+    def get_most_active_groups_and_user_groups(self, max_number_of_groups, max_group_size):
         """
         finds the most active groups and gets the users inside by their activity
         :param max_number_of_groups: how much groups to return
@@ -324,13 +334,58 @@ class WhatsAppDB:
         group_names = self.groups_df.groupName.unique()[:max_number_of_groups]
 
         result_df = self.groups_df.loc[self.groups_df['groupName'].isin(group_names)]
-        sliced_df = result_df[['groupName', 'name']]
 
-        # for each group, if user (i.e. 'self.user_whatsapp_name') isn't in it, add it (with a brand new index)
-        for group_name in sliced_df.groupName.unique():
-            if self.user_whatsapp_name not in sliced_df[sliced_df.groupName == group_name].name.tolist():
-                sliced_df = pd.concat([sliced_df, pd.DataFrame([[group_name, self.user_whatsapp_name]],
-                                                               columns=(['groupName', 'name']))], ignore_index=True)
+        arr_of_df_to_return = []
+
+        for group_name in group_names:
+            curr_df = result_df[result_df.groupName == group_name]
+            group_size = len(curr_df)
+
+            # if amount of people in group is smaller than minimum, proceed to next group
+            if group_size <= max_group_size:
+                arr_of_df_to_return.append(curr_df)
+                continue
+
+            # narrow the current group to a group of 6 people
+            jump_size = np.round(group_size / 6)
+            narrowd_df_idx_list = [0, jump_size, 2 * jump_size, 3 * jump_size, 4 * jump_size, group_size - 1]
+
+            # for cases 4*jump_size equals to last index
+            if narrowd_df_idx_list[-2] == narrowd_df_idx_list[-1]:
+                narrowd_df_idx_list[-2] -= 1
+
+            narrowed_df = curr_df.iloc[narrowd_df_idx_list, :]
+
+            # NOW check is used is in narrowed_df, and insert if not
+            if not self.user_whatsapp_name in narrowed_df[narrowed_df.groupName == group_name].name.tolist():
+                to_concat = pd.DataFrame([[group_name, self.user_whatsapp_name, 0, 0]], columns=narrowed_df.columns)
+
+                # if user isn't in the group at all (even before narrowing), replace with last place
+                if not self.user_whatsapp_name in curr_df.name.tolist():
+                    # messagesCount and totalMessages are set to 0 since no one cares and they're trimmed anyway
+                    narrowed_df = pd.concat([narrowed_df.iloc[:5],
+                                             pd.DataFrame([[group_name, self.user_whatsapp_name, 0, 0]],
+                                                          columns=narrowed_df.columns)],
+                                            ignore_index=True)
+
+                # user is in results_df but not in the narrow list, replace with most appropriate one
+                else:
+                    user_amount_of_msg = int(curr_df[curr_df.name == self.user_whatsapp_name].messagesCount)
+                    narrowed_df['diff_msg'] = narrowed_df['messagesCount'] - user_amount_of_msg
+                    narrowed_df.sort_values(['diff_msg'], inplace=True, ascending=False)
+                    del narrowed_df['diff_msg']
+                    narrowed_df = pd.concat([narrowed_df.iloc[:5],
+                                             pd.DataFrame(
+                                                 [[group_name, self.user_whatsapp_name, user_amount_of_msg, 0]],
+                                                 columns=narrowed_df.columns)],
+                                            ignore_index=True)
+                    narrowed_df.sort_values(['messagesCount'], inplace=True, ascending=False)
+
+            arr_of_df_to_return.append(narrowed_df)
+
+        result_df = pd.concat([df for df in arr_of_df_to_return])
+
+        sliced_df = result_df[['groupName', 'name']]
 
         return sliced_df.to_json(date_format='iso', double_precision=0, date_unit='s', orient='records')
 
