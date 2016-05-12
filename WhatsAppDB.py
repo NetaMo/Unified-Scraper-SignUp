@@ -38,9 +38,13 @@ class WhatsAppDB:
         self.dreams_or_old_messages = 0
         self.most_active_groups_and_user_groups = 0
         self.chat_archive = 0
+        self.amphi_people = []
 
     def add_latest_contacts(self, name):
         self.latest_contacts.append(name)
+
+    def set_amphi_people(self, arr_dict):
+        self.amphi_people = arr_dict
 
     def set_user_whatsapp_name(self, user_whatsapp_name):
         self.user_whatsapp_name = user_whatsapp_name

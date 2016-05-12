@@ -4,6 +4,8 @@
 
 // get contacts by activity level
 
+def amphi(name, nickname):
+    return '''
 var allContacts = [];
 var curContactName;
 var curChat;
@@ -11,6 +13,8 @@ var savedChats = 0;
 var interval;
 var numOfMsgs;
 var intensity;
+var curContact;
+var found;
 
 var lineSeperator = "------------------------------------------";
 
@@ -34,11 +38,11 @@ for (i = 0; i < Store.Chat.models.length; i++) {
     // get num of msgs
     numOfMsgs = curChat.msgs.models.length;
 
-    //get difference between first and last message
+    found = false;
+    for (var msg in curChat.msgs.models)
+    {
 
-    interval = (curChat.msgs.models[numOfMsgs-1].t - curChat.msgs.models[0].t);
-
-    intensity = numOfMsgs / interval;
+    }
 
     allContacts.push({name:curContactName, rank:intensity});
     savedChats++;
