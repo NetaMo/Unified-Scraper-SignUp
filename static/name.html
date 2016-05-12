@@ -52,11 +52,10 @@
           </div>
           <div class="form-group">
             <label for="LastName"></label>
-            <input type="text" class="form-control" id="LastName" placeholder="Last name">
+            <input type="text" class="form-control" id="LastName" placeholder="Last name" onkeydown = "if (event.keyCode == 13)
+                        document.getElementById('submit').click()">
           </div>
-          <!--<button type="button" style="font-size:20px;" class="startbutton"  onkeypress="addName()"></button>-->
-          <button type="button" style="font-size:20px;" class="startbutton"  onclick="addName()">Submit</button>
-
+          <button type="button" style="font-size:20px;" class="startbutton" id="submit" onclick="addName()">Submit</button>
         </form>
     </div>
 
