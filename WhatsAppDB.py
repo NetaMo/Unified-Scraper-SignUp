@@ -189,7 +189,13 @@ class WhatsAppDB:
         # latest_msgs_df = self.contacts_df.drop_duplicates(subset='contactName').head(number_of_chats)
 
         latest_msgs_df = self.contacts_df.drop_duplicates(subset='contactName')
-        res_df = latest_msgs_df.loc[latest_msgs_df['contactName'].isin(self.latest_contacts[:6])]
+
+        res_df = pd.DataFrame()
+
+        for contact_name in self.latest_contacts:
+            res_df = res_df.append(latest_msgs_df[latest_msgs_df["contactName"] == contact_name], ignore_index=True)
+
+        # res_df = latest_msgs_df.loc[latest_msgs_df['contactName'].isin(self.latest_contacts)]
 
         res_df.time = latest_msgs_df.time.apply(self.correct_time_for_whatsapp)
         sliced_df = res_df[['contactName', 'text', 'time']]

@@ -186,8 +186,8 @@ class WhatsAppWebScraper:
                         cropped.save(self.TEMP_AVATAR_PATH + str(avatar_count) + ".jpg")
                     else:
                         self.defaultAvatar.save(self.TEMP_AVATAR_PATH + str(avatar_count) + ".jpg")
-                avatar_count += 1
-                DB.add_latest_contacts(contact_name)
+                    avatar_count += 1
+                    DB.add_latest_contacts(contact_name)
 
             # Set as scraped
             self.scrapedContacts.append(contact_name)
