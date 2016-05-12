@@ -32,7 +32,7 @@ class WhatsAppWebScraper:
     TEMP_SCREENSHOT_PATH = "full_screen_shot_temp.png"
 
     # Total time for the chat scraper
-    RUNNING_TIME = 60
+    RUNNING_TIME = 300
 
     # How much time of the RUNNING_TIME we will dedicate for persons
     FRACTION_PERSON = 0.9
@@ -48,10 +48,10 @@ class WhatsAppWebScraper:
     GOOD_RANK_ADDITIONAL_SECONDS = 20  # If the contact is above rank, how many seconds we add for him
 
     # Maximum time tha scraper keep clicking load more and get more messages
-    MIN_TIME_NEEDED_TO_GET_ENOUGH_CONTACTS = int(RUNNING_TIME / NUMBER_OF_PERSON_CONTACT_PICTURES)
     MAX_PERSON_LOAD_CHAT = GOOD_RANK_ADDITIONAL_SECONDS
-    MAX_GROUP_LOAD_CHAT = min(int(RUNNING_TIME * (1 - FRACTION_PERSON) / MAX_GROUPS),
-                              MIN_TIME_NEEDED_TO_GET_ENOUGH_CONTACTS)
+    MAX_GROUP_LOAD_CHAT = 5
+    # MAX_GROUP_LOAD_CHAT = min(int(RUNNING_TIME * (1 - FRACTION_PERSON) / MAX_GROUPS),
+    #                           MIN_TIME_NEEDED_TO_GET_ENOUGH_CONTACTS)
 
     # set of the interesting words for the dynamic chat loading
     interesting_words = set(codecs.open('bag of words', encoding='utf-8').read().split())
