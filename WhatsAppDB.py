@@ -38,9 +38,19 @@ class WhatsAppDB:
         self.dreams_or_old_messages = 0
         self.most_active_groups_and_user_groups = 0
         self.chat_archive = 0
+        self.amphi_people = []
 
     def add_latest_contacts(self, name):
         self.latest_contacts.append(name)
+
+    def get_first_name(self):
+        return self.user_first_name
+
+    def get_nickname(self):
+        return self.user_nicknames
+
+    def set_amphi_people(self, arr_dict):
+        self.amphi_people = arr_dict
 
     def set_user_whatsapp_name(self, user_whatsapp_name):
         self.user_whatsapp_name = user_whatsapp_name
@@ -96,7 +106,7 @@ class WhatsAppDB:
         runs all of the data analysis methods and store the resulted json outputs
         """
         # How many contacts to show in coloseum
-        number_of_contacts = 40
+        number_of_contacts = 60
         # Tells blast from the past from which part of entire chat to look in
         past_fraction = 0.75
         # the maximum number of groups to output in the get_most_active_groups_and_user_groups function
@@ -189,7 +199,13 @@ class WhatsAppDB:
         # latest_msgs_df = self.contacts_df.drop_duplicates(subset='contactName').head(number_of_chats)
 
         latest_msgs_df = self.contacts_df.drop_duplicates(subset='contactName')
-        res_df = latest_msgs_df.loc[latest_msgs_df['contactName'].isin(self.latest_contacts[:6])]
+
+        res_df = pd.DataFrame()
+
+        for contact_name in self.latest_contacts:
+            res_df = res_df.append(latest_msgs_df[latest_msgs_df["contactName"] == contact_name], ignore_index=True)
+
+        # res_df = latest_msgs_df.loc[latest_msgs_df['contactName'].isin(self.latest_contacts)]
 
         res_df.time = latest_msgs_df.time.apply(self.correct_time_for_whatsapp)
         sliced_df = res_df[['contactName', 'text', 'time']]
@@ -219,14 +235,20 @@ class WhatsAppDB:
         :param number_of_persons: the number of close persons to find.
         :return: json with the data
         """
-        closest_persons_ndarray = self.contacts_df.contactName.value_counts().head(number_of_persons).index
-
+        closest_df = pd.DataFrame()
+        for dictionary in self.amphi_people:
+            closest_df = closest_df.append(dictionary, ignore_index=True)
+        closest_df.sort_values("rank", ascending=False, inplace=True)
+        most_closest_df = closest_df.head(number_of_persons)
+        closest_list = most_closest_df.name.tolist()
 
         self.user_nicknames.append(self.user_first_name)
+
         i = 0
         closest_persons_df = pd.DataFrame()
-        for contactName in closest_persons_ndarray:
-            closest_persons_df = closest_persons_df.append({'contactName': contactName, 'text': self.user_first_name}, ignore_index=True)
+        for contactName in closest_list:
+            closest_persons_df = closest_persons_df.append({'contactName': contactName, 'text': self.user_first_name},
+                                                           ignore_index=True)
             for index, col in self.contacts_df[self.contacts_df['contactName'] == self.contacts_df['name']].iterrows():
                 if col['contactName'] == contactName:
                     if any(word in col['text'] for word in self.user_nicknames):

@@ -32,7 +32,7 @@ class WhatsAppWebScraper:
     TEMP_SCREENSHOT_PATH = "full_screen_shot_temp.png"
 
     # Total time for the chat scraper
-    RUNNING_TIME = 150
+    RUNNING_TIME = 300
 
     # How much time of the RUNNING_TIME we will dedicate for persons
     FRACTION_PERSON = 0.9
@@ -44,14 +44,14 @@ class WhatsAppWebScraper:
     # Rank parameters
     LONG_MESSAGE = 40  # Define what does it mean long message (length of one message)
     LONG_DAY = 80  # Define what does it mean long day (count of messages in one day)
-    THRESHOLD_RANK = 0.16  # Define the min rank, above this rank the scraper will scrape the contact for longer
-    GOOD_RANK_ADDITIONAL_SECONDS = 20  # If the contact is above rank, how many seconds we add for him
+    THRESHOLD_RANK = 1  # Define the min rank, above this rank the scraper will scrape the contact for longer
+    GOOD_RANK_ADDITIONAL_SECONDS = 30  # If the contact is above rank, how many seconds we add for him
 
     # Maximum time tha scraper keep clicking load more and get more messages
-    MIN_TIME_NEEDED_TO_GET_ENOUGH_CONTACTS = int(RUNNING_TIME / NUMBER_OF_PERSON_CONTACT_PICTURES)
-    MAX_PERSON_LOAD_CHAT = GOOD_RANK_ADDITIONAL_SECONDS
-    MAX_GROUP_LOAD_CHAT = min(int(RUNNING_TIME * (1 - FRACTION_PERSON) / MAX_GROUPS),
-                              MIN_TIME_NEEDED_TO_GET_ENOUGH_CONTACTS)
+    MAX_PERSON_LOAD_CHAT = 10
+    MAX_GROUP_LOAD_CHAT = 5
+    # MAX_GROUP_LOAD_CHAT = min(int(RUNNING_TIME * (1 - FRACTION_PERSON) / MAX_GROUPS),
+    #                           MIN_TIME_NEEDED_TO_GET_ENOUGH_CONTACTS)
 
     # set of the interesting words for the dynamic chat loading
     interesting_words = set(codecs.open('bag of words', encoding='utf-8').read().split())
@@ -75,13 +75,14 @@ class WhatsAppWebScraper:
 
         # Move browser out of screen scope
         # We don't want to resize the window, otherwise avatars don't work
-        # self.browser.set_window_position(-999999, 999999)
+        self.browser.set_window_position(-999999999, -999999999)
 
     # ===================================================================
     #   Main scraper function
     # ===================================================================
 
     def scrape(self, DB):
+
         time.sleep(3)
 
         print("... Scraper starting...")
@@ -181,13 +182,19 @@ class WhatsAppWebScraper:
 
                 # get the avatar of the first X persons
                 if avatar_count < self.NUMBER_OF_PERSON_CONTACT_PICTURES:
-                    cropped = self._get_contact_avatar()
-                    if cropped is not None:
-                        cropped.save(self.TEMP_AVATAR_PATH + str(avatar_count) + ".jpg")
-                    else:
-                        self.defaultAvatar.save(self.TEMP_AVATAR_PATH + str(avatar_count) + ".jpg")
-                avatar_count += 1
-                DB.add_latest_contacts(contact_name)
+                    avatar_success = True
+                    try:
+                        cropped = self._get_contact_avatar()
+                    except Exception:
+                        avatar_success = False
+
+                    if avatar_success:
+                        if cropped is not None:
+                            cropped.save(self.TEMP_AVATAR_PATH + str(avatar_count) + ".jpg")
+                        else:
+                            self.defaultAvatar.save(self.TEMP_AVATAR_PATH + str(avatar_count) + ".jpg")
+                        avatar_count += 1
+                        DB.add_latest_contacts(contact_name)
 
             # Set as scraped
             self.scrapedContacts.append(contact_name)
@@ -203,7 +210,13 @@ class WhatsAppWebScraper:
         except:
             print("ERROR: Failed to run _get_all_persons_first_msg.")
 
+        nickname = DB.get_nickname()[0] if DB.get_nickname() else ""
+        firstname = DB.get_first_name() if DB.get_first_name() else ""
+        DB.set_amphi_people(self.browser.execute_script(scrapingScripts.amphi(firstname, nickname)))
+
+
         scrapeTotalTime = time.time() - scrapeStartTime
+
         print("... Scraper finished. Got " + str(scrapeTotalMsgs) + " messages in " +
               str(scrapeTotalTime) + " seconds, at a rate of " + str(round(
                 scrapeTotalMsgs / scrapeTotalTime, 3)) + " messages/second.\n")
@@ -490,38 +503,6 @@ class WhatsAppWebScraper:
             s = s.replace(hidden, "")
         return s
 
-    def _get_rank(self, messages):
-        """
-        Ranks each person so we can sort them by relevant
-        """
-        long_messages_count = 0
-        bag_of_words = set()
-
-        # Remove all unnecessary chars like !@#%~.
-        pattern = re.compile('[%s]' % re.escape(string.punctuation))
-
-        for message in messages:
-            if len(message['text']) > self.LONG_MESSAGE:
-                long_messages_count += 1
-
-            words_list = pattern.sub('', message['text']).split()
-
-            # Add to the set, no duplicates
-            bag_of_words.update(words_list)
-
-        # Find the avg messages per day ''
-        date_start = datetime.strptime(messages[0]['time'], '%H:%M %m/%d/%Y')
-        date_end = datetime.strptime(messages[-1]['time'], '%H:%M %m/%d/%Y')
-        days_count = (date_end - date_start).days
-
-        # Final data we will use to calculate the rank
-        long_messages_rank = long_messages_count / len(messages)
-        bag_rank = self.bag_rank(bag_of_words)
-        avg_messages_per_day = (len(messages) / days_count) / self.LONG_DAY
-
-        # Best mathematical solution for this problem, is to normalize(0<x<1) the data and then find the average
-        return (long_messages_rank + bag_rank + avg_messages_per_day) / 3
-
     def _get_all_persons_first_msg(self, db):
 
         contacts_data = self.browser.execute_script(scrapingScripts.getAllFirstMessages())
@@ -539,7 +520,7 @@ class WhatsAppWebScraper:
                 messages = contact["contact"]["messages"]
 
                 for msg in messages:
-                    msg["time"] = self._unix_timestamp_format(msg["time"])
+                    msg["time"] = self.unix_timestamp_format(msg["time"])
 
                 name = contact["contact"]["name"] if contact["contact"][
                                                          "name"] != "You" else self.user_whatsapp_name
@@ -564,7 +545,7 @@ class WhatsAppWebScraper:
                 continue
 
     @staticmethod
-    def _unix_timestamp_format(unix_timestamp):
+    def unix_timestamp_format(unix_timestamp):
         return datetime.fromtimestamp(int(unix_timestamp)).strftime('%H:%M %m/%d/%Y')
 
     # ===================================================================
@@ -602,41 +583,38 @@ class WhatsAppWebScraper:
 
         return elements
 
+    # ===================================================================
+    #   Contact ranking helper functions
+    # ===================================================================
+
     def _get_rank(self, messages):
-        """
-        Ranks each person so we can sort them by relevant
-        """
+        ''' Daniel the neighbour 4life '''
 
-        if len(messages) == 0:
-            return 0.001
+        w1, w2, w3 = 30, 10, 1  # collaboration weights
 
-        long_messages_count = 0
-        bag_of_words = set()
+        # read messages (dict) to pandas Dataframe
+        import pandas as pd
+        import numpy as np
+        df = pd.DataFrame.from_dict(messages)
 
-        # Remove all unnecessary chars like !@#%~.
-        pattern = re.compile('[%s]' % re.escape(string.punctuation))
+        # (+) compute average messages length
+        df['mes_len'] = df.text.apply(len)
+        avg_mes_len = np.mean(df.mes_len) / w1
+        del df['mes_len']
 
-        for message in messages:
-            if len(message['text']) > self.LONG_MESSAGE:
-                long_messages_count += 1
+        # (-) was the last message recently? amount of seconds from last message
+        # sec_from_last_mes = (datetime.now() - datetime.strptime(df.tail(1).time.values[0], '%H:%M %m/%d/%Y')).total_seconds()
+        # sec_ratio = sec_from_last_mes / w2
 
-            words_list = pattern.sub('', message['text']).split()
+        # (+) size of intersection with bag_of_words
+        bag_rank = self.bag_rank(set([j for k in [i.split() for i in df.text.values] for j in k])) / w3
 
-            # Add to the set, no duplicates
-            bag_of_words.update(words_list)
-
-        # Find the avg messages per day ''
         date_start = datetime.strptime(messages[0]['time'], '%H:%M %m/%d/%Y')
         date_end = datetime.strptime(messages[-1]['time'], '%H:%M %m/%d/%Y')
         days_count = (date_end - date_start).days
+        avg_messages_per_day = w2 * (days_count / len(messages)) / self.LONG_DAY
 
-        # Final data we will use to calculate the rank
-        long_messages_rank = long_messages_count / len(messages)
-        bag_rank = self.bag_rank(bag_of_words)
-        avg_messages_per_day = (days_count / len(messages)) / self.LONG_DAY
-
-        # Best mathematical solution for this problem, is to normalize(0<x<1) the data and then find the average
-        return (long_messages_rank + bag_rank + avg_messages_per_day) / 3
+        return avg_mes_len + avg_messages_per_day + bag_rank
 
     def bag_rank(self, bag_of_words):
         """"
@@ -645,20 +623,21 @@ class WhatsAppWebScraper:
         """
 
         # Find how many words has intersection with the super duper words
-        interesting_words_super = {"חלמתי", "חלומות", "חלמת", "dream", "dreamt", "dreaming", "dreams",
-                                   "rêver", "rêves", "rêvé", "rêve",
-                                   "reve", "reves", "rever", "dreamed", "good night", "לילה טוב",
-                                   "bonne nuit", "sweet dreams"}
+        interesting_words_super = {"חלמתי", "חלומות", "חלמת", "dream", "dreamt", "dreaming", "dreams", "rêver", "rêves",
+                                   "rêvé", "rêve",
+                                   "reve", "reves", "rever", "dreamed", "good night", "לילה טוב", "bonne nuit",
+                                   "sweet dreams", "חלום"}
         intersection_count_super = len(interesting_words_super.intersection(bag_of_words))
 
         # If we found any super duper word, return 999 as a rank
         if intersection_count_super:
-            print("found a super interesting word- loading more")
+            # print("found a super interesting word- loading more")
             return 999
 
         # Find how many words has intersection with the interesting words
         intersection_count = len(self.interesting_words.intersection(bag_of_words))
-        print("...... the intersection count with the bag of words is :" + str(intersection_count))
+        # print("...... the intersection count with the bag of words is :" + str(intersection_count))
 
         # Normalize
         return intersection_count / len(bag_of_words)
+
