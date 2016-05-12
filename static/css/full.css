@@ -129,7 +129,7 @@ position:absolute; bottom:20%;  margin-bottom:7px; left: 46.5%;
 }
 
 .introbutton {
-position:absolute; bottom:19.5%;  margin-bottom:7px; left: 72%;
+position:absolute; bottom:19.3%;  margin-bottom:7px; left: 72%;
 }
 
 .bottomnick {
@@ -149,19 +149,22 @@ position:absolute; bottom:36%;  margin-bottom:7px; left: 50%;
 }
 
 .iphone {
-position:absolute; bottom:10%;  margin-bottom:7px; left: 40%;
+position:absolute; bottom:15%;  margin-bottom:7px; left: 41.4%;
+font-family: "Didact Gothic";
 }
 
 .android {
-position:absolute; bottom:10%;  margin-bottom:7px; left: 56%;
+position:absolute; bottom:15%;  margin-bottom:7px; left: 53.3%;
+font-family: "Didact Gothic";
 }
 
 .letsgobutton {
     position:absolute; bottom:20%;  margin-bottom:7px; left: 47%;
     color: #333;
+    font-size: 30px;
     background-color: #fff;
     border: none;
-    font-family: "Didact Gothic"
+    font-family: "Didact Gothic";
 }
 
 .terms {
