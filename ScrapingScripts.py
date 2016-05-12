@@ -97,5 +97,91 @@ def getIncomingMessages():
     #                 }\
     #             });"
 
-def getBagOfWords():
-    pass
+
+def getAllFirstMessages():
+    """
+    Gets data from Store object.
+    :return: format to fit db
+    """
+    return '''
+
+    // get All first messages (iterating on Chat)
+
+    var allContacts = [];
+    var curDict;
+    var lastContact = "place holder";
+    var isGroup;
+    var curContactName;
+    var curMsgName;
+    var curMsgTime;
+    var curType;
+    var curMsgText;
+    var curMsg;
+    var curChat;
+    var curNumOfMsgs;
+    var savedChats = 0;
+
+    var lineSeperator = "------------------------------------------";
+
+    console.log(lineSeperator);
+    var i, j = 0;
+    for (i = 0; i < Store.Chat.models.length; i++) {
+
+        //get a chat and it's name
+        curChat = Store.Chat.models[i]
+        curContactName = curChat.formattedTitle;
+        console.log("Scraping " + curContactName);
+        // get type - and only continue if a user or a group (no broadcast list etc.)
+        if (curChat.isUser)
+        {
+            curType = "person";
+        }
+        else if (curChat.isGroup)
+        {
+            curType = "group"
+            continue;
+        }
+        else
+        {
+            continue;
+        }
+
+        console.log("\tit's a " + curType);
+
+        //initialize this chat's dict
+        curDict = {contact:{type:curType, name:curContactName, messages:[]}};
+
+        //
+        for (j = 0; j < curChat.msgs.models.length ; j++)
+        {
+            // get a message
+            curMsgObj = curChat.msgs.models[j];
+            if (curMsgObj.isMMS  || curMsgObj.isMedia || curMsgObj.isNotification )
+            {
+                continue;
+            }
+            // construct message object
+            curMsgName = curMsgObj.senderObj.formattedName;
+            curMsgTime = curMsgObj.t;
+            curMsgText = curMsgObj.body;
+            curMsg = {name:curMsgName, time:curMsgTime, text:curMsgText}
+            curDict.contact.messages.push(curMsg);
+        }
+
+        // get number of messages
+        curNumOfMsgs = curDict.contact.messages.length;
+
+        console.log("\t got " + curNumOfMsgs + " messages");
+
+        if (curNumOfMsgs != 0)
+        {
+            savedChats++;
+            allContacts.push(curDict);
+        }
+        console.log(lineSeperator);
+    }
+    console.log("saved " + savedChats + " chats");
+    console.log(lineSeperator);
+    return allContacts;
+
+    '''
