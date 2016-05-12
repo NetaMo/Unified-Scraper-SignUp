@@ -38,9 +38,19 @@ class WhatsAppDB:
         self.dreams_or_old_messages = 0
         self.most_active_groups_and_user_groups = 0
         self.chat_archive = 0
+        self.amphi_people = []
 
     def add_latest_contacts(self, name):
         self.latest_contacts.append(name)
+
+    def get_first_name(self):
+        return self.user_first_name
+
+    def get_nickname(self):
+        return self.user_nicknames
+
+    def set_amphi_people(self, arr_dict):
+        self.amphi_people = arr_dict
 
     def set_user_whatsapp_name(self, user_whatsapp_name):
         self.user_whatsapp_name = user_whatsapp_name
@@ -189,7 +199,13 @@ class WhatsAppDB:
         # latest_msgs_df = self.contacts_df.drop_duplicates(subset='contactName').head(number_of_chats)
 
         latest_msgs_df = self.contacts_df.drop_duplicates(subset='contactName')
-        res_df = latest_msgs_df.loc[latest_msgs_df['contactName'].isin(self.latest_contacts[:6])]
+
+        res_df = pd.DataFrame()
+
+        for contact_name in self.latest_contacts:
+            res_df = res_df.append(latest_msgs_df[latest_msgs_df["contactName"] == contact_name], ignore_index=True)
+
+        # res_df = latest_msgs_df.loc[latest_msgs_df['contactName'].isin(self.latest_contacts)]
 
         res_df.time = latest_msgs_df.time.apply(self.correct_time_for_whatsapp)
         sliced_df = res_df[['contactName', 'text', 'time']]
