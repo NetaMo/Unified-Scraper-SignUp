@@ -40,12 +40,16 @@
 
 </body>
 <script type="text/javascript">
-document.addEventListener('DOMContentLoaded', function() {
+var myTimer, dbg_a, dbg_b, dbg_c, dbg_d;
+dbg_a = document.addEventListener('DOMContentLoaded', function() {
 getletsgo();
+dbg_b = this.removeEventListener('DOMContentLoaded', arguments.callee);
 }, false);
-setTimeout(function () {
+clearTimeout(myTimer);
+myTimer = window.setTimeout(function () {
        // alert('Veverything is deleted');
         window.location.href = 'headset2.html';
+        dbg_c = clearTimeout(myTimer);
     }, 1000);
 </script>
 </html>

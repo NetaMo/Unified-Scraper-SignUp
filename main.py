@@ -1,13 +1,17 @@
 import glob
 import os
 import sys
+
+import time
 import tornado.ioloop
 import tornado.web
 import WhatsAppWebScraper
 from Webdriver import Webdriver
 from WhatsAppDB import WhatsAppDB
-
 import DataAnalysisTestDriver # TODO remove wehn not needed
+
+firstTime = True
+runFile = "C:\\Users\\maoze\\PycharmProjects\\Unified-Scraper-SignUp\\run.bat"
 
 """
 run the WhatsApp web scrapper.
@@ -117,6 +121,13 @@ class ChoosePhoneHandler(tornado.web.RequestHandler):
         phone = self.get_argument("phone")
         DB.phone = phone
         print('Phone is {}'.format(phone))
+        self.finish()
+
+class ResetBrowserHandler(tornado.web.RequestHandler):
+
+    def get(self):
+        mainDriver.close()
+        exit(0)
         self.finish()
 
 
@@ -231,6 +242,7 @@ def make_app():
         (r"/nicknamesubmit", NickNameSubmitHandler),
         (r"/choosephone", ChoosePhoneHandler),
         (r"/letsgo", LetsGoHandler),
+        (r"/resetBrowser", ResetBrowserHandler),
         # unity handlers
         (r"/get_latest_chats", GiveLatestChatsHandler),
         (r"/get_closest_persons_and_msgs", GiveClosestPersonsAndMsgs),
@@ -249,8 +261,9 @@ DB = None
 # We'll use this to send the user back to the main page when we reset the experience
 driver_user = None
 
-if __name__ == "__main__":
 
+
+if __name__ == "__main__":
     InitializeDBAndAvatars()
     global mainDriver
 
@@ -301,8 +314,8 @@ if __name__ == "__main__":
     print("listening")
     app.listen(port)
 
-    # app.listen(port, address="192.168.173.1")  # listen to ip
+    # app.listen(port, address="192.16873.1")  # listen to ip
 
     tornado.ioloop.IOLoop.current().start()
 
-
+    # lt.join()
