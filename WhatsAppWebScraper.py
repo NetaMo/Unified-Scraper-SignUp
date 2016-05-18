@@ -32,10 +32,10 @@ class WhatsAppWebScraper:
     TEMP_SCREENSHOT_PATH = "full_screen_shot_temp.png"
 
     # Total time for the chat scraper
-    RUNNING_TIME = 60
+    RUNNING_TIME = 300
 
     # How much time of the RUNNING_TIME we will dedicate for persons
-    FRACTION_PERSON = 0.9
+    FRACTION_PERSON = 0.8
 
     # Maximum groups and persons we want
     MAX_GROUPS = 6
@@ -449,8 +449,7 @@ class WhatsAppWebScraper:
         try:
             actions.click(self.wait_for_element('.input.input-search')).send_keys(Keys.TAB).send_keys(
                     Keys.ARROW_DOWN).perform()
-        except StaleElementReferenceException:
-            # Element is removed from the DOM structure, that happens when whatsapp refresh
+        except (StaleElementReferenceException, OSError) :# Element is removed from the DOM structure, that happens when whatsapp refresh
             # the page and we don't want to break the app. I'm retying again after 2 sec.
             time.sleep(3)
 
@@ -553,19 +552,32 @@ class WhatsAppWebScraper:
     #   Webdriver helper functions
     # ===================================================================
 
-    def wait_for_element(self, jquerySelector, timeout=10):
+    def wait_for_element(self, jquerySelector, timeout=100):
         """
         General helper function. Searches and waits for css element to appear on page and returns it,
         if it doesnt appear after timeout seconds prints relevant exception and returns None.
         """
-        startTime = time.time()
-        elements = self.browser.execute_script("return $(arguments[0]);", jquerySelector)
+        try:
 
-        while (len(elements) == 0):
+            startTime = time.time()
             elements = self.browser.execute_script("return $(arguments[0]);", jquerySelector)
-            if time.time() - startTime > timeout:
-                return None
-            time.sleep(0.001)
+
+            while (len(elements) == 0):
+                elements = self.browser.execute_script("return $(arguments[0]);", jquerySelector)
+                if time.time() - startTime > timeout:
+                    return None
+                time.sleep(0.1)
+        except OSError:
+
+            print("### OS ###")
+            time.sleep(10)
+            elements = self.browser.execute_script("return $(arguments[0]);", jquerySelector)
+
+            while (len(elements) == 0):
+                elements = self.browser.execute_script("return $(arguments[0]);", jquerySelector)
+                if time.time() - startTime > timeout:
+                    return None
+            time.sleep(0.1)
 
         return elements[0]
 

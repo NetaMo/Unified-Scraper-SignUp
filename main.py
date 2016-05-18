@@ -208,8 +208,12 @@ class ResetHandler(tornado.web.RequestHandler):
             ''')
         except Exception as e:
             print(e)
+        finally:
+            exit(0)
+        exit(0)
 
         self.finish()
+
 
 
 """""
