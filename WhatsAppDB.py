@@ -469,12 +469,24 @@ class WhatsAppDB:
         del df['self_interest_grade']
         del df['interest_grade']
 
-        # Get name of interesting contact, his messages and the ID of the last message from him
-        interesting_message = df.iloc[interesting_message_row_id]
-        print('\nThe interesting message is: {}'.format(interesting_message))
-        contact_name_interesting_message = interesting_message['contactName']
-        messages_of_contact = df[df.contactName.str.contains(contact_name_interesting_message)]
-        index_last_message_from_contact = int(messages_of_contact.tail(1).index.values[0])
+        try:
+
+            # Get name of interesting contact, his messages and the ID of the last message from him
+            interesting_message = df.iloc[interesting_message_row_id]
+            print('\nThe interesting message is: {}'.format(interesting_message))
+            contact_name_interesting_message = interesting_message['contactName']
+            messages_of_contact = df[df.contactName.str.contains(contact_name_interesting_message)]
+            index_last_message_from_contact = int(messages_of_contact.tail(1).index.values[0])
+        except:
+
+            print("had an exception in get msgs archive")
+
+            # Sort the DataFrame, for usage in future methods
+            self.sort()
+
+            resulted_sliced_df = self.contacts_df[["name", "text"]]
+
+            return resulted_sliced_df.to_json(date_format='iso', double_precision=0, date_unit='s', orient='records')
 
         # Indexes of messages before and after the interesting message
         index_interesting_row_before = interesting_message_row_id - INTERESTING_ROWS_EXTRA_BEFORE
