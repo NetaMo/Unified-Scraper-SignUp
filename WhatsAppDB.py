@@ -230,17 +230,13 @@ class WhatsAppDB:
         # return df_past_chats.contactName.value_counts().head(1).index[0]
 
     def get_closest_persons_and_msg(self, number_of_persons):  # TODO rewrite more efficiently
-        """
-        finds the number_of_persons most talked persons and a message that has the user name in it.
-        :param number_of_persons: the number of close persons to find.
-        :return: json with the data
-        """
         START_INTERESTING_TIME = dt(00, 1, 0)
         END_INTERESTING_TIME = dt(4, 00, 0)
         ENVIRONMENT_SIZE = 3    # one-sided (i.e. environment is actually twice bigger)
     
-        df = self.contact_df
-        # df['time'] = pd.to_datetime(df['time'])
+    
+        df = pd.read_pickle('saved_contacts_df')
+        df['time'] = pd.to_datetime(df['time'])
     
     
         # add rank column:
@@ -258,8 +254,8 @@ class WhatsAppDB:
     
         # >>> compute grade; how interesting is the message by itself (w.o. context)?    higher is better. <<<
         # you can use adjust weights
-        df['self_interest_grade'] = 1 * df.mes_len \
-                                    + 50 * df.is_night \
+        df['self_interest_grade'] = 5 * df.mes_len \
+                                    + 10 * df.is_night \
                                     - 5 * df.amount_of_letter_seq
     
         # (+) add column: is message part of sequence of interesting messages (relying on self_interest_grade)
@@ -275,19 +271,14 @@ class WhatsAppDB:
     
         df.sort_values(['interest_grade'], inplace=True, ascending=False)
     
-        top_contacts_list = df.drop_duplicates("contactName", keep='first')["contactName"].tolist()[:number_of_persons]
-    
-        df = df[df.text.str.lower().str.contains(
-            self.user_first_name|self.user_last_name|self.user_nicknames)]
-
+        top_contacts_list = df.drop_duplicates("contactName", keep='first')["contactName"].tolist()[:40]
     
         df.drop_duplicates("contactName", keep='first', inplace=True)
-        cur_contacts_list = df["contactName"].tolist()
+        df = df[['contactName', 'text']]
     
-        missing_contacts = [c for c in top_contacts_list if c not in cur_contacts_list]
-        missing_df = pd.DataFrame([[contact, self.user_first_name] for contact in missing_contacts], columns=['contactName', 'text'])
-    
-        df = df[['contactName', 'text']].append(missing_df,ignore_index=True)
+        for idx, row in df.iterrows():
+            if not any(x in row.text for x in [self.user_first_name, self.user_last_name, self.user_nicknames[0]):
+                df.ix[idx].text = self.user_first_name
     
         blast = self.get_blast_from_the_past()
         df = df.append({"contactName": blast, "text": "im the blast from the past"}, ignore_index=True)
