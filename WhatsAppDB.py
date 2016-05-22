@@ -326,17 +326,22 @@ class WhatsAppDB:
         # df_past_chats = self.contacts_df.where(self.contacts_df.time <= past_chats_threshold_date).dropna()
         # return df_past_chats[['contactName', 'text']]
 
-        old_messages_df = self.contacts_df[self.contacts_df['contactName'] == self.contacts_df['name']].drop_duplicates("contactName",
-                                                                                                                        keep='last')
-        earlist_messages_df = old_messages_df.tail(20)
+        word_amount_bounds = (7, 13)
 
-        # earlist_messages_df.loc['word_count'] = earlist_messages_df.text.apply(self.get_word_count)
-        count_series = earlist_messages_df.text.apply(self.get_word_count)
-        earlist_messages_df.insert(0, "word_count", count_series)
-        earlist_messages_df = earlist_messages_df.sort_values("word_count")
-
-        return earlist_messages_df[['contactName', 'text']]
-
+        old_messages_df = f[f['contactName'] == f['name']]
+        old_messages_df['word_amount'] = old_messages_df.text.apply(get_word_count)
+    
+        old_messages_df = old_messages_df[old_messages_df.word_amount > word_amount_bounds[0]]
+        [old_messages_df.word_amount < word_amount_bounds[1]]
+    
+        old_messages_df.drop_duplicates("contactName", keep='last', inplace=True)
+    
+        old_messages_df['just_date'] = pd.to_datetime(old_messages_df['time']).dt.date.astype(str)
+        old_messages_df['name_and_date'] = old_messages_df['contactName'] + '   (' + old_messages_df['just_date'] + ')'
+    
+        return old_messages_df[['name_and_date', 'text']].head(8)
+        
+        
     def get_dreams_or_old_messages(self):
         """
         decides what is better- old msgs or dream msgs and returns it
