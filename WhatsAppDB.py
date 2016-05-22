@@ -365,7 +365,7 @@ class WhatsAppDB:
         old_messages_df['just_date'] = pd.to_datetime(old_messages_df['time']).dt.date.astype(str)
         old_messages_df['contactName'] = old_messages_df['contactName'] + '   (' + old_messages_df['just_date'] + ')'
         
-        return old_messages_df[['contactName', 'text']].head(8)
+        return old_messages_df[['contactName', 'text']].tail(8)
         
     def get_dreams_or_old_messages(self):
         """
