@@ -265,15 +265,22 @@ class WhatsAppDB:
         finds messages containing good night word
         :return: json with the data
         """
-        good_night_df = self.contacts_df[self.contacts_df.text.str.lower().str.contains("good night|לילה טוב|bonne nuit|sweet dreams")]
+        good_night_df = self.contact_df[self.contact_df.text.str.lower().str.contains(
+        "good night|לילה טוב|bonne nuit|sweet dreams|ער\?|ערה\?|ער במקרה\?|ערה במקרה\?")]
+        
+        dreams_df = self.contact_df[self.contact_df.text.str.lower().str.contains(
+            "חלמתי|חלומות|חלמת|dream|dreamt|dreaming|dreams|rêver|rêves|rêvé|rêve|reve|reves|rever|dreamed|חלום|חולם")]
 
         good_night_df = good_night_df[['contactName', 'text']]
-        # print(good_night_df['contactName'].value_counts())
-        # print(good_night_df.groupby(['contactName']).transform('count'))
-        # print(good_night_df.sort_values('contactName').contactName.value_counts())
         good_night_df['count_val'] = good_night_df.groupby(['contactName']).transform('count')
-        good_night_df = good_night_df.sort_values(['count_val', 'contactName'], ascending=False).groupby('contactName').head(5)
-        res_df = good_night_df.loc[good_night_df['contactName'].isin(good_night_df['contactName'].unique()[:6])]
+        good_night_df = good_night_df.sort_values(['count_val', 'contactName'], ascending=False).groupby('contactName').head(1)
+    
+        dreams_df = dreams_df[['contactName', 'text']]
+        dreams_df['count_val'] = dreams_df.groupby(['contactName']).transform('count')
+        dreams_df = dreams_df.sort_values(['count_val', 'contactName'], ascending=False).groupby('contactName').head(1)
+    
+        res_df = dreams_df.loc[dreams_df['contactName'].isin(dreams_df['contactName'].unique()[:8])].append(
+            good_night_df.loc[good_night_df['contactName'].isin(good_night_df['contactName'].unique()[:8])])
 
         return res_df.to_json(date_format='iso', double_precision=0, date_unit='s', orient='records')
 
@@ -319,35 +326,38 @@ class WhatsAppDB:
         # df_past_chats = self.contacts_df.where(self.contacts_df.time <= past_chats_threshold_date).dropna()
         # return df_past_chats[['contactName', 'text']]
 
-        old_messages_df = self.contacts_df[self.contacts_df['contactName'] == self.contacts_df['name']].drop_duplicates("contactName",
-                                                                                                                        keep='last')
-        earlist_messages_df = old_messages_df.tail(20)
+        word_amount_bounds = (7, 13)
 
-        # earlist_messages_df.loc['word_count'] = earlist_messages_df.text.apply(self.get_word_count)
-        count_series = earlist_messages_df.text.apply(self.get_word_count)
-        earlist_messages_df.insert(0, "word_count", count_series)
-        earlist_messages_df = earlist_messages_df.sort_values("word_count")
-
-        return earlist_messages_df[['contactName', 'text']]
-
+        old_messages_df = f[f['contactName'] == f['name']]
+        old_messages_df['word_amount'] = old_messages_df.text.apply(get_word_count)
+    
+        old_messages_df = old_messages_df[old_messages_df.word_amount > word_amount_bounds[0]]
+        [old_messages_df.word_amount < word_amount_bounds[1]]
+    
+        old_messages_df.drop_duplicates("contactName", keep='last', inplace=True)
+    
+        old_messages_df['just_date'] = pd.to_datetime(old_messages_df['time']).dt.date.astype(str)
+        old_messages_df['name_and_date'] = old_messages_df['contactName'] + '   (' + old_messages_df['just_date'] + ')'
+    
+        return old_messages_df[['name_and_date', 'text']].head(8)
+        
+        
     def get_dreams_or_old_messages(self):
         """
         decides what is better- old msgs or dream msgs and returns it
         :return: json with the data
         """
-        dreams_df = self.get_dream_messages()
-
-        old_messages_df = self.get_old_messages()
-
-        initial_size = len(dreams_df.index)
-        while initial_size < 5:
-            dreams_df = dreams_df.append(old_messages_df.tail(1))
-
-            old_messages_df = old_messages_df[:-1]
-
-            initial_size = len(dreams_df.index)
-
-        return dreams_df.to_json(date_format='iso', double_precision=0, date_unit='s', orient='records')
+        # dreams_df = self.get_dream_messages()
+        # old_messages_df = self.get_old_messages()
+        # initial_size = len(dreams_df.index)
+        # while initial_size < 5:
+            # dreams_df = dreams_df.append(old_messages_df.tail(1))
+            # old_messages_df = old_messages_df[:-1]
+            # initial_size = len(dreams_df.index)
+        # return dreams_df.to_json(date_format='iso', double_precision=0, date_unit='s', orient='records')
+        
+        # currently returning only old messages - dreams was merged to 'good_night'
+        return old_messages_df.to_json(date_format='iso', double_precision=0, date_unit='s', orient='records')
 
     def get_most_active_groups_and_user_groups(self, max_number_of_groups, max_group_size):
         """
