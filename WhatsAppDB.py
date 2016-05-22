@@ -347,19 +347,17 @@ class WhatsAppDB:
         decides what is better- old msgs or dream msgs and returns it
         :return: json with the data
         """
-        dreams_df = self.get_dream_messages()
-
-        old_messages_df = self.get_old_messages()
-
-        initial_size = len(dreams_df.index)
-        while initial_size < 5:
-            dreams_df = dreams_df.append(old_messages_df.tail(1))
-
-            old_messages_df = old_messages_df[:-1]
-
-            initial_size = len(dreams_df.index)
-
-        return dreams_df.to_json(date_format='iso', double_precision=0, date_unit='s', orient='records')
+        # dreams_df = self.get_dream_messages()
+        # old_messages_df = self.get_old_messages()
+        # initial_size = len(dreams_df.index)
+        # while initial_size < 5:
+            # dreams_df = dreams_df.append(old_messages_df.tail(1))
+            # old_messages_df = old_messages_df[:-1]
+            # initial_size = len(dreams_df.index)
+        # return dreams_df.to_json(date_format='iso', double_precision=0, date_unit='s', orient='records')
+        
+        # currently returning only old messages - dreams was merged to 'good_night'
+        return old_messages_df.to_json(date_format='iso', double_precision=0, date_unit='s', orient='records')
 
     def get_most_active_groups_and_user_groups(self, max_number_of_groups, max_group_size):
         """
