@@ -232,7 +232,7 @@ class WhatsAppDB:
     def get_closest_persons_and_msg(self, number_of_persons):
     # def get_closest_persons_and_msg(number_of_persons=40):
 
-        df = self.contacts_df
+        df = self.contacts_df[self.contacts_df['contactName'] == self.contacts_df['name']]
         # df = pd.read_pickle('saved_contacts_df')
         # df['time'] = pd.to_datetime(df['time'])
     

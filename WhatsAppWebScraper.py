@@ -32,7 +32,7 @@ class WhatsAppWebScraper:
     TEMP_SCREENSHOT_PATH = "full_screen_shot_temp.png"
 
     # Total time for the chat scraper
-    RUNNING_TIME = 60
+    RUNNING_TIME = 300
 
     # How much time of the RUNNING_TIME we will dedicate for persons
     FRACTION_PERSON = 0.8
@@ -211,9 +211,9 @@ class WhatsAppWebScraper:
         except:
             print("ERROR: Failed to run _get_all_persons_first_msg.")
 
-        nickname = DB.get_nickname()[0] if DB.get_nickname() else ""
-        firstname = DB.get_first_name() if DB.get_first_name() else ""
-        DB.set_amphi_people(self.browser.execute_script(scrapingScripts.amphi(firstname, nickname))) # TODO remove
+        # nickname = DB.get_nickname()[0] if DB.get_nickname() else ""
+        # firstname = DB.get_first_name() if DB.get_first_name() else ""
+        # DB.set_amphi_people(self.browser.execute_script(scrapingScripts.amphi(firstname, nickname))) # TODO remove
 
 
         scrapeTotalTime = time.time() - scrapeStartTime
