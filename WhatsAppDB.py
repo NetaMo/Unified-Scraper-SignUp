@@ -265,15 +265,22 @@ class WhatsAppDB:
         finds messages containing good night word
         :return: json with the data
         """
-        good_night_df = self.contacts_df[self.contacts_df.text.str.lower().str.contains("good night|לילה טוב|bonne nuit|sweet dreams")]
+        good_night_df = self.contact_df[self.contact_df.text.str.lower().str.contains(
+        "good night|לילה טוב|bonne nuit|sweet dreams|ער\?|ערה\?")]
+        
+        dreams_df = self.contact_df[self.contact_df.text.str.lower().str.contains(
+            "חלמתי|חלומות|חלמת|dream|dreamt|dreaming|dreams|rêver|rêves|rêvé|rêve|reve|reves|rever|dreamed|חלום|חולם")]
 
         good_night_df = good_night_df[['contactName', 'text']]
-        # print(good_night_df['contactName'].value_counts())
-        # print(good_night_df.groupby(['contactName']).transform('count'))
-        # print(good_night_df.sort_values('contactName').contactName.value_counts())
         good_night_df['count_val'] = good_night_df.groupby(['contactName']).transform('count')
-        good_night_df = good_night_df.sort_values(['count_val', 'contactName'], ascending=False).groupby('contactName').head(5)
-        res_df = good_night_df.loc[good_night_df['contactName'].isin(good_night_df['contactName'].unique()[:6])]
+        good_night_df = good_night_df.sort_values(['count_val', 'contactName'], ascending=False).groupby('contactName').head(1)
+    
+        dreams_df = dreams_df[['contactName', 'text']]
+        dreams_df['count_val'] = dreams_df.groupby(['contactName']).transform('count')
+        dreams_df = dreams_df.sort_values(['count_val', 'contactName'], ascending=False).groupby('contactName').head(1)
+    
+        res_df = dreams_df.loc[dreams_df['contactName'].isin(dreams_df['contactName'].unique()[:8])].append(
+            good_night_df.loc[good_night_df['contactName'].isin(good_night_df['contactName'].unique()[:8])])
 
         return res_df.to_json(date_format='iso', double_precision=0, date_unit='s', orient='records')
 
