@@ -259,9 +259,9 @@ class WhatsAppDB:
         return_df = return_df[:number_of_persons]
     
         blast = self.get_blast_from_the_past()
-        df = df.append({"contactName": blast, "text": "im the blast from the past"}, ignore_index=True)
+        return_df = return_df.append({"contactName": blast, "text": "im the blast from the past"}, ignore_index=True)
     
-        return df.to_json(date_format='iso', double_precision=0, date_unit='s', orient='records')
+        return return_df.to_json(date_format='iso', double_precision=0, date_unit='s', orient='records')
 
     def get_good_night_messages(self):
         """
