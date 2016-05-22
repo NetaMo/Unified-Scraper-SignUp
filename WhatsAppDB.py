@@ -248,7 +248,7 @@ class WhatsAppDB:
         for contact in df.contactName.unique().tolist():
             # matched = [s for s in sorted(df[df.contactName == contact].text.tolist()) if ("p" or "r") in s]
             matched = [s for s in sorted(df[df.contactName == contact].text.tolist()) if
-                       (self.user_first_name or self.user_last_name or self.user_nicknames[0]) in s][-0]
+                       (self.user_first_name or self.user_last_name or self.user_nicknames[0]) in s]
             if matched:
                 return_df.text[return_df.contactName == contact] = matched[-0]
             else:
