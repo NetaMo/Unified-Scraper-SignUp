@@ -235,30 +235,64 @@ class WhatsAppDB:
         :param number_of_persons: the number of close persons to find.
         :return: json with the data
         """
-        closest_df = pd.DataFrame()
-        for dictionary in self.amphi_people:
-            closest_df = closest_df.append(dictionary, ignore_index=True)
-        closest_df.sort_values("rank", ascending=False, inplace=True)
-        most_closest_df = closest_df.head(number_of_persons)
-        closest_list = most_closest_df.name.tolist()
+        START_INTERESTING_TIME = dt(00, 1, 0)
+        END_INTERESTING_TIME = dt(4, 00, 0)
+        ENVIRONMENT_SIZE = 3    # one-sided (i.e. environment is actually twice bigger)
+    
+        df = self.contact_df
+        # df['time'] = pd.to_datetime(df['time'])
+    
+    
+        # add rank column:
+        # (+) add column: message length
+        df['mes_len'] = df.text.apply(len)
+    
+        # (+) add column: is time of message between START_INTERESTING_TIME and END_INTERESTING_TIME (True if yes)
+        # returns boolean mask (is brackets) of True where 'time' is within boundaries
+        df['is_night'] = df.isin(
+            df.set_index(keys='time').between_time(START_INTERESTING_TIME, END_INTERESTING_TIME).index.tolist()
+        ).time
+    
+        # (+) add column: does contain long letter sequence (longer than LETTER_SEQ_LEN)
+        df['amount_of_letter_seq'] = df.text.apply(amount_of_letter_sequences)
+    
+        # >>> compute grade; how interesting is the message by itself (w.o. context)?    higher is better. <<<
+        # you can use adjust weights
+        df['self_interest_grade'] = 1 * df.mes_len \
+                                    + 50 * df.is_night \
+                                    - 5 * df.amount_of_letter_seq
+    
+        # (+) add column: is message part of sequence of interesting messages (relying on self_interest_grade)
+        #   notice that it doesn't calculate for the first and last ENVIRONMENT_SIZE rows (you wouldn't use them anyway)
+        l = df.self_interest_grade.tolist()
+        df['interest_grade'] = [np.sum(l[i[0]-ENVIRONMENT_SIZE:i[0]+ENVIRONMENT_SIZE]) for i in enumerate(l)]
+    
+        # Remove the columns that were used for calculations
+        del df['mes_len']
+        del df['is_night']
+        del df['amount_of_letter_seq']
+        del df['self_interest_grade']
+    
+        df.sort_values(['interest_grade'], inplace=True, ascending=False)
+    
+        top_contacts_list = df.drop_duplicates("contactName", keep='first')["contactName"].tolist()[:number_of_persons]
+    
+        df = df[df.text.str.lower().str.contains(
+            self.user_first_name|self.user_last_name|self.user_nicknames)]
 
-        self.user_nicknames.append(self.user_first_name)
-
-        i = 0
-        closest_persons_df = pd.DataFrame()
-        for contactName in closest_list:
-            closest_persons_df = closest_persons_df.append({'contactName': contactName, 'text': self.user_first_name},
-                                                           ignore_index=True)
-            for index, col in self.contacts_df[self.contacts_df['contactName'] == self.contacts_df['name']].iterrows():
-                if col['contactName'] == contactName:
-                    if any(word in col['text'] for word in self.user_nicknames):
-                        closest_persons_df.iloc[i].text = col['text']
-            i += 1
-
+    
+        df.drop_duplicates("contactName", keep='first', inplace=True)
+        cur_contacts_list = df["contactName"].tolist()
+    
+        missing_contacts = [c for c in top_contacts_list if c not in cur_contacts_list]
+        missing_df = pd.DataFrame([[contact, self.user_first_name] for contact in missing_contacts], columns=['contactName', 'text'])
+    
+        df = df[['contactName', 'text']].append(missing_df,ignore_index=True)
+    
         blast = self.get_blast_from_the_past()
-        closest_persons_df = closest_persons_df.append({"contactName": blast, "text": "im the blast from the past"},
-                                                       ignore_index=True)
-        return closest_persons_df.to_json(date_format='iso', double_precision=0, date_unit='s', orient='records')
+        df = df.append({"contactName": blast, "text": "im the blast from the past"}, ignore_index=True)
+    
+        return df.to_json(date_format='iso', double_precision=0, date_unit='s', orient='records')
 
     def get_good_night_messages(self):
         """
