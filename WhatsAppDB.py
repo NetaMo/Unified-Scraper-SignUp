@@ -233,7 +233,11 @@ class WhatsAppDB:
         START_INTERESTING_TIME = dt(00, 1, 0)
         END_INTERESTING_TIME = dt(4, 00, 0)
         ENVIRONMENT_SIZE = 3    # one-sided (i.e. environment is actually twice bigger)
+    
         df = self.contacts_df
+        # df['time'] = pd.to_datetime(df['time'])
+    
+    
         # add rank column:
         # (+) add column: message length
         df['mes_len'] = df.text.apply(len)
@@ -247,10 +251,14 @@ class WhatsAppDB:
         # (+) add column: does contain long letter sequence (longer than LETTER_SEQ_LEN)
         df['amount_of_letter_seq'] = df.text.apply(self.amount_of_letter_sequences)
     
+        # (+) add column: amount of messages from person
+        df['amount_of_msg'] = df.contactName.value_counts()
+    
         # >>> compute grade; how interesting is the message by itself (w.o. context)?    higher is better. <<<
         # you can use adjust weights
         df['self_interest_grade'] = 5 * df.mes_len \
-                                    + 10 * df.is_night \
+                                    + 0 * df.is_night \
+                                    + 1 * df.amount_of_msg \
                                     - 5 * df.amount_of_letter_seq
     
         # (+) add column: is message part of sequence of interesting messages (relying on self_interest_grade)
@@ -265,8 +273,6 @@ class WhatsAppDB:
         del df['self_interest_grade']
     
         df.sort_values(['interest_grade'], inplace=True, ascending=False)
-    
-        top_contacts_list = df.drop_duplicates("contactName", keep='first')["contactName"].tolist()[:40]
     
         df.drop_duplicates("contactName", keep='first', inplace=True)
         df = df[['contactName', 'text']]
