@@ -229,57 +229,34 @@ class WhatsAppDB:
         # df_past_chats = self.contacts_df.where(self.contacts_df.time <= past_chats_threshold_date).dropna()
         # return df_past_chats.contactName.value_counts().head(1).index[0]
 
-    def get_closest_persons_and_msg(self, number_of_persons):  # TODO rewrite more efficiently
-        START_INTERESTING_TIME = dt(00, 1, 0)
-        END_INTERESTING_TIME = dt(4, 00, 0)
-        ENVIRONMENT_SIZE = 3    # one-sided (i.e. environment is actually twice bigger)
-    
+    def get_closest_persons_and_msg(self, number_of_persons):
+    # def get_closest_persons_and_msg(number_of_persons=40):
+
         df = self.contacts_df
+        # df = pd.read_pickle('saved_contacts_df')
         # df['time'] = pd.to_datetime(df['time'])
     
-    
-        # add rank column:
         # (+) add column: message length
+        df = df[['contactName', 'text']]
+        df['count_val'] = df.groupby(['contactName']).transform('count')
         df['mes_len'] = df.text.apply(len)
     
-        # (+) add column: is time of message between START_INTERESTING_TIME and END_INTERESTING_TIME (True if yes)
-        # returns boolean mask (is brackets) of True where 'time' is within boundaries
-        df['is_night'] = df.isin(
-            df.set_index(keys='time').between_time(START_INTERESTING_TIME, END_INTERESTING_TIME).index.tolist()
-        ).time
+        df.sort_values(['count_val', 'contactName'], inplace=True, ascending=False)
     
-        # (+) add column: does contain long letter sequence (longer than LETTER_SEQ_LEN)
-        df['amount_of_letter_seq'] = df.text.apply(self.amount_of_letter_sequences)
+        return_df = df.drop_duplicates("contactName", keep='first')
     
-        # (+) add column: amount of messages from person
-        df['amount_of_msg'] = df.contactName.value_counts()
+        for contact in df.contactName.unique().tolist():
+            # matched = [s for s in sorted(df[df.contactName == contact].text.tolist()) if ("p" or "r") in s]
+            matched = [s for s in sorted(df[df.contactName == contact].text.tolist()) if
+                       (self.user_first_name or self.user_last_name or self.user_nicknames[0]) in s][-0]
+            if matched:
+                return_df.text[return_df.contactName == contact] = matched[-0]
+            else:
+                # return_df.text[return_df.contactName == contact] = "boring"
+                return_df.text[return_df.contactName == contact] = self.user_first_name
     
-        # >>> compute grade; how interesting is the message by itself (w.o. context)?    higher is better. <<<
-        # you can use adjust weights
-        df['self_interest_grade'] = 5 * df.mes_len \
-                                    + 0 * df.is_night \
-                                    + 1 * df.amount_of_msg \
-                                    - 5 * df.amount_of_letter_seq
-    
-        # (+) add column: is message part of sequence of interesting messages (relying on self_interest_grade)
-        #   notice that it doesn't calculate for the first and last ENVIRONMENT_SIZE rows (you wouldn't use them anyway)
-        l = df.self_interest_grade.tolist()
-        df['interest_grade'] = [np.sum(l[i[0]-ENVIRONMENT_SIZE:i[0]+ENVIRONMENT_SIZE]) for i in enumerate(l)]
-    
-        # Remove the columns that were used for calculations
-        del df['mes_len']
-        del df['is_night']
-        del df['amount_of_letter_seq']
-        del df['self_interest_grade']
-    
-        df.sort_values(['interest_grade'], inplace=True, ascending=False)
-    
-        df.drop_duplicates("contactName", keep='first', inplace=True)
-        df = df[['contactName', 'text']]
-    
-        for idx, row in df.iterrows():
-            if not any(x in row.text for x in [self.user_first_name, self.user_last_name, self.user_nicknames[0]]):
-                df.ix[idx].text = self.user_first_name
+        # return_df = return_df[:40]
+        return_df = return_df[:number_of_persons]
     
         blast = self.get_blast_from_the_past()
         df = df.append({"contactName": blast, "text": "im the blast from the past"}, ignore_index=True)
