@@ -233,7 +233,7 @@ class WhatsAppDB:
         START_INTERESTING_TIME = dt(00, 1, 0)
         END_INTERESTING_TIME = dt(4, 00, 0)
         ENVIRONMENT_SIZE = 3    # one-sided (i.e. environment is actually twice bigger)
-    
+        df = self.contacts_df
         # add rank column:
         # (+) add column: message length
         df['mes_len'] = df.text.apply(len)
@@ -245,7 +245,7 @@ class WhatsAppDB:
         ).time
     
         # (+) add column: does contain long letter sequence (longer than LETTER_SEQ_LEN)
-        df['amount_of_letter_seq'] = df.text.apply(amount_of_letter_sequences)
+        df['amount_of_letter_seq'] = df.text.apply(self.amount_of_letter_sequences)
     
         # >>> compute grade; how interesting is the message by itself (w.o. context)?    higher is better. <<<
         # you can use adjust weights
@@ -272,7 +272,7 @@ class WhatsAppDB:
         df = df[['contactName', 'text']]
     
         for idx, row in df.iterrows():
-            if not any(x in row.text for x in [self.user_first_name, self.user_last_name, self.user_nicknames[0]):
+            if not any(x in row.text for x in [self.user_first_name, self.user_last_name, self.user_nicknames[0]]):
                 df.ix[idx].text = self.user_first_name
     
         blast = self.get_blast_from_the_past()
@@ -348,8 +348,8 @@ class WhatsAppDB:
 
         word_amount_bounds = (7, 13)
 
-        old_messages_df = f[f['contactName'] == f['name']]
-        old_messages_df['word_amount'] = old_messages_df.text.apply(get_word_count)
+        old_messages_df = self.contacts_df[self.contacts_df['contactName'] == self.contacts_df['name']]
+        old_messages_df['word_amount'] = old_messages_df.text.apply(self.get_word_count)
     
         old_messages_df = old_messages_df[old_messages_df.word_amount > word_amount_bounds[0]]
         [old_messages_df.word_amount < word_amount_bounds[1]]
@@ -368,7 +368,7 @@ class WhatsAppDB:
         :return: json with the data
         """
         # dreams_df = self.get_dream_messages()
-        # old_messages_df = self.get_old_messages()
+        old_messages_df = self.get_old_messages()
         # initial_size = len(dreams_df.index)
         # while initial_size < 5:
             # dreams_df = dreams_df.append(old_messages_df.tail(1))
