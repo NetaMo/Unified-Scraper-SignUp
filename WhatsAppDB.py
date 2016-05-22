@@ -266,7 +266,7 @@ class WhatsAppDB:
         :return: json with the data
         """
         good_night_df = self.contact_df[self.contact_df.text.str.lower().str.contains(
-        "good night|לילה טוב|bonne nuit|sweet dreams|ער\?|ערה\?")]
+        "good night|לילה טוב|bonne nuit|sweet dreams|ער\?|ערה\?|ער במקרה\?|ערה במקרה\?")]
         
         dreams_df = self.contact_df[self.contact_df.text.str.lower().str.contains(
             "חלמתי|חלומות|חלמת|dream|dreamt|dreaming|dreams|rêver|rêves|rêvé|rêve|reve|reves|rever|dreamed|חלום|חולם")]
