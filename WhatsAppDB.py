@@ -234,11 +234,6 @@ class WhatsAppDB:
         END_INTERESTING_TIME = dt(4, 00, 0)
         ENVIRONMENT_SIZE = 3    # one-sided (i.e. environment is actually twice bigger)
     
-    
-        df = pd.read_pickle('saved_contacts_df')
-        df['time'] = pd.to_datetime(df['time'])
-    
-    
         # add rank column:
         # (+) add column: message length
         df['mes_len'] = df.text.apply(len)
