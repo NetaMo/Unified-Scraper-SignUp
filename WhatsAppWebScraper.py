@@ -45,10 +45,10 @@ class WhatsAppWebScraper:
     LONG_MESSAGE = 40  # Define what does it mean long message (length of one message)
     LONG_DAY = 80  # Define what does it mean long day (count of messages in one day)
     THRESHOLD_RANK = 1  # Define the min rank, above this rank the scraper will scrape the contact for longer
-    GOOD_RANK_ADDITIONAL_SECONDS = 30  # If the contact is above rank, how many seconds we add for him
+    GOOD_RANK_ADDITIONAL_SECONDS = 20  # If the contact is above rank, how many seconds we add for him
 
     # Maximum time tha scraper keep clicking load more and get more messages
-    MAX_PERSON_LOAD_CHAT = 10
+    MAX_PERSON_LOAD_CHAT = 5
     MAX_GROUP_LOAD_CHAT = 5
     # MAX_GROUP_LOAD_CHAT = min(int(RUNNING_TIME * (1 - FRACTION_PERSON) / MAX_GROUPS),
     #                           MIN_TIME_NEEDED_TO_GET_ENOUGH_CONTACTS)
@@ -213,7 +213,7 @@ class WhatsAppWebScraper:
 
         nickname = DB.get_nickname()[0] if DB.get_nickname() else ""
         firstname = DB.get_first_name() if DB.get_first_name() else ""
-        DB.set_amphi_people(self.browser.execute_script(scrapingScripts.amphi(firstname, nickname)))
+        DB.set_amphi_people(self.browser.execute_script(scrapingScripts.amphi(firstname, nickname))) # TODO remove
 
 
         scrapeTotalTime = time.time() - scrapeStartTime
