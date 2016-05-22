@@ -285,10 +285,10 @@ class WhatsAppDB:
         finds messages containing good night word
         :return: json with the data
         """
-        good_night_df = self.contact_df[self.contact_df.text.str.lower().str.contains(
+        good_night_df = self.contacts_df[self.contacts_df.text.str.lower().str.contains(
         "good night|לילה טוב|bonne nuit|sweet dreams|ער\?|ערה\?|ער במקרה\?|ערה במקרה\?")]
         
-        dreams_df = self.contact_df[self.contact_df.text.str.lower().str.contains(
+        dreams_df = self.contacts_df[self.contacts_df.text.str.lower().str.contains(
             "חלמתי|חלומות|חלמת|dream|dreamt|dreaming|dreams|rêver|rêves|rêvé|rêve|reve|reves|rever|dreamed|חלום|חולם")]
 
         good_night_df = good_night_df[['contactName', 'text']]
@@ -357,9 +357,9 @@ class WhatsAppDB:
         old_messages_df.drop_duplicates("contactName", keep='last', inplace=True)
     
         old_messages_df['just_date'] = pd.to_datetime(old_messages_df['time']).dt.date.astype(str)
-        old_messages_df['name_and_date'] = old_messages_df['contactName'] + '   (' + old_messages_df['just_date'] + ')'
+        old_messages_df['contactName'] = old_messages_df['contactName'] + '   (' + old_messages_df['just_date'] + ')'
     
-        return old_messages_df[['name_and_date', 'text']].head(8)
+        return old_messages_df[['contactName', 'text']].head(8)
         
         
     def get_dreams_or_old_messages(self):
