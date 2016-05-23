@@ -29,7 +29,7 @@ body {
 }
 
 .background1 {
-    background: url("/static/images/1- THIS WILL BE THE VIDEO.jpg") no-repeat center center fixed;
+    background: url("/static/images/1.jpg") no-repeat center center fixed;
     -webkit-background-size: cover;
     -moz-background-size: cover;
     background-size: cover;
