@@ -124,6 +124,14 @@ body {
     -o-background-size: cover;
 }
 
+.blank {
+    background: url("/static/images/blank.jpg") no-repeat center center fixed;
+    -webkit-background-size: cover;
+    -moz-background-size: cover;
+    background-size: cover;
+    -o-background-size: cover;
+}
+
 .bottomaligned {
 position:absolute; bottom:20%;  margin-bottom:7px; left: 46.5%;
 }
@@ -178,6 +186,11 @@ position:absolute; bottom:30%;  margin-bottom:7px; left: 15%;
 .startvideo {
 position:absolute; bottom:1%;  margin-bottom:7px; left: 7%;
 }
+
+.loadingvideo {
+position:absolute; bottom:0%; left: 0%;
+}
+
 
 .buttonagree{
     font-size: 24px;
