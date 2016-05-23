@@ -107,8 +107,7 @@ class WhatsAppDB:
         """
         # How many contacts to show in coloseum
         number_of_contacts = 60
-        # Tells blast from the past from which part of entire chat to look in
-        past_fraction = 0.75
+
         # the maximum number of groups to output in the get_most_active_groups_and_user_groups function
         max_num_of_groups = 5
 
@@ -184,7 +183,7 @@ class WhatsAppDB:
         :return: the corrected whatsapp time string
         """
         if x.date() == pd.to_datetime('today').date():
-            return str(x.time())[:-3]  # exclude the seconds
+            return str(x.time())  # exclude the seconds
         elif x.date() == (pd.to_datetime('today') - pd.DateOffset()).date():
             return 'Yesterday'
         else:
@@ -272,7 +271,7 @@ class WhatsAppDB:
         "good night|לילה טוב|bonne nuit|sweet dreams|ער\?|ערה\?|ער במקרה\?|ערה במקרה\?")]
         
         dreams_df = self.contacts_df[self.contacts_df.text.str.lower().str.contains(
-            "חלמתי|חלומות|חלמת|dream|dreamt|dreaming|dreams|rêver|rêves|rêvé|rêve|reve|reves|rever|dreamed|חלום|חולם")]
+            "חלמתי|חלומות|חלמת|dream|dreamt|dreaming|dreams|dreamed|חלום|חולם")]
 
         good_night_df = good_night_df[['contactName', 'text']]
         good_night_df['count_val'] = good_night_df.groupby(['contactName']).transform('count')
