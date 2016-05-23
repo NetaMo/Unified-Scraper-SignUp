@@ -211,9 +211,9 @@ class WhatsAppWebScraper:
         except:
             print("ERROR: Failed to run _get_all_persons_first_msg.")
 
-        nickname = DB.get_nickname()[0] if DB.get_nickname() else ""
-        firstname = DB.get_first_name() if DB.get_first_name() else ""
-        DB.set_amphi_people(self.browser.execute_script(scrapingScripts.amphi(firstname, nickname))) # TODO remove
+        # nickname = DB.get_nickname()[0] if DB.get_nickname() else ""
+        # firstname = DB.get_first_name() if DB.get_first_name() else ""
+        # DB.set_amphi_people(self.browser.execute_script(scrapingScripts.amphi(firstname, nickname))) # TODO remove
 
 
         scrapeTotalTime = time.time() - scrapeStartTime
