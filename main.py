@@ -1,13 +1,14 @@
 import glob
 import os
 import sys
+
 import tornado.ioloop
 import tornado.web
+
+import DataAnalysisTestDriver  # TODO remove wehn not needed
 import WhatsAppWebScraper
 from Webdriver import Webdriver
 from WhatsAppDB import WhatsAppDB
-
-import DataAnalysisTestDriver # TODO remove wehn not needed
 
 """
 run the WhatsApp web scrapper.
@@ -135,7 +136,9 @@ class LetsGoHandler(tornado.web.RequestHandler):
         # analyze and Save the results
         DB.run_data_analysis_and_store_results()
 
-        DataAnalysisTestDriver.test_data_analysis(DB)
+        # Print if in debug mode
+        if debug_mode:
+            DataAnalysisTestDriver.test_data_analysis(DB)
         print("going out of handler letsGo")
         self.finish()
 
@@ -253,6 +256,9 @@ DB = None
 # We'll use this to send the user back to the main page when we reset the experience
 driver_user = None
 
+# Are we in debug mode
+debug_mode = False
+
 if __name__ == "__main__":
 
     InitializeDBAndAvatars()
@@ -260,6 +266,10 @@ if __name__ == "__main__":
 
     port = 8888
     app = make_app()
+
+    # Check if we are in debug mode
+    if len(sys.argv) > 2 and sys.argv[2] == "debug":
+        debug_mode = True
 
     # enter webPage as the first argument to run the web page
     if sys.argv[1] == 'WebPage':

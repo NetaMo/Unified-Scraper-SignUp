@@ -24,7 +24,7 @@ class WhatsAppDB:
 
         self.user_first_name = ""
         self.user_last_name = ""
-        self.user_whatsapp_name = "+972 54-750-8445"
+        self.user_whatsapp_name = ""
         self.user_nicknames = []
         self.phone = ""
 
@@ -485,7 +485,7 @@ class WhatsAppDB:
 
             # Get name of interesting contact, his messages and the ID of the last message from him
             interesting_message = df.iloc[interesting_message_row_id]
-            print('\nThe interesting message is: {}'.format(interesting_message))
+            # print('\nThe interesting message is: {}'.format(interesting_message))
             contact_name_interesting_message = interesting_message['contactName']
             messages_of_contact = df[df.contactName.str.contains(contact_name_interesting_message)]
             index_last_message_from_contact = int(messages_of_contact.tail(1).index.values[0])
@@ -524,7 +524,7 @@ class WhatsAppDB:
 
         # Slice the interesting message, before and after
         interesting_messages = df.iloc[index_interesting_row_before:index_interesting_row_after]
-        print("The interesting messages are: \n{}".format(interesting_messages))
+        # print("The interesting messages are: \n{}".format(interesting_messages))
 
         # Get the length of the DataFrame
         df_len = len(df)

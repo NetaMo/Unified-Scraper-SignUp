@@ -1,6 +1,4 @@
 import codecs
-import re
-import string
 import time
 from datetime import datetime
 
@@ -117,8 +115,7 @@ class WhatsAppWebScraper:
 
                 # If we scraped enough of this contact load chat will return None-s
                 if (contact_name, contact_type, messages) == (None, None, None):
-                    print("...... Already scraped enough contacts of type", contact_type, "sorry",
-                          contact_name)
+                    print("...... Already scraped enough contacts of type: ", contact_type)
                     self._go_to_next_contact()
                     continue
             except Exception as e:  # We had unknown error, we want to go to the next contact
@@ -140,13 +137,14 @@ class WhatsAppWebScraper:
 
             # If the user received message while scraping we don't want to scrape it again
             if contact_name in self.scrapedContacts:
-                print('this contact is scraped', contact_name)
+                print('contact number ', self.scrapedContacts.index(contact_name), ' is scraped '
+                                                                                   'already.')
                 self._go_to_next_contact()
                 continue
 
             # Check if we already have enough of this contactType
             if not self._check_max_persons_groups(contact_type):
-                print('max persons', contact_name, contact_type)
+                print('max persons', contact_type)
                 self._go_to_next_contact()
                 continue
 
@@ -161,7 +159,7 @@ class WhatsAppWebScraper:
                 DB.append_to_groups_df(contactData)
                 self.group_count += 1
                 print("...... Got " + str(messages[0]) + " messages in " + str(
-                        round(contact_scrape_time, 3)) + " for " + str(contact_name))
+                        round(contact_scrape_time, 3)) + " for group number " + str(self.group_count))
                 scrapeTotalMsgs += messages[0]
 
             elif contact_type == 'person':
@@ -175,10 +173,10 @@ class WhatsAppWebScraper:
 
                 # add data to the data frame
                 DB.append_to_contacts_df(contactData)
-                self.person_count += 1
                 # print data
+                self.person_count += 1
                 print("...... Got " + str(len(messages)) + " messages in " + str(round(
-                        contact_scrape_time, 3)) + " for contact " + str(contact_name))
+                        contact_scrape_time, 3)) + " for person number " + str(self.person_count))
                 scrapeTotalMsgs += len(messages)
 
                 # get the avatar of the first X persons
@@ -538,8 +536,8 @@ class WhatsAppWebScraper:
                 self.person_count += 1
                 # print data
                 print("...... All persons query got " + str(len(messages)) + " messages in 0 seconds "
-                                                                             "for contact " + str(
-                        contact["contact"]["name"]))
+                                                                             "for contact number " +
+                      str(self.person_count))
             except Exception as e:
                 print("....... Error: get_all_persons_first_msg msg bad format.")
                 continue
