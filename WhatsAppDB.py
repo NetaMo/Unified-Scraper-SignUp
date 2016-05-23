@@ -7,6 +7,11 @@ import pandas as pd
 
 import WhatsAppWebScraper
 
+# suppress warnings
+pd.options.mode.chained_assignment = None  # default='warn'
+import warnings
+warnings.filterwarnings("ignore", category=DeprecationWarning)
+
 
 class WhatsAppDB:
     """
@@ -111,7 +116,7 @@ class WhatsAppDB:
         # the maximum number of groups to output in the get_most_active_groups_and_user_groups function
         max_num_of_groups = 5
 
-        max_group_size = 6
+        max_group_size = 5
 
         self.convert_to_datetime()
 
@@ -273,10 +278,14 @@ class WhatsAppDB:
         dreams_df = self.contacts_df[self.contacts_df.text.str.lower().str.contains(
             "חלמתי|חלומות|חלמת|dream|dreamt|dreaming|dreams|dreamed|חלום|חולם")]
 
+        good_night_df['word_amount'] = good_night_df.text.apply(self.get_word_count)
+        good_night_df = good_night_df[good_night_df.word_amount < 15]
         good_night_df = good_night_df[['contactName', 'text']]
         good_night_df['count_val'] = good_night_df.groupby(['contactName']).transform('count')
         good_night_df = good_night_df.sort_values(['count_val', 'contactName'], ascending=False).groupby('contactName').head(1)
-    
+
+        dreams_df['word_amount'] = dreams_df.text.apply(self.get_word_count)
+        dreams_df = dreams_df[dreams_df.word_amount < 15]
         dreams_df = dreams_df[['contactName', 'text']]
         dreams_df['count_val'] = dreams_df.groupby(['contactName']).transform('count')
         dreams_df = dreams_df.sort_values(['count_val', 'contactName'], ascending=False).groupby('contactName').head(1)
@@ -417,7 +426,7 @@ class WhatsAppDB:
         result_df = pd.concat([df for df in arr_of_df_to_return])
         sliced_df = result_df[['groupName', 'name']]
 
-    return sliced_df.to_json(date_format='iso', double_precision=0, date_unit='s', orient='records')
+        return sliced_df.to_json(date_format='iso', double_precision=0, date_unit='s', orient='records')
 
     def amount_of_letter_sequences(self, str):
         ''' Helper Function. returns the amount of letter sequences longer than min_amount '''
