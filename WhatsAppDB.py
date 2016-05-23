@@ -361,69 +361,63 @@ class WhatsAppDB:
         return old_messages_df.to_json(date_format='iso', double_precision=0, date_unit='s', orient='records')
 
     def get_most_active_groups_and_user_groups(self, max_number_of_groups, max_group_size):
-        """
-        finds the most active groups and gets the users inside by their activity
-        :param max_number_of_groups: how much groups to return
-        :return: a json with the data
-        """
         self.groups_df.sort_values(['totalMessages', 'groupName', 'messagesCount'], ascending=False, inplace=True)
         group_names = self.groups_df.groupName.unique()[:max_number_of_groups]
-
+    
         result_df = self.groups_df.loc[self.groups_df['groupName'].isin(group_names)]
-
+    
         arr_of_df_to_return = []
-
+    
         for group_name in group_names:
             curr_df = result_df[result_df.groupName == group_name]
             group_size = len(curr_df)
-
+    
             # if amount of people in group is smaller than minimum, proceed to next group
             if group_size <= max_group_size:
                 arr_of_df_to_return.append(curr_df)
                 continue
-
-            # narrow the current group to a group of 6 people
-            jump_size = np.round(group_size / 6)
-            narrowd_df_idx_list = [0, jump_size, 2 * jump_size, 3 * jump_size, 4 * jump_size, group_size - 1]
-
-            # for cases 4*jump_size equals to last index
-            if narrowd_df_idx_list[-2] == narrowd_df_idx_list[-1]:
-                narrowd_df_idx_list[-2] -= 1
-
-            narrowed_df = curr_df.iloc[narrowd_df_idx_list, :]
-
+    
+            # narrow the current group to a group of max_group_size people
+            jump_size = np.round(group_size / max_group_size)
+            # narrowed_df_idx_list = [0, jump_size, 2 * jump_size, 3 * jump_size, 4 * jump_size, group_size - 1]   # 6 people
+            narrowed_df_idx_list = [0, jump_size, 2 * jump_size, 3 * jump_size, group_size - 1]                    # 5 people
+    
+            # for cases the last jump_size equals to last index
+            if narrowed_df_idx_list[-2] == narrowed_df_idx_list[-1]:
+                narrowed_df_idx_list[-2] -= 1
+    
+            narrowed_df = curr_df.iloc[narrowed_df_idx_list, :]
+    
             # NOW check is used is in narrowed_df, and insert if not
             if not self.user_whatsapp_name in narrowed_df[narrowed_df.groupName == group_name].name.tolist():
-                to_concat = pd.DataFrame([[group_name, self.user_whatsapp_name, 0, 0]], columns=narrowed_df.columns)
-
+    
                 # if user isn't in the group at all (even before narrowing), replace with last place
                 if not self.user_whatsapp_name in curr_df.name.tolist():
                     # messagesCount and totalMessages are set to 0 since no one cares and they're trimmed anyway
-                    narrowed_df = pd.concat([narrowed_df.iloc[:5],
+                    narrowed_df = pd.concat([narrowed_df.iloc[:max_group_size-1],
                                              pd.DataFrame([[group_name, self.user_whatsapp_name, 0, 0]],
                                                           columns=narrowed_df.columns)],
                                             ignore_index=True)
-
+    
                 # user is in results_df but not in the narrow list, replace with most appropriate one
                 else:
                     user_amount_of_msg = int(curr_df[curr_df.name == self.user_whatsapp_name].messagesCount)
                     narrowed_df['diff_msg'] = narrowed_df['messagesCount'] - user_amount_of_msg
                     narrowed_df.sort_values(['diff_msg'], inplace=True, ascending=False)
                     del narrowed_df['diff_msg']
-                    narrowed_df = pd.concat([narrowed_df.iloc[:5],
+                    narrowed_df = pd.concat([narrowed_df.iloc[:max_group_size-1],
                                              pd.DataFrame(
                                                  [[group_name, self.user_whatsapp_name, user_amount_of_msg, 0]],
                                                  columns=narrowed_df.columns)],
                                             ignore_index=True)
                     narrowed_df.sort_values(['messagesCount'], inplace=True, ascending=False)
-
+    
             arr_of_df_to_return.append(narrowed_df)
-
+    
         result_df = pd.concat([df for df in arr_of_df_to_return])
-
         sliced_df = result_df[['groupName', 'name']]
 
-        return sliced_df.to_json(date_format='iso', double_precision=0, date_unit='s', orient='records')
+    return sliced_df.to_json(date_format='iso', double_precision=0, date_unit='s', orient='records')
 
     def amount_of_letter_sequences(self, str):
         ''' Helper Function. returns the amount of letter sequences longer than min_amount '''
