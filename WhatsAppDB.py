@@ -523,21 +523,23 @@ class WhatsAppDB:
 
         # Slice the interesting message, before and after
         interesting_messages = df.iloc[index_interesting_row_before:index_interesting_row_after]
-        # print("The interesting messages are: \n{}".format(interesting_messages))
+        print("The interesting messages are: \n{}".format(interesting_messages))
 
-        # Get the length of the DataFrame
-        df_len = len(df)
-        half_len = int(df_len/2)
-        # The first and second half of it
-        first_half_df = df.iloc[0:half_len]
-        second_half = df.iloc[half_len:df_len - 1]
+        # # Get the length of the DataFrame
+        # df_len = len(df)
+        # half_len = int(df_len/2)
+        # # The first and second half of it
+        # first_half_df = df.iloc[0:half_len]
+        # second_half = df.iloc[half_len:df_len - 1]
+        #
+        # # Append the first half, interesting messages and then second half
+        # df_with_interesting_messages_in_middle = first_half_df.append(interesting_messages, ignore_index=True).append(second_half, ignore_index=True)
 
-        # Append the first half, interesting messages and then second half
-        df_with_interesting_messages_in_middle = first_half_df.append(interesting_messages, ignore_index=True).append(second_half, ignore_index=True)
+        df_with_interesting_messages_on_top = interesting_messages.append(df, ignore_index=True)
 
         # Sort the DataFrame, for usage in future methods
         self.sort()
 
-        resulted_sliced_df = df_with_interesting_messages_in_middle[["name", "text"]]
+        resulted_sliced_df = df_with_interesting_messages_on_top[["name", "text"]]
 
         return resulted_sliced_df.to_json(date_format='iso', double_precision=0, date_unit='s', orient='records')
