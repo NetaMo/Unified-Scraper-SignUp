@@ -59,6 +59,7 @@ class WhatsAppWebScraper:
         self.browser.set_page_load_timeout(150)  # Set timeout to 150 seconds
         self.browser.get("https://web.whatsapp.com/")  # Navigate browser to WhatsApp page
         self.browser.execute_script(scrapingScripts.initJQuery())  # active the jquery lib
+        self.browser.execute_script(scrapingScripts.initMoment())  # active the moment lib
         self.scrapedContacts = []  # List of scraped contacts
         self.defaultAvatar = Image.open("defaultAvatar.jpg")
         self.user_whatsapp_name = None  # what is the user's whatsapp outgoing messages name
@@ -73,8 +74,8 @@ class WhatsAppWebScraper:
 
         # Move browser out of screen scope
         # We don't want to resize the window, otherwise avatars don't work
-        self.browser.set_window_position(-999, -999)
-        self.browser.set_window_position(-999, -999)
+        # self.browser.set_window_position(-999, -999)
+        # self.browser.set_window_position(-999, -999)
 
     # ===================================================================
     #   Main scraper function

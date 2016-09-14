@@ -4,6 +4,13 @@ def initJQuery():
         jquery = jquery_js.read()  # read the jquery from a file
         return jquery
 
+
+def initMoment():
+    # add moment
+    with open("moment-with-locales.js", 'r', encoding="utf-8") as jquery_js:
+        jquery = jquery_js.read()  # read the jquery from a file
+        return jquery
+
 def getTextMessages():
     return '''
         var B = [];
@@ -20,10 +27,10 @@ def getTextMessages():
                     //if (currentDate.indexOf("2015") == -1 && currentDate.indexOf("2016") == -1) {
                     //    //console.log(currentDate)
                     //}
-
-                    //var formattedDate = this.moment(currentDate, moment.localeData()._longDateFormat.LT + ' ' + moment.localeData(
-                    //)._longDateFormat.l).format("HH:mm MM/DD/YYYY")
-                    var formattedDate = currentDate
+                    // substring(2,length) because 2 first invisible charachters.............. ^_^
+                    // var formattedDate = this.moment(currentDate.substring(2,currentDate.length), moment.localeData()._longDateFormat.LT + ' ' +
+                    // moment.localeData()._longDateFormat.l).format("HH:mm MM/DD/YYYY");
+                    var formattedDate = this.moment(currentDate.substring(2,currentDate.length)).format("HH:mm MM/DD/YYYY");
                     b.push(a[j].innerText);
                 }
                 console.log("NEW" + formattedDate);
