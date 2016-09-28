@@ -18,7 +18,8 @@ def getTextMessages():
         for (var i = 0; i < A.length; i++) {
             var b = [];
             var a = A[i].getElementsByClassName('message-text');
-            if (a.length != 0){
+            var c = A[i].getElementsByClassName('link-preview-container')
+            if (a.length != 0 && c.length == 0){
                 for (var j = 0; j < a.length; j++) {
                     end_pos = a[0].innerText.indexOf("]");
 
@@ -39,7 +40,8 @@ def getTextMessages():
                     b[0] = '[' + formattedDate + '] ' + b[0].slice(end_pos+1);
                 }
                 B.push(b);
-                if (A[i].getElementsByClassName('message-text message-link').length != 0) {
+                // if (A[i].getElementsByClassName('message-text message-link').length != 0) {
+                if (A[i].getElementsByClassName('link-preview-container').length != 0) {
                     B[i] = [];
                 };
             };

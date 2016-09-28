@@ -30,7 +30,7 @@ class WhatsAppWebScraper:
     TEMP_SCREENSHOT_PATH = "full_screen_shot_temp.png"
 
     # Total time for the chat scraper
-    RUNNING_TIME = 60
+    RUNNING_TIME = 300
 
     # How much time of the RUNNING_TIME we will dedicate for persons
     FRACTION_PERSON = 0.8
