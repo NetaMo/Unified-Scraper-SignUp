@@ -19,7 +19,8 @@ def getTextMessages():
             var b = [];
             var a = A[i].getElementsByClassName('message-text');
             var c = A[i].getElementsByClassName('link-preview-container')
-            if (a.length != 0 && c.length == 0){
+            var d = A[i].getElementsByClassName('quoted-msg')
+            if (a.length != 0 && c.length == 0 && d.length == 0){
                 for (var j = 0; j < a.length; j++) {
                     end_pos = a[0].innerText.indexOf("]");
 
