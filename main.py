@@ -23,7 +23,8 @@ def scrape_whatsapp():
     # print("create driver")
     driver = Webdriver()  # create new driver
     scraper = WhatsAppWebScraper.WhatsAppWebScraper(driver)  # create new WhatsApp scraper
-    scraper.scrape(DB)  # scrape
+    # scraper.scrape(DB)  # scrape
+    scraper.search(DB)
     print("finished scraping,load headset instructions")
     driver.close()  # close driver
 

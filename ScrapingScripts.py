@@ -33,6 +33,13 @@ def getTextMessages():
                     // var formattedDate = this.moment(currentDate.substring(2,currentDate.length), moment.localeData()._longDateFormat.LT + ' ' +
                     // moment.localeData()._longDateFormat.l).format("HH:mm MM/DD/YYYY");
                     var formattedDate = this.moment(currentDate.substring(2,currentDate.length)).format("HH:mm MM/DD/YYYY");
+                    //if (currentDate.indexOf("2015") == -1 && currentDate.indexOf("2016") == -1) {
+                    //    //console.log(currentDate)
+                    //}
+                    // substring(2,length) because 2 first invisible charachters.............. ^_^
+                    // var formattedDate = this.moment(currentDate.substring(2,currentDate.length), moment.localeData()._longDateFormat.LT + ' ' +
+                    // moment.localeData()._longDateFormat.l).format("HH:mm MM/DD/YYYY");
+                    var formattedDate = this.moment(currentDate.substring(2,currentDate.length)).format("HH:mm MM/DD/YYYY");
                     b.push(a[j].innerText);
                 }
                 console.log("NEW" + formattedDate);
@@ -49,6 +56,28 @@ def getTextMessages():
         };
         return B;
         '''
+
+def getSearchResults():
+    return '''
+        var results = [];
+        var messages = document.getElementsByClassName('message chat');
+        for (var i = 0; i < messages.length; i++) {
+            var result_item = messages[i];
+            var contact_name = result_item.getElementsByClassName('chat-title')[0].innerText;
+            results.push(contact_name);
+        }
+        return results;
+    '''
+
+def isConversation():
+    return '''
+        var active = document.getElementsByClassName('message active chat');
+        if (active.length !== 1) {
+            return false;
+        }
+        return true;
+    '''
+
 
 def getSingleOutgoingMessage():
     return ''' var A = document.getElementsByClassName('message message-out')

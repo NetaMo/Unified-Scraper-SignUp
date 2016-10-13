@@ -221,6 +221,76 @@ class WhatsAppWebScraper:
               str(scrapeTotalTime) + " seconds, at a rate of " + str(round(
                 scrapeTotalMsgs / scrapeTotalTime, 3)) + " messages/second.\n")
 
+
+    # ===================================================================
+    #   Search Scrape function
+    # ===================================================================
+    def search(self, DB):
+        print("... Scraper starting...")
+        scrapeStartTime, scrapeTotalMsgs = time.time(), 0
+
+        MAX_CHATS = 10
+        KEYWORD = 'אמא'
+
+        skip_counter = 0
+        conversations = []
+        self._search(KEYWORD)
+
+        while len(conversations) < MAX_CHATS:
+            skip_counter, messages = self._go_to_next_match(skip_counter)
+            conversations.append(messages)
+            self._search(KEYWORD)
+
+        print(conversations)
+
+        scrapeTotalTime = time.time() - scrapeStartTime
+
+        print("... Scraper finished. Got " + str(scrapeTotalMsgs) + " messages in " +
+              str(scrapeTotalTime) + " seconds, at a rate of " + str(round(
+            scrapeTotalMsgs / scrapeTotalTime, 3)) + " messages/second.\n")
+
+    def _search(self, keyword, load_extra = False):
+        actions = ActionChains(self.browser)
+        # try:
+        actions.click(self.wait_for_element('.input.input-search'))
+        actions.send_keys_to_element(self.wait_for_element('.input.input-search'), keyword)
+        actions.send_keys(Keys.TAB).perform()
+        if load_extra:
+            ActionChains(self.browser).send_keys(Keys.PAGE_DOWN).send_keys(Keys.PAGE_DOWN).perform()
+        # except (StaleElementReferenceException, OSError):
+        #     time.sleep(3)
+        #
+        #     actions.click(self.wait_for_element('.input.input-search'))
+        #     actions.send_keys_to_element(self.wait_for_element('.input.input-search'), keyword)
+        #     actions.send_keys(Keys.TAB).perform()
+        #     if load_extra:
+        #         ActionChains(self.browser).send_keys(Keys.PAGE_DOWN).send_keys(Keys.PAGE_DOWN).perform()
+
+        self.wait_for_element('.message.chat')
+        # return self.browser.execute_script(scrapingScripts.getSearchResults())
+
+    def _go_to_next_match(self, skip_count):
+        ActionChains(self.browser).send_keys_to_element(self.wait_for_element('.input.input-search'), Keys.TAB).perform()
+
+        actions = ActionChains(self.browser)
+        for _ in range(skip_count):
+            actions.send_keys(Keys.ARROW_DOWN)
+        actions.perform()
+
+        is_conversation = self.browser.execute_script(scrapingScripts.isConversation())
+        while not is_conversation:
+            ActionChains(self.browser).send_keys(Keys.ARROW_DOWN).perform()
+            skip_count += 1
+            is_conversation = self.browser.execute_script(scrapingScripts.isConversation())
+
+        # Get the conversation
+        ActionChains(self.browser).send_keys(Keys.ENTER).perform()
+        self.wait_for_element('.message-list')
+        messages = self.browser.execute_script(scrapingScripts.getTextMessages())
+
+        return skip_count + 1, messages
+
+
     # ===================================================================
     #   Scraper helper functions
     # ===================================================================
