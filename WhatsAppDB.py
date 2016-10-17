@@ -546,3 +546,31 @@ class WhatsAppDB:
         resulted_sliced_df = df_with_interesting_messages_on_top[["name", "text"]]
 
         return resulted_sliced_df.to_json(date_format='iso', double_precision=0, date_unit='s', orient='records')
+
+    def create_world_df(self, world_name, scraper):
+        # get keywords and amount from protocol file
+        with open('search_protocol', 'r') as f:
+            for line in f:
+                l = line.split('|')
+                if l[0] == world_name:
+                    keywords = l[1].split(',')
+                    amount = int(l[2])
+                    get_msg_env = True if l[3] == 'true' else False
+                    break
+
+        cur_amount = 0
+        keyword_idx = 0
+        dfs_arr = []
+
+        while cur_amount < amount:
+            cur_df, real_amount = scraper.search(keywords[keyword_idx], amount-cur_amount, get_msg_env)
+            dfs_arr.append(cur_df)
+            cur_amount += real_amount
+            keyword_idx += 1        # todo consider end of list
+
+        df = pd.concat([df for df in dfs_arr])
+        return df.to_json(date_format='iso', double_precision=0, date_unit='s', orient='records')
+
+    def create_db_using_search(self, scraper):
+        self.dreams_or_old_messages = self.create_world_df('dreams', scraper)
+        self.good_night_messages = self.create_world_df('love', scraper)

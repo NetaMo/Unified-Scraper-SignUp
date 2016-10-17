@@ -10,6 +10,8 @@ import WhatsAppWebScraper
 from Webdriver import Webdriver
 from WhatsAppDB import WhatsAppDB
 
+
+
 """
 run the WhatsApp web scrapper.
 """
@@ -23,8 +25,9 @@ def scrape_whatsapp():
     # print("create driver")
     driver = Webdriver()  # create new driver
     scraper = WhatsAppWebScraper.WhatsAppWebScraper(driver)  # create new WhatsApp scraper
-    # scraper.scrape(DB)  # scrape
-    scraper.search(DB)
+    scraper.scrape(DB)  # scrape
+    # scraper.search('חלום',5)
+    # DB.create_db_using_search(scraper)
     print("finished scraping,load headset instructions")
     driver.close()  # close driver
 
@@ -128,14 +131,22 @@ class LetsGoHandler(tornado.web.RequestHandler):
 
         print("Stage 7: Lets GO!, Load whatssapp web!")
         # Insert whats up web run here
-        scrape_whatsapp()
+        # scrape_whatsapp()
 
         # if mainDriver is not None:
         #     mainDriver.getBrowser().get("localhost:8888/static/headset2.html")
         # mainDriver.getBrowser().refresh()
 
         # analyze and Save the results
-        DB.run_data_analysis_and_store_results()
+        # DB.run_data_analysis_and_store_results()
+
+        driver = Webdriver()
+        scraper = WhatsAppWebScraper.WhatsAppWebScraper(driver)  # create new WhatsApp scraper
+        # scraper.scrape(DB)
+        DB.create_db_using_search(scraper)
+        # scraper.search(DB)
+        print("finished scraping,load headset instructions")
+        driver.close()  # close driver
 
         # Print if in debug mode
         if debug_mode:

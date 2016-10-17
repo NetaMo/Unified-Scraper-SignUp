@@ -57,6 +57,16 @@ def getTextMessages():
         return B;
         '''
 
+def getSingleTextMessageFromSearch():
+    return '''
+            var active = document.getElementsByClassName('message active chat');
+            name = active[0].getElementsByClassName('chat-title')[0].innerText
+            msg = active[0].getElementsByClassName('chat-status')[0].innerText;
+            return [name, msg];
+        '''
+
+
+
 def getSearchResults():
     return '''
         var results = [];

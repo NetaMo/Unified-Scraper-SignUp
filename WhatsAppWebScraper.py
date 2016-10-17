@@ -1,8 +1,12 @@
 import codecs
 import time
 from datetime import datetime
+import pandas as pd
 
-from PIL import Image, ImageChops
+use_avatars = False
+
+if use_avatars:
+    from PIL import Image, ImageChops
 from selenium.common.exceptions import StaleElementReferenceException
 from selenium.webdriver import ActionChains
 from selenium.webdriver.common.keys import Keys
@@ -61,7 +65,8 @@ class WhatsAppWebScraper:
         self.browser.execute_script(scrapingScripts.initJQuery())  # active the jquery lib
         self.browser.execute_script(scrapingScripts.initMoment())  # active the moment lib
         self.scrapedContacts = []  # List of scraped contacts
-        self.defaultAvatar = Image.open("defaultAvatar.jpg")
+        if use_avatars:
+            self.defaultAvatar = Image.open("defaultAvatar.jpg")
         self.user_whatsapp_name = None  # what is the user's whatsapp outgoing messages name
         # How many contact we scraped already
         self.person_count = 0
@@ -180,19 +185,24 @@ class WhatsAppWebScraper:
                         contact_scrape_time, 3)) + " for person number " + str(self.person_count))
                 scrapeTotalMsgs += len(messages)
 
+                if use_avatars:
                 # get the avatar of the first X persons
-                if avatar_count < self.NUMBER_OF_PERSON_CONTACT_PICTURES:
-                    avatar_success = True
-                    try:
-                        cropped = self._get_contact_avatar()
-                    except Exception:
-                        avatar_success = False
+                    if avatar_count < self.NUMBER_OF_PERSON_CONTACT_PICTURES:
+                        avatar_success = True
+                        try:
+                            cropped = self._get_contact_avatar()
+                        except Exception:
+                            avatar_success = False
 
-                    if avatar_success:
-                        if cropped is not None:
-                            cropped.save(self.TEMP_AVATAR_PATH + str(avatar_count) + ".jpg")
-                        else:
-                            self.defaultAvatar.save(self.TEMP_AVATAR_PATH + str(avatar_count) + ".jpg")
+                        if avatar_success:
+                            if cropped is not None:
+                                cropped.save(self.TEMP_AVATAR_PATH + str(avatar_count) + ".jpg")
+                            else:
+                                self.defaultAvatar.save(self.TEMP_AVATAR_PATH + str(avatar_count) + ".jpg")
+                            avatar_count += 1
+                            DB.add_latest_contacts(contact_name)
+                else:
+                    if avatar_count < self.NUMBER_OF_PERSON_CONTACT_PICTURES:
                         avatar_count += 1
                         DB.add_latest_contacts(contact_name)
 
@@ -225,29 +235,32 @@ class WhatsAppWebScraper:
     # ===================================================================
     #   Search Scrape function
     # ===================================================================
-    def search(self, DB):
+    def search(self, keyword, amount, is_get_msg_environment=False):
         print("... Scraper starting...")
         scrapeStartTime, scrapeTotalMsgs = time.time(), 0
 
-        MAX_CHATS = 10
-        KEYWORD = 'אמא'
-
         skip_counter = 0
-        conversations = []
-        self._search(KEYWORD)
+        conversations = pd.DataFrame(columns=['name', 'text'])
+        self._search(keyword)
 
-        while len(conversations) < MAX_CHATS:
-            skip_counter, messages = self._go_to_next_match(skip_counter)
-            conversations.append(messages)
-            self._search(KEYWORD)
+        if is_get_msg_environment:
+            while len(conversations) < amount:
+                skip_counter, messages = self._go_to_next_match(skip_counter, is_get_msg_environment)
+                conversations.append(messages)      # todo fix to df
+                self._search(keyword)
+        else:
+            _, _ = self._go_to_next_match(skip_counter, is_get_msg_environment)     # gets to first chat
+            while len(conversations) < amount:
+                name, message = self.browser.execute_script(scrapingScripts.getSingleTextMessageFromSearch())
+                if (not conversations.empty) and name == conversations.tail(1).name.values[0] and message == conversations.tail(1).text.values[0]:
+                    # reached end of search word, clear search bar
+                    self._clear_search_bar(keyword)
+                    break
+                conversations = conversations.append(pd.DataFrame([[name, message]], columns=['name', 'text']), ignore_index=True)
+                ActionChains(self.browser).send_keys(Keys.ARROW_DOWN).perform()
+            self._clear_search_bar(keyword)
 
-        print(conversations)
-
-        scrapeTotalTime = time.time() - scrapeStartTime
-
-        print("... Scraper finished. Got " + str(scrapeTotalMsgs) + " messages in " +
-              str(scrapeTotalTime) + " seconds, at a rate of " + str(round(
-            scrapeTotalMsgs / scrapeTotalTime, 3)) + " messages/second.\n")
+        return conversations, len(conversations)
 
     def _search(self, keyword, load_extra = False):
         actions = ActionChains(self.browser)
@@ -266,12 +279,14 @@ class WhatsAppWebScraper:
         #     if load_extra:
         #         ActionChains(self.browser).send_keys(Keys.PAGE_DOWN).send_keys(Keys.PAGE_DOWN).perform()
 
-        self.wait_for_element('.message.chat')
+        self.wait_for_element('.message.chat')      # todo handle empty searches
         # return self.browser.execute_script(scrapingScripts.getSearchResults())
 
-    def _go_to_next_match(self, skip_count):
+    def _go_to_next_match(self, skip_count, is_get_msg_environment):
+        messages = []
         ActionChains(self.browser).send_keys_to_element(self.wait_for_element('.input.input-search'), Keys.TAB).perform()
 
+        # go down to desited person
         actions = ActionChains(self.browser)
         for _ in range(skip_count):
             actions.send_keys(Keys.ARROW_DOWN)
@@ -283,12 +298,20 @@ class WhatsAppWebScraper:
             skip_count += 1
             is_conversation = self.browser.execute_script(scrapingScripts.isConversation())
 
-        # Get the conversation
-        ActionChains(self.browser).send_keys(Keys.ENTER).perform()
-        self.wait_for_element('.message-list')
-        messages = self.browser.execute_script(scrapingScripts.getTextMessages())
+        if is_get_msg_environment:
+            # Get the conversation
+            ActionChains(self.browser).send_keys(Keys.ENTER).perform()
+            self.wait_for_element('.message-list')
+            messages = self.browser.execute_script(scrapingScripts.getTextMessages()) # todo make return df
 
         return skip_count + 1, messages
+
+    def _clear_search_bar(self, keyword):
+        actions = ActionChains(self.browser)
+        for _ in range(len(keyword) + 1):
+            actions.send_keys_to_element(self.wait_for_element('.input.input-search'), Keys.BACK_SPACE)
+        actions.perform()
+
 
 
     # ===================================================================
