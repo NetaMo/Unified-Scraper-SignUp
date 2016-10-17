@@ -65,8 +65,6 @@ def getSingleTextMessageFromSearch():
             return [name, msg];
         '''
 
-
-
 def getSearchResults():
     return '''
         var results = [];
@@ -236,6 +234,34 @@ def getAllFirstMessages():
     console.log(lineSeperator);
     return allContacts;
 
+    '''
+
+def get_latest_k_chats(k):      # todo small_time!!
+    return '''
+    var chats = [];
+    var k = parseInt("''' + str(k) + '''");
+
+    for (i = 0; i < k; i++) {
+        curChat = Store.Chat.models[i];
+        if (!curChat.isUser) {
+            ++k;
+            if ((Store.Chat.models.length-1) == k) {
+                return chats;
+            }
+            continue;
+        }
+        name = curChat.formattedTitle;
+        msg = curChat.msgs.models[curChat.msgs.models.length -1].body;
+        small_time = "21:30"
+
+        chats.push({
+            contactName: name,
+            text : msg,
+            time: small_time
+        });
+    }
+
+    return chats;
     '''
 
 def amphi(curName, nickname):

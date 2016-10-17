@@ -79,7 +79,7 @@ class WhatsAppWebScraper:
 
         # Move browser out of screen scope
         # We don't want to resize the window, otherwise avatars don't work
-        # self.browser.set_window_position(-999, -999)
+        # self.browser.set_window_position(-999, -999)      # todo return for presentation
         # self.browser.set_window_position(-999, -999)
 
     # ===================================================================
@@ -240,7 +240,7 @@ class WhatsAppWebScraper:
         scrapeStartTime, scrapeTotalMsgs = time.time(), 0
 
         skip_counter = 0
-        conversations = pd.DataFrame(columns=['name', 'text'])
+        conversations = pd.DataFrame(columns=['contactName', 'text'])
         self._search(keyword)
 
         if is_get_msg_environment:
@@ -639,6 +639,15 @@ class WhatsAppWebScraper:
     @staticmethod
     def unix_timestamp_format(unix_timestamp):
         return datetime.fromtimestamp(int(unix_timestamp)).strftime('%H:%M %m/%d/%Y')
+
+    def get_k_latest_chats(self, k=5):
+        chats = self.browser.execute_script(scrapingScripts.get_latest_k_chats(k))
+        df = pd.DataFrame.from_dict(chats)
+
+        return df
+
+
+
 
     # ===================================================================
     #   Webdriver helper functions

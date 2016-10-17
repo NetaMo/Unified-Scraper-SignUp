@@ -43,7 +43,9 @@ class WhatsAppDB:
         self.dreams_or_old_messages = 0
         self.most_active_groups_and_user_groups = 0
         self.chat_archive = 0
-        self.amphi_people = []
+        self.amphi_data = []
+        self.my_name_messages = 0
+        self.love_messages = 0
 
     def add_latest_contacts(self, name):
         self.latest_contacts.append(name)
@@ -54,8 +56,8 @@ class WhatsAppDB:
     def get_nickname(self):
         return self.user_nicknames
 
-    def set_amphi_people(self, arr_dict):
-        self.amphi_people = arr_dict
+    def set_amphi_data(self, arr_dict):
+        self.amphi_data = arr_dict
 
     def set_user_whatsapp_name(self, user_whatsapp_name):
         self.user_whatsapp_name = user_whatsapp_name
@@ -547,15 +549,25 @@ class WhatsAppDB:
 
         return resulted_sliced_df.to_json(date_format='iso', double_precision=0, date_unit='s', orient='records')
 
-    def create_world_df(self, world_name, scraper):
+
+    def get_k_latest_chats(self, scraper, k=5):
+        df = scraper.get_k_latest_chats(k)
+        # df.time = df.time.apply(self.correct_time_for_whatsapp)     # todo check if necessary. maybe we'll need it when small_time is fixed
+        return df
+
+    def get_k_most_interesting(self, df, k=3):      # todo
+        return df.head(3)
+
+    def create_world_df(self, world_name, scraper, override_keywords=False):
         # get keywords and amount from protocol file
         with open('search_protocol', 'r') as f:
             for line in f:
                 l = line.split('|')
                 if l[0] == world_name:
-                    keywords = l[1].split(',')
+                    keywords = override_keywords if override_keywords else l[1].split(',')
                     amount = int(l[2])
                     get_msg_env = True if l[3] == 'true' else False
+                    after_competition = False if l[4] == 'false' else l[5]
                     break
 
         cur_amount = 0
@@ -569,8 +581,14 @@ class WhatsAppDB:
             keyword_idx += 1        # todo consider end of list
 
         df = pd.concat([df for df in dfs_arr])
+        df = df if not after_competition else self.get_k_most_interesting(df, k=after_competition)
         return df.to_json(date_format='iso', double_precision=0, date_unit='s', orient='records')
 
     def create_db_using_search(self, scraper):
+        self.latest_chats = self.get_k_latest_chats(scraper, k=5)
+        self.amphi_data = self.get_k_latest_chats(scraper, k=40)
+        self.my_name_messages = self.create_world_df('my_name', scraper, override_keywords=self.user_nicknames.append(self.user_first_name))
+        self.good_night_messages = self.create_world_df('good_night', scraper)        # todo count_val?
         self.dreams_or_old_messages = self.create_world_df('dreams', scraper)
-        self.good_night_messages = self.create_world_df('love', scraper)
+        self.love_messages = self.create_world_df('love', scraper)
+        # self.most_interesting = # todo

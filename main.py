@@ -10,12 +10,9 @@ import WhatsAppWebScraper
 from Webdriver import Webdriver
 from WhatsAppDB import WhatsAppDB
 
-
-
 """
 run the WhatsApp web scrapper.
 """
-
 
 def scrape_whatsapp():
     """
@@ -208,6 +205,27 @@ class GiveChatArchive(tornado.web.RequestHandler):
         self.finish(DB.chat_archive)
 
 
+class GiveAmphiData(tornado.web.RequestHandler):
+
+    def get(self):
+        print("GiveAmphiData")
+        self.finish(DB.amphi_data)
+
+
+class GiveMyNameMessages(tornado.web.RequestHandler):
+
+    def get(self):
+        print("GiveMyNameMessages")
+        self.finish(DB.my_name_messages)
+
+
+class GiveLoveMessages(tornado.web.RequestHandler):
+
+    def get(self):
+        print("GiveLoveMessages")
+        self.finish(DB.love_messages)
+
+
 class ResetHandler(tornado.web.RequestHandler):
     """
     Sends the user to the first page, resets the DB and removes all avatars
@@ -258,6 +276,9 @@ def make_app():
         (r"/get_dreams_or_old_messages", GiveDreamsOrOldMessages),
         (r"/get_most_active_groups_and_user_groups", GiveMostActiveGroupsAndUserGroups),
         (r"/get_chat_archive", GiveChatArchive),
+        (r"/get_amphi_data", GiveAmphiData),
+        (r"/get_my_name_messages", GiveMyNameMessages),
+        (r"/get_love_messages", GiveLoveMessages),
         (r"/reset", ResetHandler)
     ], **settings)
 
