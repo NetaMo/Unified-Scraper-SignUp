@@ -5,7 +5,7 @@ import sys
 import tornado.ioloop
 import tornado.web
 
-import DataAnalysisTestDriver  # TODO remove wehn not needed
+import DataAnalysisTestDriver
 import WhatsAppWebScraper
 from Webdriver import Webdriver
 from WhatsAppDB import WhatsAppDB
@@ -35,7 +35,7 @@ def InitializeDBAndAvatars():
     and remove all avatars
     """
     print("InitializeDBAndAvatars")
-    global DB  # TODO
+    global DB
     DB = WhatsAppDB()
     files = glob.glob('static/tempAvatars/*')
     for f in files:
@@ -100,7 +100,7 @@ class NickNameSubmitHandler(tornado.web.RequestHandler):
         nick_name = self.get_argument("nick")
         print("User NickName:", nick_name)
         self.finish()
-        DB.user_nicknames.append(nick_name)
+        DB.user_nickname = nick_name
 
 
 class TermAgreeHandler(tornado.web.RequestHandler):

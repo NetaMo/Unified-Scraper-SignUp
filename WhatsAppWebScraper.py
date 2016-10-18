@@ -220,11 +220,6 @@ class WhatsAppWebScraper:
         except:
             print("ERROR: Failed to run _get_all_persons_first_msg.")
 
-        # nickname = DB.get_nickname()[0] if DB.get_nickname() else ""
-        # firstname = DB.get_first_name() if DB.get_first_name() else ""
-        # DB.set_amphi_people(self.browser.execute_script(scrapingScripts.amphi(firstname, nickname))) # TODO remove
-
-
         scrapeTotalTime = time.time() - scrapeStartTime
 
         print("... Scraper finished. Got " + str(scrapeTotalMsgs) + " messages in " +
@@ -235,20 +230,22 @@ class WhatsAppWebScraper:
     # ===================================================================
     #   Search Scrape function
     # ===================================================================
-    def search(self, keyword, amount, is_get_msg_environment=False):
-        print("... Scraper starting...")
-        scrapeStartTime, scrapeTotalMsgs = time.time(), 0
+    def search(self, keyword, amount, min_msg_len, is_get_msg_environment=False):
+        print("... Searching after \"%s\"..." % (keyword))
 
         skip_counter = 0
         conversations = pd.DataFrame(columns=['contactName', 'text'])
-        self._search(keyword)
+        if not self._search(keyword):       # empty search (no such keyword in messages)
+            self._clear_search_bar(keyword)
+            return conversations, 0
 
-        if is_get_msg_environment:
+        if is_get_msg_environment:  # todo
             while len(conversations) < amount:
                 skip_counter, messages = self._go_to_next_match(skip_counter, is_get_msg_environment)
-                conversations.append(messages)      # todo fix to df
+                conversations.append(messages)
                 self._search(keyword)
-        else:
+
+        else:   # single message
             _, _ = self._go_to_next_match(skip_counter, is_get_msg_environment)     # gets to first chat
             while len(conversations) < amount:
                 name, message = self.browser.execute_script(scrapingScripts.getSingleTextMessageFromSearch())
@@ -256,7 +253,8 @@ class WhatsAppWebScraper:
                     # reached end of search word, clear search bar
                     self._clear_search_bar(keyword)
                     break
-                conversations = conversations.append(pd.DataFrame([[name, message]], columns=['name', 'text']), ignore_index=True)
+                if len(message) >= min_msg_len:
+                    conversations = conversations.append(pd.DataFrame([[name, message]], columns=['name', 'text']), ignore_index=True)
                 ActionChains(self.browser).send_keys(Keys.ARROW_DOWN).perform()
             self._clear_search_bar(keyword)
 
@@ -279,7 +277,7 @@ class WhatsAppWebScraper:
         #     if load_extra:
         #         ActionChains(self.browser).send_keys(Keys.PAGE_DOWN).send_keys(Keys.PAGE_DOWN).perform()
 
-        self.wait_for_element('.message.chat')      # todo handle empty searches
+        return self.wait_for_element('.message.chat', 3)      # todo - consider a solution for empty searches w.o. hard-coded t.o
         # return self.browser.execute_script(scrapingScripts.getSearchResults())
 
     def _go_to_next_match(self, skip_count, is_get_msg_environment):
@@ -302,15 +300,17 @@ class WhatsAppWebScraper:
             # Get the conversation
             ActionChains(self.browser).send_keys(Keys.ENTER).perform()
             self.wait_for_element('.message-list')
-            messages = self.browser.execute_script(scrapingScripts.getTextMessages()) # todo make return df
+            messages = self.browser.execute_script(scrapingScripts.getTextMessages()) # todo fix the entire return conversation
 
         return skip_count + 1, messages
 
-    def _clear_search_bar(self, keyword):
+    def _clear_search_bar(self, keyword):          # todo - a more elegant way to clear search bar?
         actions = ActionChains(self.browser)
         for _ in range(len(keyword) + 1):
             actions.send_keys_to_element(self.wait_for_element('.input.input-search'), Keys.BACK_SPACE)
         actions.perform()
+        # self.wait_for_element('.input.input-search').clear()
+        # ActionChains(self.browser).click(self.wait_for_element('.input.input-search')).perform()
 
 
 
@@ -641,6 +641,7 @@ class WhatsAppWebScraper:
         return datetime.fromtimestamp(int(unix_timestamp)).strftime('%H:%M %m/%d/%Y')
 
     def get_k_latest_chats(self, k=5):
+        self.wait_for_element('.pane-list-body')
         chats = self.browser.execute_script(scrapingScripts.get_latest_k_chats(k))
         df = pd.DataFrame.from_dict(chats)
 

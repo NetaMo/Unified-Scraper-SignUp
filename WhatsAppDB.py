@@ -12,6 +12,8 @@ pd.options.mode.chained_assignment = None  # default='warn'
 import warnings
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
+BACKUP_SEARCH_KEYWORDS = ["היי", "hi", "hey", "שלום", "hello"]       # todo define in protocol file, not here
+
 
 class WhatsAppDB:
     """
@@ -30,7 +32,7 @@ class WhatsAppDB:
         self.user_first_name = ""
         self.user_last_name = ""
         self.user_whatsapp_name = ""
-        self.user_nicknames = []
+        self.user_nickname = ""
         self.phone = ""
 
         self.latest_contacts = []
@@ -54,7 +56,7 @@ class WhatsAppDB:
         return self.user_first_name
 
     def get_nickname(self):
-        return self.user_nicknames
+        return self.user_nickname
 
     def set_amphi_data(self, arr_dict):
         self.amphi_data = arr_dict
@@ -254,7 +256,7 @@ class WhatsAppDB:
         for contact in df.contactName.unique().tolist():
             # matched = [s for s in sorted(df[df.contactName == contact].text.tolist()) if ("p" or "r") in s]
             matched = [s for s in sorted(df[df.contactName == contact].text.tolist()) if
-                       (self.user_first_name or self.user_last_name or self.user_nicknames[0]) in s]
+                       (self.user_first_name or self.user_last_name or self.user_nickname) in s]
             if matched:
                 return_df.text[return_df.contactName == contact] = matched[-0]
             else:
@@ -486,7 +488,6 @@ class WhatsAppDB:
         del df['interest_grade']
 
         try:
-
             # Get name of interesting contact, his messages and the ID of the last message from him
             interesting_message = df.iloc[interesting_message_row_id]
             # print('\nThe interesting message is: {}'.format(interesting_message))
@@ -564,10 +565,11 @@ class WhatsAppDB:
             for line in f:
                 l = line.split('|')
                 if l[0] == world_name:
-                    keywords = override_keywords if override_keywords else l[1].split(',')
+                    keywords = override_keywords+l[1].split(',') if override_keywords else l[1].split(',')
                     amount = int(l[2])
-                    get_msg_env = True if l[3] == 'true' else False
-                    after_competition = False if l[4] == 'false' else l[5]
+                    min_msg_len = int(l[3])
+                    get_msg_env = True if l[4] == 'true' else False
+                    after_competition = False if l[5] == 'false' else l[6]
                     break
 
         cur_amount = 0
@@ -575,10 +577,16 @@ class WhatsAppDB:
         dfs_arr = []
 
         while cur_amount < amount:
-            cur_df, real_amount = scraper.search(keywords[keyword_idx], amount-cur_amount, get_msg_env)
-            dfs_arr.append(cur_df)
+            try:
+                cur_df, real_amount = scraper.search(keywords[keyword_idx], amount-cur_amount, get_msg_env)
+            except IndexError:      # end of keywords list
+                keywords = BACKUP_SEARCH_KEYWORDS
+                keyword_idx = 0
+                continue
+            if not cur_df.empty:
+                dfs_arr.append(cur_df)
             cur_amount += real_amount
-            keyword_idx += 1        # todo consider end of list
+            keyword_idx += 1
 
         df = pd.concat([df for df in dfs_arr])
         df = df if not after_competition else self.get_k_most_interesting(df, k=after_competition)
@@ -587,8 +595,8 @@ class WhatsAppDB:
     def create_db_using_search(self, scraper):
         self.latest_chats = self.get_k_latest_chats(scraper, k=5)
         self.amphi_data = self.get_k_latest_chats(scraper, k=40)
-        self.my_name_messages = self.create_world_df('my_name', scraper, override_keywords=self.user_nicknames.append(self.user_first_name))
-        self.good_night_messages = self.create_world_df('good_night', scraper)        # todo count_val?
+        self.my_name_messages = self.create_world_df('my_name', scraper, override_keywords=[self.user_nickname, self.user_first_name])
+        self.good_night_messages = self.create_world_df('good_night', scraper)
         self.dreams_or_old_messages = self.create_world_df('dreams', scraper)
         self.love_messages = self.create_world_df('love', scraper)
-        # self.most_interesting = # todo
+        # self.most_interesting =  self.create_world_df('interesting_chat', scraper)    # todo understand wat
