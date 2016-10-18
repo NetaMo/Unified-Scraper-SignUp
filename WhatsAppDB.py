@@ -599,4 +599,4 @@ class WhatsAppDB:
         self.good_night_messages = self.create_world_df('good_night', scraper)
         self.dreams_or_old_messages = self.create_world_df('dreams', scraper)
         # self.most_interesting = self.create_world_df('interesting_chat', scraper)  # todo
-        self.love_messages = self.create_world_df('love', scraper)        # todo not for v.Liege
+        # self.love_messages = self.create_world_df('love', scraper)        # todo not for v.Liege

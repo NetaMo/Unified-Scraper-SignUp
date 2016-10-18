@@ -233,28 +233,30 @@ class WhatsAppWebScraper:
     def search(self, keyword, amount, min_msg_len, is_get_msg_environment=False):
         print("... Searching after \"%s\"..." % (keyword))
 
+        conversations = pd.DataFrame(columns=['contactName', 'text'])       # todo remove
         skip_counter = 0
-        conversations = pd.DataFrame(columns=['contactName', 'text'])
         if not self._search(keyword):       # empty search (no such keyword in messages)
             self._clear_search_bar(keyword)
             return conversations, 0
 
         if is_get_msg_environment:  # todo
+            conversations = pd.DataFrame(columns=['contactName', 'text'])
             while len(conversations) < amount:
                 skip_counter, messages = self._go_to_next_match(skip_counter, is_get_msg_environment)
                 conversations.append(messages)
                 self._search(keyword)
 
         else:   # single message
+            conversations = pd.DataFrame(columns=['contactName', 'text'])
             _, _ = self._go_to_next_match(skip_counter, is_get_msg_environment)     # gets to first chat
             while len(conversations) < amount:
                 name, message = self.browser.execute_script(scrapingScripts.getSingleTextMessageFromSearch())
-                if (not conversations.empty) and name == conversations.tail(1).name.values[0] and message == conversations.tail(1).text.values[0]:
+                if (not conversations.empty) and name == conversations.tail(1).contactName.values[0] and message == conversations.tail(1).text.values[0]:
                     # reached end of search word, clear search bar
                     self._clear_search_bar(keyword)
                     break
                 if len(message) >= min_msg_len:
-                    conversations = conversations.append(pd.DataFrame([[name, message]], columns=['name', 'text']), ignore_index=True)
+                    conversations = conversations.append(pd.DataFrame([[name, message]], columns=['contactName', 'text']), ignore_index=True)
                 ActionChains(self.browser).send_keys(Keys.ARROW_DOWN).perform()
             self._clear_search_bar(keyword)
 
