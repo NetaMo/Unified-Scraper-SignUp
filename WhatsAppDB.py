@@ -561,7 +561,7 @@ class WhatsAppDB:
 
     def create_world_df(self, world_name, scraper, override_keywords=False):
         # get keywords and amount from protocol file
-        with open('search_protocol', 'r') as f:
+        with open('search_protocol', 'r', encoding='utf8') as f:
             for line in f:
                 l = line.split('|')
                 if l[0] == world_name:
@@ -593,10 +593,10 @@ class WhatsAppDB:
         return df.to_json(date_format='iso', double_precision=0, date_unit='s', orient='records')
 
     def create_db_using_search(self, scraper):
-        # self.latest_chats = self.get_k_latest_chats(scraper, k=6)
-        # self.my_name_messages = self.create_world_df('my_name', scraper, override_keywords=[self.user_nickname, self.user_first_name])
-        # self.amphi_data = self.get_k_latest_chats(scraper, k=40)
-        # self.good_night_messages = self.create_world_df('good_night', scraper)
-        # self.dreams_or_old_messages = self.create_world_df('dreams', scraper)
-        self.most_interesting = self.create_world_df('interesting_chat', scraper)  # todo
+        self.latest_chats = self.get_k_latest_chats(scraper, k=6)
+        self.my_name_messages = self.create_world_df('my_name', scraper, override_keywords=[self.user_nickname, self.user_first_name])
+        self.amphi_data = self.get_k_latest_chats(scraper, k=40)
+        self.good_night_messages = self.create_world_df('good_night', scraper)
+        self.dreams_or_old_messages = self.create_world_df('dreams', scraper)
+        # self.most_interesting = self.create_world_df('interesting_chat', scraper)  # todo
         self.love_messages = self.create_world_df('love', scraper)        # todo not for v.Liege
