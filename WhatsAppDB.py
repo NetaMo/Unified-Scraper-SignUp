@@ -554,7 +554,7 @@ class WhatsAppDB:
     def get_k_latest_chats(self, scraper, k=5):
         df = scraper.get_k_latest_chats(k)
         # df.time = df.time.apply(self.correct_time_for_whatsapp)     # todo check if necessary. maybe we'll need it when small_time is fixed
-        return df
+        return df.to_json(date_format='iso', double_precision=0, date_unit='s', orient='records')
 
     def get_k_most_interesting(self, df, k=3):      # todo
         return df.head(k)
