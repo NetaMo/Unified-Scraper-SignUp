@@ -557,7 +557,7 @@ class WhatsAppDB:
         return df
 
     def get_k_most_interesting(self, df, k=3):      # todo
-        return df.head(3)
+        return df.head(k)
 
     def create_world_df(self, world_name, scraper, override_keywords=False):
         # get keywords and amount from protocol file
@@ -578,7 +578,7 @@ class WhatsAppDB:
 
         while cur_amount < amount:
             try:
-                cur_df, real_amount = scraper.search(keywords[keyword_idx], amount-cur_amount, get_msg_env)
+                cur_df, real_amount = scraper.search(keywords[keyword_idx], amount-cur_amount, min_msg_len, get_msg_env)
             except IndexError:      # end of keywords list
                 keywords = BACKUP_SEARCH_KEYWORDS
                 keyword_idx = 0
@@ -598,5 +598,5 @@ class WhatsAppDB:
         self.amphi_data = self.get_k_latest_chats(scraper, k=40)
         self.good_night_messages = self.create_world_df('good_night', scraper)
         self.dreams_or_old_messages = self.create_world_df('dreams', scraper)
-        # self.most_interesting =  self.create_world_df('interesting_chat', scraper)    # todo
-        # self.love_messages = self.create_world_df('love', scraper)        # todo not for v.Liege
+        self.most_interesting = self.create_world_df('interesting_chat', scraper)  # todo
+        self.love_messages = self.create_world_df('love', scraper)        # todo not for v.Liege
