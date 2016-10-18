@@ -184,7 +184,7 @@ class GiveGoodNightMessages(tornado.web.RequestHandler):
         self.finish(DB.good_night_messages)
 
 
-class GiveDreamsOrOldMessages(tornado.web.RequestHandler):
+class GiveDreamMessages(tornado.web.RequestHandler):
 
     def get(self):
         print("GiveDreamsOrOldMessages")
@@ -224,6 +224,14 @@ class GiveLoveMessages(tornado.web.RequestHandler):
     def get(self):
         print("GiveLoveMessages")
         self.finish(DB.love_messages)
+
+
+class GiveMostInterestingChat(tornado.web.RequestHandler):
+
+    def get(self):
+        print("GiveMostInterestingChat")
+        self.finish(DB.love_messages)       # todo change between lines after implementing
+        # self.finish(self.most_interesting)
 
 
 class ResetHandler(tornado.web.RequestHandler):
@@ -270,15 +278,16 @@ def make_app():
         (r"/letsgo", LetsGoHandler),
         # unity handlers
         (r"/get_latest_chats", GiveLatestChatsHandler),
-        (r"/get_closest_persons_and_msgs", GiveClosestPersonsAndMsgs),
-        (r"/have_hebrew", HaveHebrew),
-        (r"/get_good_night_messages", GiveGoodNightMessages),
-        (r"/get_dreams_or_old_messages", GiveDreamsOrOldMessages),
-        (r"/get_most_active_groups_and_user_groups", GiveMostActiveGroupsAndUserGroups),
-        (r"/get_chat_archive", GiveChatArchive),
-        (r"/get_amphi_data", GiveAmphiData),
         (r"/get_my_name_messages", GiveMyNameMessages),
-        (r"/get_love_messages", GiveLoveMessages),
+        (r"/get_amphi_data", GiveAmphiData),
+        (r"/get_good_night_messages", GiveGoodNightMessages),
+        (r"/get_dream_messages", GiveDreamMessages),
+        (r"/get_most_interesting_chat", GiveMostInterestingChat),
+        # (r"/get_closest_persons_and_msgs", GiveClosestPersonsAndMsgs),
+        # (r"/have_hebrew", HaveHebrew),
+        # (r"/get_most_active_groups_and_user_groups", GiveMostActiveGroupsAndUserGroups),
+        # (r"/get_chat_archive", GiveChatArchive),
+        # (r"/get_love_messages", GiveLoveMessages),
         (r"/reset", ResetHandler)
     ], **settings)
 
