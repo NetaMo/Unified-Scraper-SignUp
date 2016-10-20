@@ -68,7 +68,7 @@ def getSingleTextMessageFromSearch():
 def getSearchResults():
     return '''
         var results = [];
-        var messages = document.getElementsByClassName('message chat');
+        var messages = document.getElementsByClassName('message-chat');
         for (var i = 0; i < messages.length; i++) {
             var result_item = messages[i];
             var contact_name = result_item.getElementsByClassName('chat-title')[0].innerText;
@@ -235,6 +235,7 @@ def getAllFirstMessages():
     return allContacts;
 
     '''
+
 
 def get_latest_k_chats(k):      # todo small_time!!
     return '''

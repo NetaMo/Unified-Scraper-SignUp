@@ -1,6 +1,6 @@
 WORLD-NAME | KEYWORDS | AMOUNT | MIN-MSG-LEN | GET-MSG-ENV | COMPETE | AMOUNT-AFTER
-my_name|אחי, אחותי, גבר, גברת|8|3|false|false|8
-good_night|לילה טוב, חלומות נעימים, חלומות פז, חלומות מתוקים, לילה|7|0|false|false|7
+my_name|אחי,אחותי,גבר,גברת|8|3|false|false|8
+good_night|לילה טוב,חלומות נעימים,חלומות פז,חלומות מתוקים,לילה|7|0|false|false|7
 dreams|חלמתי,חלום,חולם|8|2|false|false|8
-interesting_chat|חייב, מאמין, בכיף|20|3|true|true|3
-love|אוהב אותך, אוהב, אוהבת, אהבה|20|1|false|false|3
+interesting_chat|חייב,מאמין,בכיף|20|3|true|true|3
+love|אוהב אותך,אוהב,אוהבת,אהבה|20|1|false|false|3

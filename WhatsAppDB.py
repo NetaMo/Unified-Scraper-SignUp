@@ -12,8 +12,6 @@ pd.options.mode.chained_assignment = None  # default='warn'
 import warnings
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
-BACKUP_SEARCH_KEYWORDS = ["היי", "hi", "hey", "שלום", "hello"]       # todo define in protocol file, not here
-
 
 class WhatsAppDB:
     """
@@ -34,6 +32,7 @@ class WhatsAppDB:
         self.user_whatsapp_name = ""
         self.user_nickname = ""
         self.phone = ""
+        self.user_language = "heb"
 
         self.latest_contacts = []
 
@@ -168,7 +167,7 @@ class WhatsAppDB:
         else:
             return False
 
-    def does_df_has_hebrew(self):  # todo maybe make check larger parts
+    def does_df_has_hebrew(self):
         """
         checks if the contacts data frame text fields has hebrew chars
         :return: True if has hebrew
@@ -556,12 +555,24 @@ class WhatsAppDB:
         # df.time = df.time.apply(self.correct_time_for_whatsapp)     # todo check if necessary. maybe we'll need it when small_time is fixed
         return df.to_json(date_format='iso', double_precision=0, date_unit='s', orient='records')
 
-    def get_k_most_interesting(self, df, k=3):      # todo
-        return df.head(k)
+    def _get_conversation_rank(self, conv):
+        return 1
+
+    def get_k_most_interesting(self, df, k=3):
+        # todo implement the shit out of it
+        # todo maybe only conversations older than... (real new ones are not as long as)
+        # todo maybe define 'conversation' between close times
+        # df.to_csv('interesting20.csv')
+        ranks = []
+        for conv_id, conversation in df.groupby('conv_id'):
+            ranks.append( (conv_id, self._get_conversation_rank(conversation)) )
+
+        ranks = sorted(ranks, key=lambda x: x[1])       # [(conv_id, rank)...(conv_id, rank)]
+        return df[df.conv_id == ranks[:k][1]].loc[:,['contactName','text']]     # todo see with unity how to return
 
     def create_world_df(self, world_name, scraper, override_keywords=False):
         # get keywords and amount from protocol file
-        with open('search_protocol', 'r', encoding='utf8') as f:
+        with open('search_protocols/search_protocol_' + self.user_language, 'r', encoding='utf8') as f:
             for line in f:
                 l = line.split('|')
                 if l[0] == world_name:
@@ -569,7 +580,7 @@ class WhatsAppDB:
                     amount = int(l[2])
                     min_msg_len = int(l[3])
                     get_msg_env = True if l[4] == 'true' else False
-                    after_competition = False if l[5] == 'false' else l[6]
+                    after_competition = False if l[5] == 'false' else int(l[6])
                     break
 
         cur_amount = 0
@@ -578,10 +589,14 @@ class WhatsAppDB:
 
         while cur_amount < amount:
             try:
-                cur_df, real_amount = scraper.search(keywords[keyword_idx], amount-cur_amount, min_msg_len, get_msg_env)
+                cur_df, real_amount = scraper.search(keywords[keyword_idx], amount, min_msg_len, cur_amount, get_msg_env)
             except IndexError:      # end of keywords list
-                keywords = BACKUP_SEARCH_KEYWORDS
-                keyword_idx = 0
+                with open('search_protocols/search_protocol_' + self.user_language, 'r', encoding='utf8') as f:
+                    keyword_idx = 0
+                    for line in f:
+                        l = line.split('|')
+                        if l[0] == 'backup':
+                            keywords = l[1]
                 continue
             if not cur_df.empty:
                 dfs_arr.append(cur_df)
@@ -598,5 +613,5 @@ class WhatsAppDB:
         self.amphi_data = self.get_k_latest_chats(scraper, k=40)
         self.good_night_messages = self.create_world_df('good_night', scraper)
         self.dreams_or_old_messages = self.create_world_df('dreams', scraper)
-        # self.most_interesting = self.create_world_df('interesting_chat', scraper)  # todo
+        self.most_interesting = self.create_world_df('interesting_chat', scraper)
         # self.love_messages = self.create_world_df('love', scraper)        # todo not for v.Liege

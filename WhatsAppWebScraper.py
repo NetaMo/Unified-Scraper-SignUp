@@ -2,6 +2,7 @@ import codecs
 import time
 from datetime import datetime
 import pandas as pd
+import numpy as np
 
 use_avatars = False
 
@@ -230,26 +231,35 @@ class WhatsAppWebScraper:
     # ===================================================================
     #   Search Scrape function
     # ===================================================================
-    def search(self, keyword, amount, min_msg_len, is_get_msg_environment=False):
+    def search(self, keyword, amount, min_msg_len, cur_amount, is_get_msg_environment=False):
         print("... Searching after \"%s\"..." % (keyword))
 
-        conversations = pd.DataFrame(columns=['contactName', 'text'])       # todo remove
+        conversations = pd.DataFrame(columns=['contactName', 'text'])
         skip_counter = 0
         if not self._search(keyword):       # empty search (no such keyword in messages)
             self._clear_search_bar(keyword)
             return conversations, 0
 
-        if is_get_msg_environment:  # todo
-            conversations = pd.DataFrame(columns=['contactName', 'text'])
-            while len(conversations) < amount:
+        if is_get_msg_environment:
+            # next_idx = 0
+            messages_backup = []
+            while cur_amount < amount:
                 skip_counter, messages = self._go_to_next_match(skip_counter, is_get_msg_environment)
-                conversations.append(messages)
+                if messages == messages_backup:     # reached end of search word, clear search bar
+                    self._clear_search_bar(keyword)
+                    break
+                messages_backup = messages.copy()
+                parsed_msgs = [self._parse_message(msg) for msg in messages if self._parse_message(msg) != (None, None, None)]
+                conversations = conversations.append(pd.DataFrame(
+                    [list(msg[:2])+[cur_amount] for msg in parsed_msgs], columns=['contactName', 'text', 'conv_id']))
+                cur_amount += 1
                 self._search(keyword)
+            real_amount = cur_amount
+            self._clear_search_bar(keyword)
 
         else:   # single message
-            conversations = pd.DataFrame(columns=['contactName', 'text'])
             _, _ = self._go_to_next_match(skip_counter, is_get_msg_environment)     # gets to first chat
-            while len(conversations) < amount:
+            while len(conversations) < amount-cur_amount:
                 name, message = self.browser.execute_script(scrapingScripts.getSingleTextMessageFromSearch())
                 if (not conversations.empty) and name == conversations.tail(1).contactName.values[0] and message == conversations.tail(1).text.values[0]:
                     # reached end of search word, clear search bar
@@ -259,8 +269,9 @@ class WhatsAppWebScraper:
                     conversations = conversations.append(pd.DataFrame([[name, message]], columns=['contactName', 'text']), ignore_index=True)
                 ActionChains(self.browser).send_keys(Keys.ARROW_DOWN).perform()
             self._clear_search_bar(keyword)
+            real_amount = len(conversations)
 
-        return conversations, len(conversations)
+        return conversations, real_amount
 
     def _search(self, keyword, load_extra = False):
         actions = ActionChains(self.browser)
@@ -279,7 +290,7 @@ class WhatsAppWebScraper:
         #     if load_extra:
         #         ActionChains(self.browser).send_keys(Keys.PAGE_DOWN).send_keys(Keys.PAGE_DOWN).perform()
 
-        return self.wait_for_element('.message.chat', 3)      # todo - consider a solution for empty searches w.o. hard-coded t.o
+        return self.wait_for_element('.message.chat', 8)      # todo - consider a solution for empty searches w.o. hard-coded t.o
         # return self.browser.execute_script(scrapingScripts.getSearchResults())
 
     def _go_to_next_match(self, skip_count, is_get_msg_environment):
@@ -312,7 +323,8 @@ class WhatsAppWebScraper:
             actions.send_keys_to_element(self.wait_for_element('.input.input-search'), Keys.BACK_SPACE)
         actions.perform()
         # self.wait_for_element('.input.input-search').clear()
-        # ActionChains(self.browser).click(self.wait_for_element('.input.input-search')).perform()
+        # ActionChains(self.browser).perform()
+        # ActionChains(self.browser).click(self.wait_for_element('.input.input-search').clear()).perform()
 
 
 
