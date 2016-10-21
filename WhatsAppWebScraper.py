@@ -231,10 +231,11 @@ class WhatsAppWebScraper:
     # ===================================================================
     #   Search Scrape function
     # ===================================================================
-    def search(self, keyword, amount, min_msg_len, cur_amount, is_get_msg_environment=False):
+    def search(self, keyword, amount, min_msg_len, cur_amount, incoming_only, is_get_msg_environment=False):
         print("... Searching after \"%s\"..." % (keyword))
 
         conversations = pd.DataFrame(columns=['contactName', 'text'])
+
         skip_counter = 0
         if not self._search(keyword):       # empty search (no such keyword in messages)
             self._clear_search_bar(keyword)
@@ -244,7 +245,7 @@ class WhatsAppWebScraper:
             # next_idx = 0
             messages_backup = []
             while cur_amount < amount:
-                skip_counter, messages = self._go_to_next_match(skip_counter, is_get_msg_environment)
+                skip_counter, messages = self._go_to_next_match(skip_counter, incoming_only, is_get_msg_environment)
                 if messages == messages_backup:     # reached end of search word, clear search bar
                     self._clear_search_bar(keyword)
                     break
@@ -258,16 +259,24 @@ class WhatsAppWebScraper:
             self._clear_search_bar(keyword)
 
         else:   # single message
-            _, _ = self._go_to_next_match(skip_counter, is_get_msg_environment)     # gets to first chat
+            duplicate_msg_in_a_row = 0
+            _, _ = self._go_to_next_match(skip_counter, incoming_only, is_get_msg_environment)     # gets to first chat
             while len(conversations) < amount-cur_amount:
+                print(len(conversations))
                 name, message = self.browser.execute_script(scrapingScripts.getSingleTextMessageFromSearch())
                 if (not conversations.empty) and name == conversations.tail(1).contactName.values[0] and message == conversations.tail(1).text.values[0]:
                     # reached end of search word, clear search bar
-                    self._clear_search_bar(keyword)
-                    break
+                    duplicate_msg_in_a_row += 1
+                    if duplicate_msg_in_a_row > 1:
+                        self._clear_search_bar(keyword)
+                        break
+                    continue
                 if len(message) >= min_msg_len:
                     conversations = conversations.append(pd.DataFrame([[name, message]], columns=['contactName', 'text']), ignore_index=True)
                 ActionChains(self.browser).send_keys(Keys.ARROW_DOWN).perform()
+                if incoming_only:
+                    while not self.browser.execute_script(scrapingScripts.isIncomingMsg()):
+                        ActionChains(self.browser).send_keys(Keys.ARROW_DOWN).perform()
             self._clear_search_bar(keyword)
             real_amount = len(conversations)
 
@@ -290,10 +299,10 @@ class WhatsAppWebScraper:
         #     if load_extra:
         #         ActionChains(self.browser).send_keys(Keys.PAGE_DOWN).send_keys(Keys.PAGE_DOWN).perform()
 
-        return self.wait_for_element('.message.chat', 5)
+        return self.wait_for_element('.message.chat', 10)
         # return self.browser.execute_script(scrapingScripts.getSearchResults())
 
-    def _go_to_next_match(self, skip_count, is_get_msg_environment):
+    def _go_to_next_match(self, skip_count, incoming_only, is_get_msg_environment):
         messages = []
         ActionChains(self.browser).send_keys_to_element(self.wait_for_element('.input.input-search'), Keys.TAB).perform()
 
@@ -304,10 +313,12 @@ class WhatsAppWebScraper:
         actions.perform()
 
         is_conversation = self.browser.execute_script(scrapingScripts.isConversation())
-        while not is_conversation:
+        is_incoming = self.browser.execute_script(scrapingScripts.isIncomingMsg()) if incoming_only else True
+        while not is_conversation or not is_incoming:
             ActionChains(self.browser).send_keys(Keys.ARROW_DOWN).perform()
             skip_count += 1
             is_conversation = self.browser.execute_script(scrapingScripts.isConversation())
+            is_incoming = self.browser.execute_script(scrapingScripts.isIncomingMsg()) if incoming_only else True
 
         if is_get_msg_environment:
             # Get the conversation
