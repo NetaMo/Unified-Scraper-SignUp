@@ -1,8 +1,8 @@
-WORLD-NAME | KEYWORDS | AMOUNT | MIN-MSG-LEN | GET-MSG-ENV | COMPETE | AMOUNT-AFTER | INCOMING-ONLY
-my_name|אחי,אחותי,גבר,גברת|8|3|false|false|8|false
-good_night|לילה טוב,חלומות נעימים,חלומות פז,חלומות מתוקים,לילה|7|0|false|false|7|true
-dreams|חלמתי,חלום,חולם|8|2|false|false|8|false
-interesting_chat|דידידידי,חייב,מאמין,בכיף|10|3|true|true|1|false
+WORLD-NAME | KEYWORDS | AMOUNT | MIN-MSG-LEN | GET-MSG-ENV | COMPETE | AMOUNT-AFTER | INCOMING-ONLY | IS-UNIQUE
+my_name|אחי,אחותי,גבר,גברת|8|3|false|false|8|false|false
+good_night|לילה טוב,חלומות נעימים,חלומות פז,חלומות מתוקים,לילה|7|0|false|false|7|true|false
+dreams|חלמתי,חלום,חולם|8|2|false|false|8|false|false
+interesting_chat|דידידידי,חייב,מאמין,בכיף|10|3|true|true|1|false|false
 
 love|אוהב אותך,אוהב,אוהבת,אהבה|20|1|false|false|3|false
 backup|היי,hi,hey,שלום,hello

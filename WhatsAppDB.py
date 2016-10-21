@@ -601,15 +601,18 @@ class WhatsAppDB:
                     get_msg_env = True if l[4] == 'true' else False
                     after_competition = False if l[5] == 'false' else int(l[6])
                     incoming_only = True if l[7] == 'true' else False
+                    is_unique = True if l[8] == 'true' else False
                     break
 
         cur_amount = 0
         keyword_idx = 0
         dfs_arr = []
+        people = []
 
         while cur_amount < amount:
             try:
-                cur_df, real_amount = scraper.search(keywords[keyword_idx], amount, min_msg_len, cur_amount, incoming_only, get_msg_env)
+                cur_df, real_amount, people = scraper.search(
+                    keywords[keyword_idx], amount, min_msg_len, cur_amount, incoming_only, is_unique, people, get_msg_env)
             except IndexError:      # end of keywords list
                 with open('search_protocols/search_protocol_' + self.user_language, 'r', encoding='utf8') as f:
                     keyword_idx = 0
