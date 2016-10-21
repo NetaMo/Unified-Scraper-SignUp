@@ -1,6 +1,7 @@
 import json
 from datetime import time as dt
 from itertools import groupby
+from datetime import datetime, date, timedelta
 
 import numpy as np
 import pandas as pd
@@ -549,16 +550,29 @@ class WhatsAppDB:
 
         return resulted_sliced_df.to_json(date_format='iso', double_precision=0, date_unit='s', orient='records')
 
+    @staticmethod
+    def convert_whatsapp_time(unix_timestamp):
+        str_fixed_date = datetime.fromtimestamp(int(unix_timestamp)).strftime('%H:%M %m/%d/%Y')
+        fixed_date = datetime.strptime(str_fixed_date, '%H:%M %m/%d/%Y')
 
-    def get_k_latest_chats(self, scraper, k=5):
+        if fixed_date.date() == date.today():
+            return str(fixed_date.time())
+        elif fixed_date.date() == date.today() - timedelta(1):
+            return 'Yesterday'
+        else:
+            import calendar
+            return calendar.day_name[fixed_date.weekday()]
+
+
+    def get_k_latest_chats(self, scraper, k=6):
         df = scraper.get_k_latest_chats(k)
-        # df.time = df.time.apply(self.correct_time_for_whatsapp)     # todo check if necessary. maybe we'll need it when small_time is fixed
+        df.time = df.time.apply(self.convert_whatsapp_time)
         return df.to_json(date_format='iso', double_precision=0, date_unit='s', orient='records')
 
     def _get_conversation_rank(self, conv):
         return 1
 
-    def get_k_most_interesting(self, df, k=3):
+    def get_k_most_interesting(self, df, k=1):
         # todo implement the shit out of it
         # todo maybe only conversations older than... (real new ones are not as long as)
         # todo maybe define 'conversation' between close times
@@ -568,7 +582,12 @@ class WhatsAppDB:
             ranks.append( (conv_id, self._get_conversation_rank(conversation)) )
 
         ranks = sorted(ranks, key=lambda x: x[1])       # [(conv_id, rank)...(conv_id, rank)]
-        return df[df.conv_id == ranks[:k][1]].loc[:,['contactName','text']]     # todo see with unity how to return
+        if k ==1:
+            return df[df.conv_id == ranks[0][0]].loc[:,['contactName','text']]\
+                .to_json(date_format='iso', double_precision=0, date_unit='s', orient='records')
+        else:
+            return df[df.conv_id == ranks[:k][0]].loc[:, ['contactName', 'text']]\
+                .to_json(date_format='iso', double_precision=0, date_unit='s', orient='records')
 
     def create_world_df(self, world_name, scraper, override_keywords=False):
         # get keywords and amount from protocol file
@@ -614,4 +633,4 @@ class WhatsAppDB:
         self.good_night_messages = self.create_world_df('good_night', scraper)
         self.dreams_or_old_messages = self.create_world_df('dreams', scraper)
         self.most_interesting = self.create_world_df('interesting_chat', scraper)
-        # self.love_messages = self.create_world_df('love', scraper)        # todo not for v.Liege
+        # self.love_messages = self.create_world_df('love', scraper)        # not for v.Liege

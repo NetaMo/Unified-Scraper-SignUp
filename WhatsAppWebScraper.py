@@ -290,7 +290,7 @@ class WhatsAppWebScraper:
         #     if load_extra:
         #         ActionChains(self.browser).send_keys(Keys.PAGE_DOWN).send_keys(Keys.PAGE_DOWN).perform()
 
-        return self.wait_for_element('.message.chat', 8)      # todo - consider a solution for empty searches w.o. hard-coded t.o
+        return self.wait_for_element('.message.chat', 5)
         # return self.browser.execute_script(scrapingScripts.getSearchResults())
 
     def _go_to_next_match(self, skip_count, is_get_msg_environment):
@@ -313,7 +313,7 @@ class WhatsAppWebScraper:
             # Get the conversation
             ActionChains(self.browser).send_keys(Keys.ENTER).perform()
             self.wait_for_element('.message-list')
-            messages = self.browser.execute_script(scrapingScripts.getTextMessages()) # todo fix the entire return conversation
+            messages = self.browser.execute_script(scrapingScripts.getTextMessages())
 
         return skip_count + 1, messages
 
@@ -654,7 +654,7 @@ class WhatsAppWebScraper:
     def unix_timestamp_format(unix_timestamp):
         return datetime.fromtimestamp(int(unix_timestamp)).strftime('%H:%M %m/%d/%Y')
 
-    def get_k_latest_chats(self, k=5):
+    def get_k_latest_chats(self, k=6):
         self.wait_for_element('.pane-list-body')
         chats = self.browser.execute_script(scrapingScripts.get_latest_k_chats(k))
         df = pd.DataFrame.from_dict(chats)

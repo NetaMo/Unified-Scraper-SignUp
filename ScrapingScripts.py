@@ -237,7 +237,7 @@ def getAllFirstMessages():
     '''
 
 
-def get_latest_k_chats(k):      # todo small_time!!
+def get_latest_k_chats(k):
     return '''
     var chats = [];
     var k = parseInt("''' + str(k) + '''");
@@ -253,12 +253,12 @@ def get_latest_k_chats(k):      # todo small_time!!
         }
         name = curChat.formattedTitle;
         msg = curChat.msgs.models[curChat.msgs.models.length -1].body;
-        small_time = "21:30"
+        t = curChat.t;
 
         chats.push({
             contactName: name,
             text : msg,
-            time: small_time
+            time: t
         });
     }
 
