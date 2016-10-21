@@ -3,6 +3,7 @@ import time
 from datetime import datetime
 import pandas as pd
 import numpy as np
+from selenium.common.exceptions import WebDriverException
 
 use_avatars = False
 
@@ -313,12 +314,18 @@ class WhatsAppWebScraper:
         actions.perform()
 
         is_conversation = self.browser.execute_script(scrapingScripts.isConversation())
-        is_incoming = self.browser.execute_script(scrapingScripts.isIncomingMsg()) if incoming_only else True
+        try:
+            is_incoming = self.browser.execute_script(scrapingScripts.isIncomingMsg()) if incoming_only else True
+        except WebDriverException:
+            is_incoming = False
         while not is_conversation or not is_incoming:
             ActionChains(self.browser).send_keys(Keys.ARROW_DOWN).perform()
             skip_count += 1
             is_conversation = self.browser.execute_script(scrapingScripts.isConversation())
-            is_incoming = self.browser.execute_script(scrapingScripts.isIncomingMsg()) if incoming_only else True
+            try:
+                is_incoming = self.browser.execute_script(scrapingScripts.isIncomingMsg()) if incoming_only else True
+            except WebDriverException:
+                is_incoming = False
 
         if is_get_msg_environment:
             # Get the conversation

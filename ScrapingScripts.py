@@ -87,16 +87,13 @@ def isConversation():
     '''
 
 def isIncomingMsg():
-    try:
-        return '''
-        var double_v_icon = document.getElementsByClassName('message active chat')[0].getElementsByClassName('icon');
-        if (double_v_icon.length == 0) {
-            return true;
-        }
-        return false;
-        '''
-    except:
-        return False
+    return '''
+    var double_v_icon = document.getElementsByClassName('message active chat')[0].getElementsByClassName('icon');
+    if (double_v_icon.length == 0) {
+        return true;
+    }
+    return false;
+    '''
 
 def getSingleOutgoingMessage():
     return ''' var A = document.getElementsByClassName('message message-out')
