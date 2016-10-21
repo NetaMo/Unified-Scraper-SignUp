@@ -21,33 +21,35 @@ class WhatsAppDB:
     def __init__(self):
         print("initializing the DataFrames")
 
-        self.contacts_df = pd.DataFrame(data=None, columns=["contactName", "name", "text", "time"])
-        self.contacts_df.name.astype('category')
+        # self.contacts_df = pd.DataFrame(data=None, columns=["contactName", "name", "text", "time"])
+        # self.contacts_df.name.astype('category')
 
-        self.groups_df = pd.DataFrame(columns=["groupName", "name", "messagesCount", "totalMessages"])
-        self.groups_df.messagesCount.astype(int)
-        self.groups_df.totalMessages.astype(int)
+        # self.groups_df = pd.DataFrame(columns=["groupName", "name", "messagesCount", "totalMessages"])
+        # self.groups_df.messagesCount.astype(int)
+        # self.groups_df.totalMessages.astype(int)
 
         self.user_first_name = ""
         self.user_last_name = ""
         self.user_whatsapp_name = ""
         self.user_nickname = ""
         self.phone = ""
-        self.user_language = "heb"
+        self.user_language = "heb"      # todo take from site
 
-        self.latest_contacts = []
+        # self.latest_contacts = []
 
         # =====data analysis json outputs=====
         self.latest_chats = 0
-        self.closest_persons_and_msg = 0
-        self.have_hebrew = False  # boolean
+        self.my_name_messages = 0
+        self.amphi_data = 0
         self.good_night_messages = 0
         self.dreams_or_old_messages = 0
-        self.most_active_groups_and_user_groups = 0
-        self.chat_archive = 0
-        self.amphi_data = []
-        self.my_name_messages = 0
-        self.love_messages = 0
+        self.most_interesting = 0
+        # self.love_messages = 0        not in v.liege
+
+        # self.closest_persons_and_msg = 0
+        # self.have_hebrew = False  # boolean
+        # self.most_active_groups_and_user_groups = 0
+        # self.chat_archive = 0
 
     def add_latest_contacts(self, name):
         self.latest_contacts.append(name)

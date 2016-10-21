@@ -48,20 +48,20 @@ web page handlers:
 """""
 
 
-class IphoneHandler(tornado.web.RequestHandler):
-
-    def get(self):
-        print("Stage 6: Iphone Chosen")
-        DB.phone = "ios"
-        self.finish()
-
-
-class AndroidHandler(tornado.web.RequestHandler):
-
-    def get(self):
-        print("Stage 6: Android Chosen")
-        DB.phone = "android"
-        self.finish()
+# class IphoneHandler(tornado.web.RequestHandler):
+#
+#     def get(self):
+#         print("Stage 6: Iphone Chosen")
+#         DB.phone = "ios"
+#         self.finish()
+#
+#
+# class AndroidHandler(tornado.web.RequestHandler):
+#
+#     def get(self):
+#         print("Stage 6: Android Chosen")
+#         DB.phone = "android"
+#         self.finish()
 
 
 class LandingHandler(tornado.web.RequestHandler):
@@ -73,7 +73,7 @@ class LandingHandler(tornado.web.RequestHandler):
 class NameSubmitHandler(tornado.web.RequestHandler):
 
     def get(self):
-        print("Stage 3: Name Submitted, Loading TermsPage")
+        print("Stage 2: Name Submitted, Loading Nickname")
         # These variables hold the users input
         first_name = self.get_argument("first")
         last_name = self.get_argument("last")
@@ -95,7 +95,7 @@ class NameSubmitHandler(tornado.web.RequestHandler):
 class NickNameSubmitHandler(tornado.web.RequestHandler):
 
     def get(self):
-        print("Stage 2: Nick Name Submitted, Loading Full Name")
+        print("Stage 3: Nick Name Submitted, Loading TermsPage")
         # These variables hold the users input
         nick_name = self.get_argument("nick")
         print("User NickName:", nick_name)
@@ -106,9 +106,8 @@ class NickNameSubmitHandler(tornado.web.RequestHandler):
 class TermAgreeHandler(tornado.web.RequestHandler):
 
     def get(self):
-        print("Stage 4: Agreed, Loading WhatssApp web scrapper")
         # run whats up web scrapper
-        print("Stage 4: Agreed, Go to phone sort")
+        print("Stage 4: Agreed, Go to Choose Phone")
         self.finish()
 
 
@@ -126,7 +125,7 @@ class LetsGoHandler(tornado.web.RequestHandler):
 
     def get(self):
 
-        print("Stage 7: Lets GO!, Load whatssapp web!")
+        print("Stage 6: Lets GO!, Load whatssapp web!")
         # Insert whats up web run here
         # scrape_whatsapp()
 
