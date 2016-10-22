@@ -633,6 +633,7 @@ class WhatsAppDB:
 
         df = pd.concat([df for df in dfs_arr])
         df = df if not after_competition else self.get_k_most_interesting(df, k=after_competition)
+        # dt.to_csv('a.csv')
         return df.to_json(date_format='iso', double_precision=0, date_unit='s', orient='records')
 
     def create_db_using_search(self, scraper):

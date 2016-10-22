@@ -332,7 +332,11 @@ class WhatsAppWebScraper:
     def _go_to_next_valid_message(self, incoming_only, is_contacts_only):
         duplicate_count = 0
         ActionChains(self.browser).send_keys(Keys.ARROW_DOWN).perform()
-        name, message = self.browser.execute_script(scrapingScripts.getSingleTextMessageFromSearch())
+        try:
+            name, message = self.browser.execute_script(scrapingScripts.getSingleTextMessageFromSearch())
+        except WebDriverException:
+            self.wait_for_element('.message.active.chat')
+            name, message = self.browser.execute_script(scrapingScripts.getSingleTextMessageFromSearch())
         if incoming_only and is_contacts_only:
             while not self._is_incoming_message() or not self._is_contact_conversation():
                 done, name, message, duplicate_count = self._go_down_check_duplicate(duplicate_count, name, message)
@@ -352,7 +356,11 @@ class WhatsAppWebScraper:
 
     def _go_down_check_duplicate(self, duplicate_count, name, message):
         ActionChains(self.browser).send_keys(Keys.ARROW_DOWN).perform()
-        name2, message2 = self.browser.execute_script(scrapingScripts.getSingleTextMessageFromSearch())
+        try:
+            name2, message2 = self.browser.execute_script(scrapingScripts.getSingleTextMessageFromSearch())
+        except WebDriverException:
+            self.wait_for_element('.message.active.chat')
+            name2, message2 = self.browser.execute_script(scrapingScripts.getSingleTextMessageFromSearch())
         if name == name2 and message == message2:
             ActionChains(self.browser).send_keys(Keys.ARROW_DOWN).perform()
             name, message = self.browser.execute_script(scrapingScripts.getSingleTextMessageFromSearch())
