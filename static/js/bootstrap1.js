@@ -2376,7 +2376,7 @@ if (typeof jQuery === 'undefined') {
   function addNickName()
   {
     console.log("Currently in addnickname function");
-    var nickName = $("NickName").val();
+    var nickName = $("#NickName").val();
     var nameArray = {nick: nickName};
     console.log(nameArray);
     $.get("/nicknamesubmit", nameArray);
