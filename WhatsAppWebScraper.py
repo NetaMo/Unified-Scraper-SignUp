@@ -232,7 +232,7 @@ class WhatsAppWebScraper:
     # ===================================================================
     #   Search Scrape function
     # ===================================================================
-    def search(self, keyword, amount, min_msg_len, cur_amount, incoming_only, is_unique, people, is_get_msg_environment=False):
+    def search(self, keyword, amount, min_msg_len, cur_amount, incoming_only, is_unique, people, is_contacts_only, is_get_msg_environment=False):
         print("... Searching after \"%s\"..." % (keyword))
 
         conversations = pd.DataFrame(columns=['contactName', 'text'])
@@ -245,7 +245,7 @@ class WhatsAppWebScraper:
         if is_get_msg_environment:      # todo implement unique if needed. currently implemented just for single message
             messages_backup = []
             while cur_amount < amount:
-                skip_counter, messages = self._go_to_next_match(skip_counter, incoming_only, is_get_msg_environment)
+                skip_counter, messages = self._go_to_next_match(skip_counter, incoming_only, is_contacts_only, is_get_msg_environment)
                 if messages == messages_backup:     # reached end of search word, clear search bar
                     self._clear_search_bar(keyword)
                     break
@@ -260,7 +260,7 @@ class WhatsAppWebScraper:
 
         else:   # single message
             duplicate_msg_in_a_row = 0
-            _, _ = self._go_to_next_match(skip_counter, incoming_only, is_get_msg_environment)     # gets to first chat
+            _, _ = self._go_to_next_match(skip_counter, incoming_only, is_contacts_only, is_get_msg_environment)     # gets to first chat
             while len(conversations) < amount-cur_amount:
                 name, message = self.browser.execute_script(scrapingScripts.getSingleTextMessageFromSearch())
                 if (not conversations.empty) and name == conversations.tail(1).contactName.values[0] and message == conversations.tail(1).text.values[0]:
@@ -275,10 +275,7 @@ class WhatsAppWebScraper:
                         conversations = conversations.append(pd.DataFrame([[name, message]], columns=['contactName', 'text']), ignore_index=True)
                         people.append(name)
                 ActionChains(self.browser).send_keys(Keys.ARROW_DOWN).perform()
-                if incoming_only:
-                    # while not self.browser.execute_script(scrapingScripts.isIncomingMsg()):
-                    while not self._is_incoming_message():
-                        ActionChains(self.browser).send_keys(Keys.ARROW_DOWN).perform()
+                self._skip_unwanted_messages(incoming_only, is_contacts_only)
             self._clear_search_bar(keyword)
             real_amount = len(conversations)
 
@@ -304,7 +301,7 @@ class WhatsAppWebScraper:
         return self.wait_for_element('.message.chat', 8)
         # return self.browser.execute_script(scrapingScripts.getSearchResults())
 
-    def _go_to_next_match(self, skip_count, incoming_only, is_get_msg_environment):
+    def _go_to_next_match(self, skip_count, incoming_only, is_contacts_only, is_get_msg_environment):
         messages = []
         ActionChains(self.browser).send_keys_to_element(self.wait_for_element('.input.input-search'), Keys.TAB).perform()
 
@@ -315,18 +312,14 @@ class WhatsAppWebScraper:
         actions.perform()
 
         is_conversation = self.browser.execute_script(scrapingScripts.isConversation())
-        # try:
         is_incoming = self._is_incoming_message() if incoming_only else True
-        # except WebDriverException:
-        #     is_incoming = False
-        while not is_conversation or not is_incoming:
+        is_contact_conversation = self._is_contact_conversation() if is_contacts_only else True
+        while not is_conversation or not is_incoming or not is_contact_conversation:
             ActionChains(self.browser).send_keys(Keys.ARROW_DOWN).perform()
             skip_count += 1
             is_conversation = self.browser.execute_script(scrapingScripts.isConversation())
-            # try:
             is_incoming = self._is_incoming_message() if incoming_only else True
-            # except WebDriverException:
-            #     is_incoming = False
+            is_contact_conversation = self._is_contact_conversation() if is_contacts_only else True
 
         if is_get_msg_environment:
             # Get the conversation
@@ -335,6 +328,17 @@ class WhatsAppWebScraper:
             messages = self.browser.execute_script(scrapingScripts.getTextMessages())
 
         return skip_count + 1, messages
+
+    def _skip_unwanted_messages(self, is_incoming_only, is_contact_conversation):
+        if is_incoming_only and is_contact_conversation:
+            while not self._is_incoming_message() or not self._is_contact_conversation():
+                ActionChains(self.browser).send_keys(Keys.ARROW_DOWN).perform()
+        elif is_incoming_only:
+            while not self._is_incoming_message():
+                ActionChains(self.browser).send_keys(Keys.ARROW_DOWN).perform()
+        elif is_contact_conversation:
+            while not self._is_contact_conversation():
+                ActionChains(self.browser).send_keys(Keys.ARROW_DOWN).perform()
 
     def _clear_search_bar(self, keyword):          # todo - a more elegant way to clear search bar?
         actions = ActionChains(self.browser)
@@ -348,6 +352,12 @@ class WhatsAppWebScraper:
     def _is_incoming_message(self):
         try:
             return self.browser.execute_script(scrapingScripts.isIncomingMsg())
+        except WebDriverException:
+            return False
+
+    def _is_contact_conversation(self):
+        try:
+            return self.browser.execute_script(scrapingScripts.isContactConversation())
         except WebDriverException:
             return False
 

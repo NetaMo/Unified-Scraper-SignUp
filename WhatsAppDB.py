@@ -600,8 +600,9 @@ class WhatsAppDB:
                     min_msg_len = int(l[3])
                     get_msg_env = True if l[4] == 'true' else False
                     after_competition = False if l[5] == 'false' else int(l[6])
-                    incoming_only = True if l[7] == 'true' else False
+                    is_incoming_only = True if l[7] == 'true' else False
                     is_unique = True if l[8] == 'true' else False
+                    is_contacts_only = True if l[9] == 'true' else False
                     break
 
         cur_amount = 0
@@ -612,7 +613,7 @@ class WhatsAppDB:
         while cur_amount < amount:
             try:
                 cur_df, real_amount, people = scraper.search(
-                    keywords[keyword_idx], amount, min_msg_len, cur_amount, incoming_only, is_unique, people, get_msg_env)
+                    keywords[keyword_idx], amount, min_msg_len, cur_amount, is_incoming_only, is_unique, people, is_contacts_only, get_msg_env)
             except IndexError:      # end of keywords list
                 with open('search_protocols/search_protocol_' + self.user_language, 'r', encoding='utf8') as f:
                     keyword_idx = 0
@@ -631,10 +632,10 @@ class WhatsAppDB:
         return df.to_json(date_format='iso', double_precision=0, date_unit='s', orient='records')
 
     def create_db_using_search(self, scraper):
-        self.latest_chats = self.get_k_latest_chats(scraper, k=6)
+        # self.latest_chats = self.get_k_latest_chats(scraper, k=6)
         self.my_name_messages = self.create_world_df('my_name', scraper, override_keywords=[self.user_nickname, self.user_first_name])
-        self.amphi_data = self.get_k_latest_chats(scraper, k=40)
-        self.good_night_messages = self.create_world_df('good_night', scraper)
-        self.dreams_or_old_messages = self.create_world_df('dreams', scraper)
-        self.most_interesting = self.create_world_df('interesting_chat', scraper)
+        # self.amphi_data = self.get_k_latest_chats(scraper, k=40)
+        # self.good_night_messages = self.create_world_df('good_night', scraper)
+        # self.dreams_or_old_messages = self.create_world_df('dreams', scraper)
+        # self.most_interesting = self.create_world_df('interesting_chat', scraper)
         # self.love_messages = self.create_world_df('love', scraper)        # not for v.Liege

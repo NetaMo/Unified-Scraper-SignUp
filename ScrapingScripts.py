@@ -86,6 +86,7 @@ def isConversation():
         return true;
     '''
 
+
 def isIncomingMsg():
     return '''
     var double_v_icon = document.getElementsByClassName('message active chat')[0].getElementsByClassName('icon');
@@ -94,6 +95,16 @@ def isIncomingMsg():
     }
     return false;
     '''
+
+
+def isContactConversation():
+    return '''
+        var chat_status_divider = document.getElementsByClassName('message active chat')[0].getElementsByClassName('chat-status-divider');
+        if (chat_status_divider.length == 0) {
+            return true;
+        }
+        return false;
+        '''
 
 def getSingleOutgoingMessage():
     return ''' var A = document.getElementsByClassName('message message-out')
