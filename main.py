@@ -251,7 +251,6 @@ class GiveMostInterestingChat(tornado.web.RequestHandler):
 
     def get(self):
         print("GiveMostInterestingChat")
-        # self.finish(DB.love_messages)
         self.finish(self.most_interesting)
 
 
