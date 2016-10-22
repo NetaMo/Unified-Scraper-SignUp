@@ -632,10 +632,10 @@ class WhatsAppDB:
         return df.to_json(date_format='iso', double_precision=0, date_unit='s', orient='records')
 
     def create_db_using_search(self, scraper):
-        # self.latest_chats = self.get_k_latest_chats(scraper, k=6)
+        self.latest_chats = self.get_k_latest_chats(scraper, k=6)
         self.my_name_messages = self.create_world_df('my_name', scraper, override_keywords=[self.user_nickname, self.user_first_name])
-        # self.amphi_data = self.get_k_latest_chats(scraper, k=40)
-        # self.good_night_messages = self.create_world_df('good_night', scraper)
-        # self.dreams_or_old_messages = self.create_world_df('dreams', scraper)
-        # self.most_interesting = self.create_world_df('interesting_chat', scraper)
+        self.amphi_data = self.get_k_latest_chats(scraper, k=40)
+        self.good_night_messages = self.create_world_df('good_night', scraper)
+        self.dreams_or_old_messages = self.create_world_df('dreams', scraper)
+        self.most_interesting = self.create_world_df('interesting_chat', scraper)
         # self.love_messages = self.create_world_df('love', scraper)        # not for v.Liege

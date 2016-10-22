@@ -1,5 +1,5 @@
 WORLD-NAME | KEYWORDS | AMOUNT | MIN-MSG-LEN | GET-MSG-ENV | COMPETE | AMOUNT-AFTER | INCOMING-ONLY | IS-UNIQUE | CONTACTS-ONLY
-my_name|אחי,אחותי,גבר,גברת|100|3|false|false|8|true|false|true
+my_name|אחי,אחותי,גבר,גברת|8|3|false|false|8|true|false|true
 good_night|לילה טוב,חלומות נעימים,חלומות פז,חלומות מתוקים,לילה|7|0|false|false|7|true|false|true
 dreams|חלמתי,חלום,חולם|8|2|false|false|8|false|false|false
 interesting_chat|דידידידי,חייב,מאמין,בכיף|10|3|true|true|1|false|false|false
