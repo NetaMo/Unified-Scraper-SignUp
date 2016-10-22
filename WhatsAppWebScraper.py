@@ -252,11 +252,12 @@ class WhatsAppWebScraper:
                 messages_backup = messages.copy()
                 parsed_msgs = [self._parse_message(msg) for msg in messages if self._parse_message(msg) != (None, None, None)]
                 conversations = conversations.append(pd.DataFrame(
-                    [list(msg[:2])+[cur_amount] for msg in parsed_msgs], columns=['contactName', 'text', 'conv_id']))
+                    [list(msg)+[cur_amount] for msg in parsed_msgs], columns=['contactName', 'text', 'time', 'conv_id']))
                 cur_amount += 1
                 self._search(keyword)
             real_amount = len(conversations.conv_id.unique())
             self._clear_search_bar(keyword)
+            conversations.time = pd.to_datetime(conversations.time)
 
         else:   # single message
             duplicate_msg_in_a_row = 0
