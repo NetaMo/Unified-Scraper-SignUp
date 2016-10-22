@@ -95,26 +95,48 @@ class NameSubmitHandler(tornado.web.RequestHandler):
 class NickNameSubmitHandler(tornado.web.RequestHandler):
 
     def get(self):
-        print("Stage 3: Nick Name Submitted, Loading TermsPage")
+        print("Stage 3: Nick Name Submitted, Loading LanguagesPage")
         # These variables hold the users input
         nick_name = self.get_argument("nick")
         print("User NickName:", nick_name)
         self.finish()
         DB.user_nickname = nick_name
 
+class LanguageHandler(tornado.web.RequestHandler):
+
+    def get(self):
+        print("Stage 4: Language Submitted, Loading TermsPage")
+        # These variables hold the users input
+        language = self.get_argument("lang")
+        print("User Language:", language)
+        self.finish()
+        # self._convert_language_name(language)
+        DB.user_language = self._convert_language_name(language)
+
+    def _convert_language_name(self, language):
+        if language == 'French':
+            return 'fr'
+        elif language == 'Hebrew':
+            return 'heb'
+        elif language == 'English':
+            return 'eng'
+        elif language == 'German':
+            return 'ger'
+        else:
+            return 'eng'
 
 class TermAgreeHandler(tornado.web.RequestHandler):
 
     def get(self):
         # run whats up web scrapper
-        print("Stage 4: Agreed, Go to Choose Phone")
+        print("Stage 5: Agreed, Go to Choose Phone")
         self.finish()
 
 
 class ChoosePhoneHandler(tornado.web.RequestHandler):
 
     def get(self):
-        print("Stage 5: Load Phone Sort")
+        print("Stage 6: Load Phone Sort")
         phone = self.get_argument("phone")
         DB.phone = phone
         print('Phone is {}'.format(phone))
@@ -125,7 +147,7 @@ class LetsGoHandler(tornado.web.RequestHandler):
 
     def get(self):
 
-        print("Stage 6: Lets GO!, Load whatssapp web!")
+        print("Stage 7: Lets GO!, Load whatssapp web!")
         # Insert whats up web run here
         # scrape_whatsapp()
 
@@ -275,6 +297,7 @@ def make_app():
         (r"/nicknamesubmit", NickNameSubmitHandler),
         (r"/choosephone", ChoosePhoneHandler),
         (r"/letsgo", LetsGoHandler),
+        (r"/languagesubmit", LanguageHandler),
         # unity handlers
         (r"/get_latest_chats", GiveLatestChatsHandler),
         (r"/get_my_name_messages", GiveMyNameMessages),
@@ -317,8 +340,8 @@ if __name__ == "__main__":
         print("web Page")
         # A Chrome window to navigate to our site
 
-        mainDriver = Webdriver()
-        mainDriver.browser.get("localhost:" + str(port))
+        # mainDriver = Webdriver()
+        # mainDriver.browser.get("localhost:" + str(port))
 
     # save the data to a file for future work
     elif sys.argv[1] == 'SaveData':

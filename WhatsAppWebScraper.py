@@ -240,7 +240,7 @@ class WhatsAppWebScraper:
         skip_counter = 0
         if not self._search(keyword):       # empty search (no such keyword in messages)
             self._clear_search_bar(keyword)
-            return conversations, 0
+            return conversations, 0, []
 
         if is_get_msg_environment:      # todo implement unique if needed. currently implemented just for single message
             messages_backup = []

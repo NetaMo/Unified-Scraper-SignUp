@@ -30,24 +30,28 @@
 <body id="name-page">
     <div id="nickname-main-cont">
         <div id="name-header"></div>
+
         <div id="name-bubble-cont">
-            <div id="nickname-q-bubble" class="name-bubble">
-                <img src="/static/images/nickname1.jpg">
+            <div id="language-q-bubble" class="name-bubble">
+                   <img src="/static/images/language1.jpg">
             </div>
             <div id="name-connect"></div>
             <div id="nickname-form-bubble" class="name-bubble">
-
-                <form class="name-form" role="form">
-                    <div class="name-form-elem" id="nickname-cont">
-                    <label for="NickName"></label>
-                    <input type="text" class="form-control" id="NickName"  placeholder="Your nickname here" onkeydown = "if (event.keyCode == 13)
-                        document.getElementById('submit').click()">
+                <form class="name-form2" role="form">
+                    <div class="language-form-elem" id="nickname-cont2">
+                    <select id = "dropdown1" class="dropdownlanguage" style="font: 20px Roboto;border: 0;">
+                        <option>English</option>
+                        <option>Hebrew</option>
+                        <option>French</option>
+                        <option>German</option>
+                    </select>
+                    <!--<input type="text" class="form-control" id="NickName"  placeholder="Your nickname here" onkeydown = "if (event.keyCode == 13)-->
+                        <!--document.getElementById('submit').click()">-->
                     </div>
-                        <button type="button" style="font-size:20px;" class="startbutton" id="submit" onclick="addNickName()">Submit</button>
+                        <button type="button" style="font-size:20px;" class="startbutton" id="submit" onclick="addLanguage()">Submit</button>
                 </form>
             </div>
         </div>
-
     </div>
 </body>
 

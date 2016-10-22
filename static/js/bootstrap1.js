@@ -2364,7 +2364,7 @@ if (typeof jQuery === 'undefined') {
 
   function addName()
   {
-    console.log("in the function");
+    console.log("Currently in addName function");
     var firstName = $("#FirstName").val();
     var lastName = $("#LastName").val();
     var nameArray = {first:firstName, last:lastName};
@@ -2376,10 +2376,20 @@ if (typeof jQuery === 'undefined') {
   function addNickName()
   {
     console.log("Currently in addnickname function");
-    var nickName = $("#NickName").val();
+    var nickName = $("NickName").val();
     var nameArray = {nick: nickName};
     console.log(nameArray);
     $.get("/nicknamesubmit", nameArray);
+    window.location.href = 'Languages.html';
+   }
+
+   function addLanguage()
+  {
+    console.log("Currently in addLanguage function");
+    var language = $("#dropdown1").val();
+    var nameArray = {lang: language};
+    console.log(nameArray);
+    $.get("/languagesubmit", nameArray);
     window.location.href = 'Terms&Conditions.html';
    }
 

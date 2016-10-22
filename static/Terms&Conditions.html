@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html class="termsbackground" lang="en">
+<html lang="en">
 <!-- Make sure the <html> tag is set to the .full CSS class. Change the background images in the full.css file. -->
 
 <head>
@@ -27,76 +27,51 @@
 
 </head>
 
-<body>
-    <!-- Put your page content here! -->
-    <!--<div class="bottomlegaldoc">-->
-        <!--<button type="button" class="btn btn-default" data-toggle="modal" data-target="#myModal">Read More</button>-->
+<body id="name-page">
+<div id="name-header"></div>
+    <div id="terms-main-cont">
 
-            <!--<div id="myModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">-->
-              <!--<div class="modal-dialog">-->
-                <!--<div class="modal-content">-->
-                    <!--<div class="modal-body">-->
-                        <!--<img src="/static/images/waiver.png" class="img-responsive">-->
-                    <!--</div>-->
-                <!--</div>-->
-              <!--</div>-->
-            <!--</div>-->
-    <!--</div>-->
-    <div class="form-group">
-        <label class="col-xs-3 control-label"></label>
-        <div class="terms">
-            <div style="border: 1px solid #e5e5e5; height: 100px; overflow: auto; padding: 10px;">
-                <p>Waiver and Consent</p>
-                <p>The legal terms of agreement set out below are between you and "HUJI“</p>
-                <p>(hereinafter – “the Vendor”) and govern your agreement and consent to the use and</p>
-                <p>utilization of your data and information provided (hereinafter – the Material”)</p>
-                <p>for purposes of “Is-Typing…” (hereinafter – “the Application”).</p>
-                <p>To agree to these terms, click “AGREE”.</p>
-                <p>If you do not agree, do not click “AGREE” and do not use the application.</p>
-                <p>Upon your agreement and consent to use the Application, you hereby relinquish</p>
-                <p>any and all rights to contest or deny the use of the material received by you</p>
-                <p>for implementation of the Application.</p>
-                <p>You agree and consent that any and all material that shall be used may be</p>
-                <p>used for any purpose, in any manner or format whatsoever without limitation.</p>
-                <p>You further agree and consent that any distortion or manipulation or misuse</p>
-                <p>or misinterpretation of the material provided by you shall</p>
-                <p>not be cause for any action or claim or demand by you in any manner whatsoever.</p>
-                <p>The Vendor shall be allowed to make use of the material provided by you</p>
-                <p>for purposes of utilization of the Application, and shall be limited to the use </p>
-                <p>and utilization for purposes of the Application only and for no other purpose.</p>
-            </div>
-        </div>
-    </div>
-
-        <!--<div class="form-group">-->
-            <!--<div class="col-xs-6 col-xs-offset-3">-->
-                <!--<div class="checkbox">-->
-                    <!--<label>-->
-                        <!--<input type="checkbox" name="agree" value="agree" /> Agree with the terms and conditions-->
-                    <!--</label>-->
-                <!--</div>-->
-            <!--</div>-->
-        <!--</div>-->
-        <div class="bottomlegalagree">
-            <div class="form-group">
-                <div class="col-xs-9 col-xs-offset-3">
-                    <button type="button" class="startbutton" style="width:300px;height:200px;border-radius:10px;" onclick="agree()">I Agree</button>
+        <div id="terms-bubble-cont">
+            <div id="terms-text-bubble" class="terms-bubble">
+                <img src="/static/images/terms2.jpg">
+                <div class="terms">
+                    <div id = "terms-div">
+                        <p id="terms-first-line">Waiver and Consent</p>
+                        <p>The legal terms of agreement set out below are between you and "HUJI“
+                        (hereinafter – “the Vendor”) and govern your agreement and consent to the use and
+                        utilization of your data and information provided (hereinafter – the Material”)
+                        for purposes of “Is-Typing…” (hereinafter – “the Application”).</p>
+                        <p>To agree to these terms, click “AGREE”.</p>
+                        <p>If you do not agree, do not click “AGREE” and do not use the application.</p>
+                        <p>Upon your agreement and consent to use the Application, you hereby relinquish
+                        any and all rights to contest or deny the use of the material received by you
+                        for implementation of the Application.</p>
+                        <p>You agree and consent that any and all material that shall be used may be
+                        used for any purpose, in any manner or format whatsoever without limitation.</p>
+                        <p>You further agree and consent that any distortion or manipulation or misuse
+                        or misinterpretation of the material provided by you shall
+                        not be cause for any action or claim or demand by you in any manner whatsoever.</p>
+                        <p>The Vendor shall be allowed to make use of the material provided by you
+                        for purposes of utilization of the Application, and shall be limited to the use
+                        and utilization for purposes of the Application only and for no other purpose.</p>
+                    </div>
                 </div>
             </div>
+            <div id="terms-connect"></div>
+            <div id="terms-agree-bubble" class="terms-bubble">
+                <button type="button" class="startbutton" id="term-agree" onclick="agree()">I Agree</button>
+            </div>
         </div>
 
+    </div>
+</body>
 
-
-
-    <!-- jQuery -->
+<!-- jQuery -->
     <script src="js/jquery.js"></script>
 
     <!-- Bootstrap Core JavaScript -->
-    <!--<script src="js/bootstrap.min.js"></script>-->
+    <script src="js/bootstrap.min.js"></script>
     <script src="js/bootstrap1.js"></script>
-
-
-</body>
 
 </html>
 

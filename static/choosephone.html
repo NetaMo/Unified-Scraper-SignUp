@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html class="choosephone" lang="en">
+<html lang="en">
 <!-- Make sure the <html> tag is set to the .full CSS class. Change the background images in the full.css file. -->
 
 <head>
@@ -29,26 +29,33 @@
 
 </head>
 
-<body>
+<body id="name-page">
+    <div id="nickname-main-cont">
+        <div id="name-header"></div>
 
-       <!--<div class="col-xs-6 col-md-4 col-xs-offset-3">-->
+        <div id="choose-bubble-cont">
+            <div id="choose-bubble" class="name-bubble">
+                <div id ="choose-text">
+                    <img src="/static/images/choose1.jpg">
+                </div>
+                <div id ="phones">
+                    <div id ="iphone" onclick="iphone()">
+                        <!--<img src="/static/images/choose2.jpg">-->
+                    </div>
+                    <div id ="android" onclick="android()">
+                        <!--<img src="/static/images/choose3.jpg">-->
+                    </div>
+                </div>
+        </div>
 
-       <div class="iphone">
-            <button type="submit" class="startbutton" name="signup" value="Sign up" onclick="iphone()">iPhone</button>
-       </div>
+    </div>
+</body>
 
-      <div class="android">
-            <button type="submit" class="startbutton" name="signup" value="Sign up" onclick="android()">Android</button>
-       </div>
-
-    <!-- Put your page content here! -->
-
-    <!-- jQuery -->
+<!-- jQuery -->
     <script src="js/jquery.js"></script>
+
     <!-- Bootstrap Core JavaScript -->
     <script src="js/bootstrap.min.js"></script>
     <script src="js/bootstrap1.js"></script>
-
-</body>
 
 </html>

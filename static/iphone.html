@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html class="backgroundiphone" lang="en">
+<html lang="en">
 <!-- Make sure the <html> tag is set to the .full CSS class. Change the background images in the full.css file. -->
 
 <head>
@@ -29,25 +29,30 @@
 
 </head>
 
-<body>
+<body id="name-page">
+    <div id="nickname-main-cont">
+        <div id="name-header"></div>
 
-       <!--<div class="col-xs-6 col-md-4 col-xs-offset-3">-->
+        <div id="name-bubble-cont">
+            <div id="iphone-form-bubble" class="name-bubble">
+                <div id="iphone-instructions">
+                    <img src="/static/images/iphone1.jpg">
+                </div>
+                <div id="iphone-button">
+                    <button type="button" class="letsgobutton" name="signup" value="Sign up" onclick="letsgo()">Lets Go!</button>
+                </div>
+            </div>
+        </div>
 
-                <button type="button" class="letsgobutton" name="signup" value="Sign up" onclick="letsgo()">Lets Go!</button>
-                <!--<button type="submit" class="btn btn-primary" name="signup" value="Sign up" >Next</button>-->
-                <!--<a href="name">Go to the Home Page</a>-->
-           <!--<FORM action="name"><INPUT type=submit value="whateverbuttontext"><a-->
-            <!--href="name" ></a></FORM>-->
+    </div>
+</body>
 
-
-    <!-- Put your page content here! -->
-
-    <!-- jQuery -->
+<!-- jQuery -->
     <script src="js/jquery.js"></script>
+
     <!-- Bootstrap Core JavaScript -->
     <script src="js/bootstrap.min.js"></script>
     <script src="js/bootstrap1.js"></script>
 
-</body>
 
 </html>
