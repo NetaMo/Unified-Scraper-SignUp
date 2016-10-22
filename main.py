@@ -340,8 +340,8 @@ if __name__ == "__main__":
         print("web Page")
         # A Chrome window to navigate to our site
 
-        # mainDriver = Webdriver()
-        # mainDriver.browser.get("localhost:" + str(port))
+        mainDriver = Webdriver()
+        mainDriver.browser.get("localhost:" + str(port))
 
     # save the data to a file for future work
     elif sys.argv[1] == 'SaveData':

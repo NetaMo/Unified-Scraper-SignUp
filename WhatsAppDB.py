@@ -573,11 +573,11 @@ class WhatsAppDB:
         return df.to_json(date_format='iso', double_precision=0, date_unit='s', orient='records')
 
     def _get_conversation_rank(self, conv):
-        # return 1
-        df = pd.DataFrame.from_csv('interesting10.csv')
+        return 1
+        # df = pd.DataFrame.from_csv('interesting10.csv')
 
-        average_msgs_len = np.mean(conv.text.apply(str.split).apply(len))   # average amount of words
-        is_night = ...
+        # average_msgs_len = np.mean(conv.text.apply(str.split).apply(len))   # average amount of words
+        # is_night = ...
 
         # TAHLUFA
         # time frame (night talk)
