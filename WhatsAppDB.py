@@ -591,6 +591,9 @@ class WhatsAppDB:
             ranks.append( (conv_id, self._get_conversation_rank(conversation)) )
 
         ranks = sorted(ranks, key=lambda x: x[1])       # [(conv_id, rank)...(conv_id, rank)]
+        df.to_csv('csv_folder/all_interesting.csv', encoding='utf-16')  # todo remove before presentation
+        print(ranks)                                                    # todo remove before presentation
+
         if k == 1:
             return df[df.conv_id == ranks[0][0]].loc[:,['contactName','text']]
         else:
