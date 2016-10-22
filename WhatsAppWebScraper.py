@@ -255,7 +255,7 @@ class WhatsAppWebScraper:
                     [list(msg[:2])+[cur_amount] for msg in parsed_msgs], columns=['contactName', 'text', 'conv_id']))
                 cur_amount += 1
                 self._search(keyword)
-            real_amount = cur_amount
+            real_amount = len(conversations.conv_id.unique())
             self._clear_search_bar(keyword)
 
         else:   # single message
@@ -274,8 +274,8 @@ class WhatsAppWebScraper:
                     if not is_unique or (is_unique and name not in people):
                         conversations = conversations.append(pd.DataFrame([[name, message]], columns=['contactName', 'text']), ignore_index=True)
                         people.append(name)
-                ActionChains(self.browser).send_keys(Keys.ARROW_DOWN).perform()
-                self._skip_unwanted_messages(incoming_only, is_contacts_only)
+                if self._go_to_next_valid_message(incoming_only, is_contacts_only):     # break if reached end of search
+                    break
             self._clear_search_bar(keyword)
             real_amount = len(conversations)
 
@@ -329,16 +329,37 @@ class WhatsAppWebScraper:
 
         return skip_count + 1, messages
 
-    def _skip_unwanted_messages(self, is_incoming_only, is_contact_conversation):
-        if is_incoming_only and is_contact_conversation:
+    def _go_to_next_valid_message(self, incoming_only, is_contacts_only):
+        duplicate_count = 0
+        ActionChains(self.browser).send_keys(Keys.ARROW_DOWN).perform()
+        name, message = self.browser.execute_script(scrapingScripts.getSingleTextMessageFromSearch())
+        if incoming_only and is_contacts_only:
             while not self._is_incoming_message() or not self._is_contact_conversation():
-                ActionChains(self.browser).send_keys(Keys.ARROW_DOWN).perform()
-        elif is_incoming_only:
+                done, name, message, duplicate_count = self._go_down_check_duplicate(duplicate_count, name, message)
+                if done:
+                    return True
+        elif incoming_only:
             while not self._is_incoming_message():
-                ActionChains(self.browser).send_keys(Keys.ARROW_DOWN).perform()
-        elif is_contact_conversation:
+                done, name, message, duplicate_count = self._go_down_check_duplicate(duplicate_count, name, message)
+                if done:
+                    return True
+        elif is_contacts_only:
             while not self._is_contact_conversation():
-                ActionChains(self.browser).send_keys(Keys.ARROW_DOWN).perform()
+                done, name, message, duplicate_count = self._go_down_check_duplicate(duplicate_count, name, message)
+                if done:
+                    return True
+        return False
+
+    def _go_down_check_duplicate(self, duplicate_count, name, message):
+        ActionChains(self.browser).send_keys(Keys.ARROW_DOWN).perform()
+        name2, message2 = self.browser.execute_script(scrapingScripts.getSingleTextMessageFromSearch())
+        if name == name2 and message == message2:
+            ActionChains(self.browser).send_keys(Keys.ARROW_DOWN).perform()
+            name, message = self.browser.execute_script(scrapingScripts.getSingleTextMessageFromSearch())
+            duplicate_count += 1
+            if duplicate_count > 1:
+                return True, name, message, duplicate_count
+        return False, name, message, duplicate_count
 
     def _clear_search_bar(self, keyword):          # todo - a more elegant way to clear search bar?
         actions = ActionChains(self.browser)
