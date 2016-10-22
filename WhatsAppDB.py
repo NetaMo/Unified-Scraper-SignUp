@@ -33,7 +33,7 @@ class WhatsAppDB:
         self.user_whatsapp_name = ""
         self.user_nickname = ""
         self.phone = ""
-        self.user_language = "heb"      # todo take from site
+        self.user_language = "eng"
 
         # self.latest_contacts = []
 
@@ -581,12 +581,10 @@ class WhatsAppDB:
         # slice * actual conversation * (idea: add word-used to df)
 
         # time frame (night talk)
-        # before certain time
+        # before certain time (older than...)
 
     def get_k_most_interesting(self, df, k=1):
         # todo implement the shit out of it
-        # todo maybe only conversations older than... (real new ones are not as long as)
-        # todo maybe define 'conversation' between close times
         # df.to_csv('interesting10.csv')
         ranks = []
         for conv_id, conversation in df.groupby('conv_id'):
