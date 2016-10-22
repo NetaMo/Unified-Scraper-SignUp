@@ -77,8 +77,8 @@ class NameSubmitHandler(tornado.web.RequestHandler):
         # These variables hold the users input
         first_name = self.get_argument("first")
         last_name = self.get_argument("last")
-        print("User first name:", first_name)
-        print("User last name:", last_name)
+        print("User's First Name:", first_name)
+        print("User's Last Name:", last_name)
 
         # assign the first name to the user name attribute in DB
         DB.user_name = first_name
@@ -98,7 +98,7 @@ class NickNameSubmitHandler(tornado.web.RequestHandler):
         print("Stage 3: Nick Name Submitted, Loading LanguagesPage")
         # These variables hold the users input
         nick_name = self.get_argument("nick")
-        print("User NickName:", nick_name)
+        print("User's NickName:", nick_name)
         self.finish()
         DB.user_nickname = nick_name
 

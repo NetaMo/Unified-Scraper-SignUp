@@ -569,16 +569,25 @@ class WhatsAppDB:
     def get_k_latest_chats(self, scraper, k=6):
         df = scraper.get_k_latest_chats(k)
         df.time = df.time.apply(self.convert_whatsapp_time)
+        # df.to_csv('csv_folder/latest_contacts.csv', encoding='utf-16')      # todo remove before presentation
         return df.to_json(date_format='iso', double_precision=0, date_unit='s', orient='records')
 
     def _get_conversation_rank(self, conv):
-        return 1
+        # return 1
+        df = pd.DataFrame.from_csv('interesting10.csv')
+
+        average_msgs_len = np.mean(conv.text.apply(str.split).apply(len))   # average amount of words
+        is_night = ...
+
+        # TAHLUFA
+        # time frame (night talk)
+        # before certain time
 
     def get_k_most_interesting(self, df, k=1):
         # todo implement the shit out of it
         # todo maybe only conversations older than... (real new ones are not as long as)
         # todo maybe define 'conversation' between close times
-        # df.to_csv('interesting20.csv')
+        # df.to_csv('interesting10.csv')
         ranks = []
         for conv_id, conversation in df.groupby('conv_id'):
             ranks.append( (conv_id, self._get_conversation_rank(conversation)) )
@@ -624,11 +633,12 @@ class WhatsAppDB:
                 continue
             if not cur_df.empty:
                 dfs_arr.append(cur_df)
-            cur_amount += real_amount
             keyword_idx += 1
+            cur_amount += real_amount
 
         df = pd.concat([df for df in dfs_arr])
         df = df if not after_competition else self.get_k_most_interesting(df, k=after_competition)
+        # df.to_csv('csv_folder/' + world_name + '.csv', encoding='utf-16')  # todo remove before presentation
         return df.to_json(date_format='iso', double_precision=0, date_unit='s', orient='records')
 
     def create_db_using_search(self, scraper):
@@ -639,3 +649,4 @@ class WhatsAppDB:
         self.dreams_or_old_messages = self.create_world_df('dreams', scraper)
         self.most_interesting = self.create_world_df('interesting_chat', scraper)
         # self.love_messages = self.create_world_df('love', scraper)        # not for v.Liege
+
