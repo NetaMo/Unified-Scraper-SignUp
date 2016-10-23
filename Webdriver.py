@@ -8,6 +8,7 @@ class Webdriver:
 
     def __init__(self):
         chromeOptions = Options()
+        chromeOptions.add_argument("--disable-extensions")
         # chromeOptions.add_argument("--kiosk")  # fullscreen mode      # todo return for presentation
         self.browser = webdriver.Chrome(chrome_options=chromeOptions)  # Create Chrome browser
         # self.browser = webdriver.Chrome(executable_path="/Users/GN3/Desktop/chromedriver", chrome_options=chromeOptions)  # Create Chrome browser
@@ -15,7 +16,6 @@ class Webdriver:
         # self.browser = webdriver.Chrome(executable_path="/Users/GN3/Desktop/chromedriver")  # Create Chrome browser
         # self.browser = webdriver.Chrome(executable_path="C:\\Users\\maoze\\AppData\\Local\\Programs\\Python\\Python35-32\\Scripts\\chromedriver.exe,,chrome_options=chromeOptions")  # Create Chrome browser
         # self.browser = webdriver.Chrome(executable_path="C:\Program Files\Python35\Scripts\chromedriver.exe,,chrome_options=chromeOptions")  # Create Chrome browser
-
 
         self.browser.maximize_window()
 
