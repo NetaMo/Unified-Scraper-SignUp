@@ -263,7 +263,7 @@ def get_latest_k_chats(k):
 
     for (i = 0; i < k; i++) {
         curChat = Store.Chat.models[i];
-        if (!curChat.isUser) {
+        if (!curChat.isUser || curChat.formattedTitle[0] == '+') {
             ++k;
             if ((Store.Chat.models.length-1) == k) {
                 return chats;

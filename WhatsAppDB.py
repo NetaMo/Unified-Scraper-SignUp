@@ -43,7 +43,8 @@ class WhatsAppDB:
         self.amphi_data = 0
         self.good_night_messages = 0
         self.dreams_or_old_messages = 0
-        self.most_interesting = 0
+        self.most_interesting_full = 0
+        self.most_interesting_just_msg = 0
         # self.love_messages = 0        not in v.liege
 
         # self.closest_persons_and_msg = 0
@@ -565,10 +566,19 @@ class WhatsAppDB:
             import calendar
             return calendar.day_name[fixed_date.weekday()]
 
+    def get_conversations_env(self, scraper, df, env_size):
+        pass        # todo implement
+        # for conv_id, conversation in df.groupby('conv_id'):
+            # search keyword
+            # go down until contact AND msg match
+            # enter
+            # roll up and down until env_size==actual revealed size
 
-    def get_k_latest_chats(self, scraper, k=6):
+    def get_k_latest_chats(self, scraper, k=6, fields=None):
         df = scraper.get_k_latest_chats(k)
         df.time = df.time.apply(self.convert_whatsapp_time)
+        if fields:
+            df = df[fields]
         # df.to_csv('csv_folder/latest_contacts.csv', encoding='utf-16')      # todo remove before presentation
         return df.to_json(date_format='iso', double_precision=0, date_unit='s', orient='records')
 
@@ -597,7 +607,7 @@ class WhatsAppDB:
         for k in keywords:
             keywords_msgs_counter[k] = conv.text.str.contains(k).sum()
 
-    def get_k_most_interesting(self, df, keywords, k=1):
+    def get_k_most_interesting(self, df, keywords,k_full_conversations=3, k_only_message=10):
         # todo implement the shit out of it
         # df.to_csv('interesting10.csv')
         ranks = []
@@ -605,13 +615,13 @@ class WhatsAppDB:
             ranks.append((conv_id, self._get_conversation_rank(conversation, keywords)))
 
         ranks = sorted(ranks, key=lambda x: x[1])       # [(conv_id, rank)...(conv_id, rank)]
+
         df.to_csv('csv_folder/all_interesting.csv', encoding='utf-16')  # todo remove before presentation
         print(ranks)                                                    # todo remove before presentation
 
-        if k == 1:
-            return df[df.conv_id == ranks[0][0]].loc[:,['contactName','text']]
-        else:
-            return df[df.conv_id == ranks[:k][0]].loc[:, ['contactName', 'text']]
+        return df[df.conv_id.isin([i[0] for i in ranks[:k_full_conversations]])].loc[:, ['contactName', 'text']],\
+               df[df.conv_id.isin(i[0] for i in ranks[:k_only_message])].loc[0, ['key_msg', 'keyword']]
+
 
     def create_world_df(self, world_name, scraper, override_keywords=False):
         # get keywords and amount from protocol file
@@ -623,10 +633,12 @@ class WhatsAppDB:
                     amount = int(l[2])
                     min_msg_len = int(l[3])
                     get_msg_env = True if l[4] == 'true' else False
-                    after_competition = False if l[5] == 'false' else int(l[6])
+                    is_compete = True if l[5] == 'true' else False
+                    full_after_competition, just_msg_after_competition = map(int, l[6].split(',')) if is_compete else (False, False)
                     is_incoming_only = True if l[7] == 'true' else False
                     is_unique = True if l[8] == 'true' else False
                     is_contacts_only = True if l[9] == 'true' else False
+                    # env_size = int(l[10]) if get_msg_env else 0
                     break
 
         cur_amount = 0
@@ -652,16 +664,23 @@ class WhatsAppDB:
             cur_amount += real_amount
 
         df = pd.concat([df for df in dfs_arr])
-        df = df if not after_competition else self.get_k_most_interesting(df, keywords, k=after_competition)
+        df_full, df_just_msg = self.get_k_most_interesting(df, keywords, k_full_conversations=full_after_competition,
+                                                           k_only_message=just_msg_after_competition) if is_compete else df
+
+        # df = df if env_size == 0 else self.get_conversations_env(scraper, df, env_size=env_size)
         # df.to_csv('csv_folder/' + world_name + '.csv', encoding='utf-16')  # todo remove before presentation
-        return df.to_json(date_format='iso', double_precision=0, date_unit='s', orient='records')
+
+        if full_after_competition:
+            return df_full.to_json(date_format='iso', double_precision=0, date_unit='s', orient='records'), \
+                   df_just_msg.to_json(date_format='iso', double_precision=0, date_unit='s', orient='records')
+        else:
+            return df.to_json(date_format='iso', double_precision=0, date_unit='s', orient='records')
 
     def create_db_using_search(self, scraper):
-        # self.latest_chats = self.get_k_latest_chats(scraper, k=6)
-        # self.my_name_messages = self.create_world_df('my_name', scraper, override_keywords=[self.user_nickname, self.user_first_name])
-        # self.amphi_data = self.get_k_latest_chats(scraper, k=40)
-        # self.good_night_messages = self.create_world_df('good_night', scraper)
-        # self.dreams_or_old_messages = self.create_world_df('dreams', scraper)
-        self.most_interesting = self.create_world_df('interesting_chat', scraper)
+        self.latest_chats = self.get_k_latest_chats(scraper, k=6)
+        self.my_name_messages = self.create_world_df('my_name', scraper, override_keywords=[self.user_nickname, self.user_first_name])
+        self.amphi_data = self.get_k_latest_chats(scraper, k=40, fields=['contactName'])
+        self.good_night_messages = self.create_world_df('good_night', scraper)
+        self.dreams_or_old_messages = self.create_world_df('dreams', scraper)
+        self.most_interesting_full, self.most_interesting_just_msg = self.create_world_df('interesting_chat', scraper)
         # self.love_messages = self.create_world_df('love', scraper)        # not for v.Liege
-
