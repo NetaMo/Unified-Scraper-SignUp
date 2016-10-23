@@ -572,23 +572,37 @@ class WhatsAppDB:
         # df.to_csv('csv_folder/latest_contacts.csv', encoding='utf-16')      # todo remove before presentation
         return df.to_json(date_format='iso', double_precision=0, date_unit='s', orient='records')
 
-    def _get_conversation_rank(self, conv):
-        return 1
-        # df = pd.DataFrame.from_csv('interesting10.csv')
+    def _get_conversation_rank(self, conv, keywords):
+        # df = pd.DataFrame.from_csv('interesting20.csv')
+        # print(df)
+        interesting_hours = [23, 0, 1, 2, 3, 4]
 
-        average_msgs_len = np.mean(conv.text.apply(str.split).apply(len))   # average amount of words
+        keyword_msg = conv[conv.key_msg[0] == conv.text]
+        keyword_msg_idx = keyword_msg.index.values[0]
+        conv["delta_from_keyword_msg"] = conv.time.apply(
+            lambda x: abs(((keyword_msg.time - x) / np.timedelta64(1, 'm'))))
 
-        # slice * actual conversation * (idea: add word-used to df)
+        conv_keyword_msg_segment = conv[conv.delta_from_keyword_msg < 120]
 
-        # time frame (night talk)
-        # before certain time (older than...)
+        conv_keyword_msg_segment_percentage = len(conv_keyword_msg_segment) / len(conv)
 
-    def get_k_most_interesting(self, df, k=1):
+        average_msgs_len = np.mean(conv_keyword_msg_segment.text.apply(str.split).apply(len))  # average amount of words
+
+        is_interesting_time_frame = 1 if conv.time.iloc[keyword_msg_idx].hour in interesting_hours else 0
+
+        is_old = 1 if abs((conv.time.iloc[keyword_msg_idx] - datetime.now()).days) <= 180 else 0
+
+        # intersect with bag of words for conversation ranking - which words the conversation contains
+        keywords_msgs_counter = {}
+        for k in keywords:
+            keywords_msgs_counter[k] = conv.text.str.contains(k).sum()
+
+    def get_k_most_interesting(self, df, keywords, k=1):
         # todo implement the shit out of it
         # df.to_csv('interesting10.csv')
         ranks = []
         for conv_id, conversation in df.groupby('conv_id'):
-            ranks.append( (conv_id, self._get_conversation_rank(conversation)) )
+            ranks.append((conv_id, self._get_conversation_rank(conversation, keywords)))
 
         ranks = sorted(ranks, key=lambda x: x[1])       # [(conv_id, rank)...(conv_id, rank)]
         df.to_csv('csv_folder/all_interesting.csv', encoding='utf-16')  # todo remove before presentation
@@ -638,7 +652,7 @@ class WhatsAppDB:
             cur_amount += real_amount
 
         df = pd.concat([df for df in dfs_arr])
-        df = df if not after_competition else self.get_k_most_interesting(df, k=after_competition)
+        df = df if not after_competition else self.get_k_most_interesting(df, keywords, k=after_competition)
         # df.to_csv('csv_folder/' + world_name + '.csv', encoding='utf-16')  # todo remove before presentation
         return df.to_json(date_format='iso', double_precision=0, date_unit='s', orient='records')
 
