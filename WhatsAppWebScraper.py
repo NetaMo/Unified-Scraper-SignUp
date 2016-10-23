@@ -245,8 +245,8 @@ class WhatsAppWebScraper:
         if is_get_msg_environment:      # todo implement unique if needed. currently implemented just for single message
             messages_backup = []
             while cur_amount < amount:
-                skip_counter, messages, key_msg = self._go_to_next_match(skip_counter, incoming_only, is_contacts_only, is_get_msg_environment)
-                if messages == messages_backup:     # reached end of search word, clear search bar
+                skip_counter, messages, key_msg, is_end = self._go_to_next_match(skip_counter, incoming_only, is_contacts_only, is_get_msg_environment)
+                if messages == messages_backup or is_end:     # reached end of search word, clear search bar
                     self._clear_search_bar(keyword)
                     break
                 messages_backup = messages.copy()
@@ -262,7 +262,7 @@ class WhatsAppWebScraper:
 
         else:   # single message
             duplicate_msg_in_a_row = 0
-            _, _, _ = self._go_to_next_match(skip_counter, incoming_only, is_contacts_only, is_get_msg_environment)     # gets to first chat
+            _, _, _, _ = self._go_to_next_match(skip_counter, incoming_only, is_contacts_only, is_get_msg_environment)     # gets to first chat
             while len(conversations) < amount-cur_amount:
                 name, message = self.browser.execute_script(scrapingScripts.getSingleTextMessageFromSearch())
                 if (not conversations.empty) and name == conversations.tail(1).contactName.values[0] and message == conversations.tail(1).text.values[0]:
@@ -306,6 +306,7 @@ class WhatsAppWebScraper:
     def _go_to_next_match(self, skip_count, incoming_only, is_contacts_only, is_get_msg_environment):
         messages = []
         key_msg = ""
+        is_end = False
         ActionChains(self.browser).send_keys_to_element(self.wait_for_element('.input.input-search'), Keys.TAB).perform()
 
         # go down to desited person
@@ -314,6 +315,7 @@ class WhatsAppWebScraper:
             actions.send_keys(Keys.ARROW_DOWN)
         actions.perform()
 
+        name_before, msg_before = self.browser.execute_script(scrapingScripts.getSingleTextMessageFromSearch())
         is_conversation = self.browser.execute_script(scrapingScripts.isConversation())
         is_incoming = self._is_incoming_message() if incoming_only else True
         is_contact_conversation = self._is_contact_conversation() if is_contacts_only else True
@@ -323,6 +325,10 @@ class WhatsAppWebScraper:
             is_conversation = self.browser.execute_script(scrapingScripts.isConversation())
             is_incoming = self._is_incoming_message() if incoming_only else True
             is_contact_conversation = self._is_contact_conversation() if is_contacts_only else True
+            name_within, msg_within = self.browser.execute_script(scrapingScripts.getSingleTextMessageFromSearch())
+            if name_before == name_within and msg_before == msg_within:
+                is_end = True
+                break
 
         if is_get_msg_environment:
             # Get the conversation
@@ -331,7 +337,7 @@ class WhatsAppWebScraper:
             self.wait_for_element('.message-list')
             messages = self.browser.execute_script(scrapingScripts.getTextMessages())
 
-        return skip_count + 1, messages, key_msg
+        return skip_count + 1, messages, key_msg, is_end
 
     def _go_to_next_valid_message(self, incoming_only, is_contacts_only):
         duplicate_count = 0
