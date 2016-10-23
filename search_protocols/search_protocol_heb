@@ -1,8 +1,8 @@
-WORLD-NAME | KEYWORDS | AMOUNT | MIN-MSG-LEN | GET-MSG-ENV | COMPETE | AMOUNT-AFTER | INCOMING-ONLY | IS-UNIQUE | CONTACTS-ONLY | ENV-SIZE
-my_name|אחי,אחותי,גבר,גברת|8|3|false|false|8|true|false|true|0
-good_night|לילה טוב,חלומות נעימים,חלומות פז,חלומות מתוקים,לילה|7|0|false|false|7|true|false|true|0
-dreams|חלמתי,חלום,חולם|8|2|false|false|8|false|false|false|0|0
-interesting_chat|נפגעתי,התחרטתי,נפרדנו,לוויה,שבעה,בית קברות,פוסטינור,בית חולים,התאוששות,התרגשות,מודאג,פאדיחות|10|3|true|true|1|false|false|true|100
+WORLD-NAME | KEYWORDS | AMOUNT | MIN-MSG-LEN | GET-MSG-ENV | COMPETE | AMOUNT-AFTER (full,just_msg) | INCOMING-ONLY | IS-UNIQUE | CONTACTS-ONLY | ENV-SIZE
+my_name|אחי,אחותי,גבר,גברת|8|3|false|false|8,8|true|false|true|0
+good_night|לילה טוב,חלומות נעימים,חלומות פז,חלומות מתוקים,לילה|7|0|false|false|7,7|true|false|true|0
+dreams|חלמתי,חלום,חולם|8|2|false|false|8,8|false|false|false|0|0
+interesting_chat|נפגעתי,התחרטתי,נפרדנו,לוויה,שבעה,בית קברות,פוסטינור,בית חולים,התאוששות,התרגשות,מודאג,פאדיחות|10|3|true|true|3,10|false|false|true|100
 
-love|אוהב אותך,אוהב,אוהבת,אהבה|20|1|false|false|3|false|false
+love|אוהב אותך,אוהב,אוהבת,אהבה|20|1|false|false|3,3|false|false
 backup|היי,hi,hey,שלום,hello

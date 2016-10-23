@@ -254,6 +254,20 @@ class GiveMostInterestingChat(tornado.web.RequestHandler):
         self.finish(self.most_interesting)
 
 
+class GiveMostInterestingChatFull(tornado.web.RequestHandler):
+
+    def get(self):
+        print("GiveMostInterestingChatFull")
+        self.finish(self.most_interesting_full)
+
+
+class GiveMostInterestingChatJustMsg(tornado.web.RequestHandler):
+
+    def get(self):
+        print("GiveMostInterestingChatJustMsg")
+        self.finish(self.most_interesting_just_msg)
+
+
 class ResetHandler(tornado.web.RequestHandler):
     """
     Sends the user to the first page, resets the DB and removes all avatars
@@ -303,7 +317,8 @@ def make_app():
         (r"/get_amphi_data", GiveAmphiData),
         (r"/get_good_night_messages", GiveGoodNightMessages),
         (r"/get_dream_messages", GiveDreamMessages),
-        (r"/get_most_interesting_chat", GiveMostInterestingChat),
+        (r"/get_most_interesting_chat_full", GiveMostInterestingChatFull),
+        (r"/get_most_interesting_chat_just_msg", GiveMostInterestingChatJustMsg),
         # (r"/get_closest_persons_and_msgs", GiveClosestPersonsAndMsgs),
         # (r"/have_hebrew", HaveHebrew),
         # (r"/get_most_active_groups_and_user_groups", GiveMostActiveGroupsAndUserGroups),
