@@ -326,7 +326,7 @@ class WhatsAppWebScraper:
             is_incoming = self._is_incoming_message() if incoming_only else True
             is_contact_conversation = self._is_contact_conversation() if is_contacts_only else True
             name_within, msg_within = self.browser.execute_script(scrapingScripts.getSingleTextMessageFromSearch())
-            if name_before == name_within and msg_before == msg_within:
+            if name_before == name_within and msg_before == msg_within and (not is_conversation or not is_incoming or not is_contacts_only):
                 is_end = True
                 break
 
