@@ -583,6 +583,8 @@ class WhatsAppDB:
         return df.to_json(date_format='iso', double_precision=0, date_unit='s', orient='records')
 
     def _get_conversation_rank(self, conv, keywords):
+        return 1
+
         # df = pd.DataFrame.from_csv('interesting20.csv')
         # print(df)
         interesting_hours = [23, 0, 1, 2, 3, 4]

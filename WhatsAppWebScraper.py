@@ -256,9 +256,12 @@ class WhatsAppWebScraper:
                     columns=['contactName', 'text', 'time', 'conv_id', 'key_msg', 'keyword']))
                 cur_amount += 1
                 self._search(keyword)
-            real_amount = len(conversations.conv_id.unique())
             self._clear_search_bar(keyword)
-            conversations.time = pd.to_datetime(conversations.time)
+            if len(conversations) == 0:
+                real_amount = 0
+            else:
+                real_amount = len(conversations.conv_id.unique())
+                conversations.time = pd.to_datetime(conversations.time)
 
         else:   # single message
             duplicate_msg_in_a_row = 0
@@ -306,42 +309,50 @@ class WhatsAppWebScraper:
     def _go_to_next_match(self, skip_count, incoming_only, is_contacts_only, is_get_msg_environment):
         messages = []
         key_msg = ""
-        is_end = False
         ActionChains(self.browser).send_keys_to_element(self.wait_for_element('.input.input-search'), Keys.TAB).perform()
 
-        # go down to desited person
+        # go down to designated person
         actions = ActionChains(self.browser)
         for _ in range(skip_count):
             actions.send_keys(Keys.ARROW_DOWN)
         actions.perform()
 
-        name_before, msg_before = self.browser.execute_script(scrapingScripts.getSingleTextMessageFromSearch())
         is_conversation = self.browser.execute_script(scrapingScripts.isConversation())
-        is_incoming = self._is_incoming_message() if incoming_only else True
-        is_contact_conversation = self._is_contact_conversation() if is_contacts_only else True
-        while not is_conversation or not is_incoming or not is_contact_conversation:
+        while not is_conversation:
             ActionChains(self.browser).send_keys(Keys.ARROW_DOWN).perform()
             skip_count += 1
             is_conversation = self.browser.execute_script(scrapingScripts.isConversation())
-            is_incoming = self._is_incoming_message() if incoming_only else True
-            is_contact_conversation = self._is_contact_conversation() if is_contacts_only else True
-            name_within, msg_within = self.browser.execute_script(scrapingScripts.getSingleTextMessageFromSearch())
-            if name_before == name_within and msg_before == msg_within and (not is_conversation or not is_incoming or not is_contacts_only):
-                is_end = True
-                break
 
-        if is_get_msg_environment:
+        done = self._go_to_next_valid_message(incoming_only, is_contacts_only, down_arrow_first=False)
+
+        # is_conversation = self.browser.execute_script(scrapingScripts.isConversation())
+        # is_incoming = self._is_incoming_message() if incoming_only else True
+        # is_contact_conversation = self._is_contact_conversation() if is_contacts_only else True
+        # while not is_conversation or not is_incoming or not is_contact_conversation:
+        #     name_before, msg_before = self.browser.execute_script(scrapingScripts.getSingleTextMessageFromSearch())
+        #     ActionChains(self.browser).send_keys(Keys.ARROW_DOWN).perform()
+        #     skip_count += 1
+        #     is_conversation = self.browser.execute_script(scrapingScripts.isConversation())
+        #     is_incoming = self._is_incoming_message() if incoming_only else True
+        #     is_contact_conversation = self._is_contact_conversation() if is_contacts_only else True
+        #     name_within, msg_within = self.browser.execute_script(scrapingScripts.getSingleTextMessageFromSearch())
+        #     if name_before == name_within and msg_before == msg_within and (not is_conversation or not is_incoming or not is_contacts_only):
+        #         is_end = True
+        #         break
+
+        if is_get_msg_environment and not done:
             # Get the conversation
             key_msg = self.browser.execute_script(scrapingScripts.getSingleTextMessageFromSearch())[1]
             ActionChains(self.browser).send_keys(Keys.ENTER).perform()
             self.wait_for_element('.message-list')
             messages = self.browser.execute_script(scrapingScripts.getTextMessages())
 
-        return skip_count + 1, messages, key_msg, is_end
+        return skip_count + 1, messages, key_msg, done
 
-    def _go_to_next_valid_message(self, incoming_only, is_contacts_only):
+    def _go_to_next_valid_message(self, incoming_only, is_contacts_only, down_arrow_first=True):
         duplicate_count = 0
-        ActionChains(self.browser).send_keys(Keys.ARROW_DOWN).perform()
+        if down_arrow_first:
+            ActionChains(self.browser).send_keys(Keys.ARROW_DOWN).perform()
         try:
             name, message = self.browser.execute_script(scrapingScripts.getSingleTextMessageFromSearch())
         except WebDriverException:
