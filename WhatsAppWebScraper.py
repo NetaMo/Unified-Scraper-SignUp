@@ -331,7 +331,6 @@ class WhatsAppWebScraper:
             self.wait_for_element('.message-list')
             messages = self.browser.execute_script(scrapingScripts.getTextMessages())
 
-
         return skip_count + 1, messages, key_msg
 
     def _go_to_next_valid_message(self, incoming_only, is_contacts_only):
