@@ -670,4 +670,3 @@ class WhatsAppDB:
         self.dreams_or_old_messages = self.create_world_df('dreams', scraper)
         self.most_interesting_full, self.most_interesting_just_msg = self.create_world_df('interesting_chat', scraper)
         # self.love_messages = self.create_world_df('love', scraper)        # not for v.Liege
-
