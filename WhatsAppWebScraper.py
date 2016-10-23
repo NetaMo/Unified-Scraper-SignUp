@@ -252,7 +252,8 @@ class WhatsAppWebScraper:
                 messages_backup = messages.copy()
                 parsed_msgs = [self._parse_message(msg) for msg in messages if self._parse_message(msg) != (None, None, None)]
                 conversations = conversations.append(pd.DataFrame(
-                    [list(msg)+[cur_amount]+[key_msg] for msg in parsed_msgs], columns=['contactName', 'text', 'time', 'conv_id', 'key_msg']))
+                    [list(msg)+[cur_amount,key_msg,keyword] for msg in parsed_msgs],
+                    columns=['contactName', 'text', 'time', 'conv_id', 'key_msg', 'keyword']))
                 cur_amount += 1
                 self._search(keyword)
             real_amount = len(conversations.conv_id.unique())

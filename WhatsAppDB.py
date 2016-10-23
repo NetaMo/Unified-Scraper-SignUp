@@ -565,6 +565,13 @@ class WhatsAppDB:
             import calendar
             return calendar.day_name[fixed_date.weekday()]
 
+    def get_conversations_env(self, scraper, df, env_size):
+        pass        # todo implement
+        # for conv_id, conversation in df.groupby('conv_id'):
+            # search keyword
+            # go down until contact AND msg match
+            # enter
+            # roll up and down until env_size==actual revealed size
 
     def get_k_latest_chats(self, scraper, k=6):
         df = scraper.get_k_latest_chats(k)
@@ -613,6 +620,7 @@ class WhatsAppDB:
                     is_incoming_only = True if l[7] == 'true' else False
                     is_unique = True if l[8] == 'true' else False
                     is_contacts_only = True if l[9] == 'true' else False
+                    env_size = int(l[10]) if get_msg_env else 0
                     break
 
         cur_amount = 0
@@ -639,6 +647,7 @@ class WhatsAppDB:
 
         df = pd.concat([df for df in dfs_arr])
         df = df if not after_competition else self.get_k_most_interesting(df, k=after_competition)
+        df = df if env_size == 0 else self.get_conversations_env(scraper, df, env_size=env_size)
         # df.to_csv('csv_folder/' + world_name + '.csv', encoding='utf-16')  # todo remove before presentation
         return df.to_json(date_format='iso', double_precision=0, date_unit='s', orient='records')
 
