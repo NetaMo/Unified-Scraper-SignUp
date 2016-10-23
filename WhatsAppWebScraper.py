@@ -305,6 +305,7 @@ class WhatsAppWebScraper:
 
     def _go_to_next_match(self, skip_count, incoming_only, is_contacts_only, is_get_msg_environment):
         messages = []
+        key_msg = ""
         ActionChains(self.browser).send_keys_to_element(self.wait_for_element('.input.input-search'), Keys.TAB).perform()
 
         # go down to desited person
