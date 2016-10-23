@@ -16,7 +16,6 @@ class Webdriver:
         # self.browser = webdriver.Chrome(executable_path="C:\\Users\\maoze\\AppData\\Local\\Programs\\Python\\Python35-32\\Scripts\\chromedriver.exe,,chrome_options=chromeOptions")  # Create Chrome browser
         # self.browser = webdriver.Chrome(executable_path="C:\Program Files\Python35\Scripts\chromedriver.exe,,chrome_options=chromeOptions")  # Create Chrome browser
 
-
         self.browser.maximize_window()
 
     def close(self):
