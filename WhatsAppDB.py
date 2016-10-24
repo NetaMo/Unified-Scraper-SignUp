@@ -583,13 +583,9 @@ class WhatsAppDB:
         return df.to_json(date_format='iso', double_precision=0, date_unit='s', orient='records')
 
     def _get_conversation_rank(self, conv, keywords):
-        return 1
-        # df = pd.DataFrame.from_csv('all_interesting.csv')
-        # print(df)
         interesting_hours = [23, 0, 1, 2, 3, 4]
 
-        keyword_msg = conv[
-            str.replace(conv.key_msg[0], '\n', '') == conv.text.apply(lambda x: str.replace(x, '\n', ''))]
+        keyword_msg = conv[''.join(conv.key_msg[0].split()) == conv.text.apply(lambda x: ''.join(x.split()))]
         keyword_msg_idx = keyword_msg.index.values[0]
         conv["delta_from_keyword_msg"] = conv.time.apply(
             lambda x: abs(((keyword_msg.time - x) / np.timedelta64(1, 'm'))))
@@ -699,10 +695,10 @@ class WhatsAppDB:
             return df.to_json(date_format='iso', double_precision=0, date_unit='s', orient='records')
 
     def create_db_using_search(self, scraper):
-        # self.latest_chats = self.get_k_latest_chats(scraper, k=6)
-        # self.my_name_messages = self.create_world_df('my_name', scraper, override_keywords=[self.user_nickname, self.user_first_name])
-        # self.amphi_data = self.get_k_latest_chats(scraper, k=40, fields=['contactName'])
-        # self.good_night_messages = self.create_world_df('good_night', scraper)
-        # self.dreams_or_old_messages = self.create_world_df('dreams', scraper)
+        self.latest_chats = self.get_k_latest_chats(scraper, k=6)
+        self.my_name_messages = self.create_world_df('my_name', scraper, override_keywords=[self.user_nickname, self.user_first_name])
+        self.amphi_data = self.get_k_latest_chats(scraper, k=40, fields=['contactName'])
+        self.good_night_messages = self.create_world_df('good_night', scraper)
+        self.dreams_or_old_messages = self.create_world_df('dreams', scraper)
         self.most_interesting_full, self.most_interesting_just_msg = self.create_world_df('interesting_chat', scraper)
         # self.love_messages = self.create_world_df('love', scraper)        # not for v.Liege
