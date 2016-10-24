@@ -251,21 +251,21 @@ class GiveMostInterestingChat(tornado.web.RequestHandler):
 
     def get(self):
         print("GiveMostInterestingChat")
-        self.finish(self.most_interesting)
+        self.finish(DB.most_interesting)
 
 
 class GiveMostInterestingChatFull(tornado.web.RequestHandler):
 
     def get(self):
         print("GiveMostInterestingChatFull")
-        self.finish(self.most_interesting_full)
+        self.finish(DB.most_interesting_full)
 
 
 class GiveMostInterestingChatJustMsg(tornado.web.RequestHandler):
 
     def get(self):
         print("GiveMostInterestingChatJustMsg")
-        self.finish(self.most_interesting_just_msg)
+        self.finish(DB.most_interesting_just_msg)
 
 
 class ResetHandler(tornado.web.RequestHandler):
