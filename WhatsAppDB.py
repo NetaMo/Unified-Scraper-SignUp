@@ -567,7 +567,7 @@ class WhatsAppDB:
             return calendar.day_name[fixed_date.weekday()]
 
     def get_conversations_env(self, scraper, df, env_size):
-        pass        # todo implement
+        pass        # todo not for v.liege
         # for conv_id, conversation in df.groupby('conv_id'):
             # search keyword
             # go down until contact AND msg match
@@ -626,8 +626,6 @@ class WhatsAppDB:
         return ranking_results[4]
 
     def get_k_most_interesting(self, df, keywords,k_full_conversations=3, k_only_message=10):
-        # todo implement the shit out of it
-        # df.to_csv('interesting10.csv')
         ranks = []
         for conv_id, conversation in df.groupby('conv_id'):
             ranks.append((conv_id, self._get_conversation_rank(conversation, keywords)))
