@@ -303,7 +303,7 @@ class WhatsAppWebScraper:
         #     if load_extra:
         #         ActionChains(self.browser).send_keys(Keys.PAGE_DOWN).send_keys(Keys.PAGE_DOWN).perform()
 
-        return self.wait_for_element('.message.chat', 8)
+        return self.wait_for_element('.message.chat', 10)
         # return self.browser.execute_script(scrapingScripts.getSearchResults())
 
     def _go_to_next_match(self, skip_count, incoming_only, is_contacts_only, is_get_msg_environment):
@@ -754,8 +754,6 @@ class WhatsAppWebScraper:
         df = pd.DataFrame.from_dict(chats)
 
         return df
-
-
 
 
     # ===================================================================

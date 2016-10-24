@@ -579,7 +579,7 @@ class WhatsAppDB:
         df.time = df.time.apply(self.convert_whatsapp_time)
         if fields:
             df = df[fields]
-        # df.to_csv('csv_folder/latest_contacts.csv', encoding='utf-16')      # todo remove before presentation
+        # df.to_csv('csv_folder/latest_contacts.csv', encoding='utf-8')      # todo remove before presentation
         return df.to_json(date_format='iso', double_precision=0, date_unit='s', orient='records')
 
     def _get_conversation_rank(self, conv, keywords):
@@ -619,9 +619,9 @@ class WhatsAppDB:
             ranking_results.append(round(rank, 0))
 
         # TODO delete - for kiulashion
-        with open('csv_folder/interesting_conversations_ranking.csv', 'a', encoding='utf-16') as f:
+        with open('csv_folder/interesting_conversations_ranking.csv', 'a', encoding='utf-8') as f:
             f.write("\nNEXT CONVERSATION RANKING: " + str(ranking_results) + "\n")
-            conv.to_csv(f, encoding='utf-16', header=False)
+            conv.to_csv(f, encoding='utf-8', header=False, sep='\t')
 
         return ranking_results[4]
 
@@ -632,12 +632,11 @@ class WhatsAppDB:
 
         ranks = sorted(ranks, key=lambda x: x[1])       # [(conv_id, rank)...(conv_id, rank)]
 
-        df.to_csv('csv_folder/all_interesting.csv', encoding='utf-16')  # todo remove before presentation
-        print(ranks)  # todo remove before presentation
+        # df.to_csv('csv_folder/all_interesting.csv', encoding='utf-8')  # todo remove before presentation
+        # print(ranks)  # todo remove before presentation
 
         return df[df.conv_id.isin([i[0] for i in ranks[:k_full_conversations]])].loc[:, ['contactName', 'text']],\
                df[df.conv_id.isin(i[0] for i in ranks[:k_only_message])].loc[0, ['key_msg', 'keyword']]
-
 
     def create_world_df(self, world_name, scraper, override_keywords=False):
         # get keywords and amount from protocol file
@@ -684,7 +683,7 @@ class WhatsAppDB:
                                                            k_only_message=just_msg_after_competition) if is_compete else df
 
         # df = df if env_size == 0 else self.get_conversations_env(scraper, df, env_size=env_size)
-        # df.to_csv('csv_folder/' + world_name + '.csv', encoding='utf-16')  # todo remove before presentation
+        # df.to_csv('csv_folder/' + world_name + '.csv', encoding='utf-8')  # todo remove before presentation
 
         if full_after_competition:
             return df_full.to_json(date_format='iso', double_precision=0, date_unit='s', orient='records'), \
