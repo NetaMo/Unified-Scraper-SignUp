@@ -279,7 +279,7 @@ class WhatsAppWebScraper:
                     if not is_unique or (is_unique and name not in people):
                         conversations = conversations.append(pd.DataFrame([[name, message]], columns=['contactName', 'text']), ignore_index=True)
                         people.append(name)
-                if self._go_to_next_valid_message(incoming_only, is_contacts_only):     # break if reached end of search
+                if self._go_to_next_valid_message(incoming_only, is_contacts_only)[0]:     # break if reached end of search
                     break
             self._clear_search_bar(keyword)
             real_amount = len(conversations)
@@ -318,14 +318,14 @@ class WhatsAppWebScraper:
             actions.send_keys(Keys.ARROW_DOWN)
         actions.perform()
 
-        name_before, msg_before = self.browser.execute_script(scrapingScripts.getSingleTextMessageFromSearch())
         is_conversation = self.browser.execute_script(scrapingScripts.isConversation())
         while not is_conversation:
             ActionChains(self.browser).send_keys(Keys.ARROW_DOWN).perform()
             skip_count += 1
             is_conversation = self.browser.execute_script(scrapingScripts.isConversation())
 
-        done = self._go_to_next_valid_message(incoming_only, is_contacts_only, down_arrow_first=False)
+        done, skipped = self._go_to_next_valid_message(incoming_only, is_contacts_only, down_arrow_first=False)
+        skip_count += skipped
 
         # is_conversation = self.browser.execute_script(scrapingScripts.isConversation())
         # is_incoming = self._is_incoming_message() if incoming_only else True
@@ -354,8 +354,11 @@ class WhatsAppWebScraper:
 
     def _go_to_next_valid_message(self, incoming_only, is_contacts_only, down_arrow_first=True):
         duplicate_count = 0
+        skip_count = 0
+        skipped = 0
         if down_arrow_first:
             ActionChains(self.browser).send_keys(Keys.ARROW_DOWN).perform()
+            skip_count += 1
         try:
             name, message = self.browser.execute_script(scrapingScripts.getSingleTextMessageFromSearch())
         except WebDriverException:
@@ -363,23 +366,27 @@ class WhatsAppWebScraper:
             name, message = self.browser.execute_script(scrapingScripts.getSingleTextMessageFromSearch())
         if incoming_only and is_contacts_only:
             while not self._is_incoming_message() or not self._is_contact_conversation():
-                done, name, message, duplicate_count = self._go_down_check_duplicate(duplicate_count, name, message)
+                done, name, message, duplicate_count, skipped = self._go_down_check_duplicate(duplicate_count, name, message)
+                skip_count += skipped
                 if done:
-                    return True
+                    return True, 0
         elif incoming_only:
             while not self._is_incoming_message():
-                done, name, message, duplicate_count = self._go_down_check_duplicate(duplicate_count, name, message)
+                done, name, message, duplicate_count, skipped = self._go_down_check_duplicate(duplicate_count, name, message)
+                skip_count += skipped
                 if done:
-                    return True
+                    return True, 0
         elif is_contacts_only:
             while not self._is_contact_conversation():
-                done, name, message, duplicate_count = self._go_down_check_duplicate(duplicate_count, name, message)
+                done, name, message, duplicate_count, skipped = self._go_down_check_duplicate(duplicate_count, name, message)
+                skip_count += skipped
                 if done:
-                    return True
-        return False
+                    return True, 0
+        return False, skip_count
 
     def _go_down_check_duplicate(self, duplicate_count, name, message):
         ActionChains(self.browser).send_keys(Keys.ARROW_DOWN).perform()
+        skip_count = 1
         try:
             name2, message2 = self.browser.execute_script(scrapingScripts.getSingleTextMessageFromSearch())
         except WebDriverException:
@@ -387,11 +394,12 @@ class WhatsAppWebScraper:
             name2, message2 = self.browser.execute_script(scrapingScripts.getSingleTextMessageFromSearch())
         if name == name2 and message == message2:
             ActionChains(self.browser).send_keys(Keys.ARROW_DOWN).perform()
+            skip_count += 1
             name, message = self.browser.execute_script(scrapingScripts.getSingleTextMessageFromSearch())
             duplicate_count += 1
             if duplicate_count > 1:
                 return True, name, message, duplicate_count
-        return False, name, message, duplicate_count
+        return False, name, message, duplicate_count, skip_count
 
     def _clear_search_bar(self, keyword):          # todo - a more elegant way to clear search bar?
         actions = ActionChains(self.browser)
