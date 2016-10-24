@@ -579,7 +579,6 @@ class WhatsAppDB:
         df.time = df.time.apply(self.convert_whatsapp_time)
         if fields:
             df = df[fields]
-        # df.to_csv('csv_folder/latest_contacts.csv', encoding='utf-8')      # todo remove before presentation
         return df.to_json(date_format='iso', double_precision=0, date_unit='s', orient='records')
 
     def _get_conversation_rank(self, conv, keywords):
@@ -631,9 +630,6 @@ class WhatsAppDB:
             ranks.append((conv_id, self._get_conversation_rank(conversation, keywords)))
 
         ranks = sorted(ranks, key=lambda x: x[1])       # [(conv_id, rank)...(conv_id, rank)]
-
-        # df.to_csv('csv_folder/all_interesting.csv', encoding='utf-8')  # todo remove before presentation
-        # print(ranks)  # todo remove before presentation
 
         return df[df.conv_id.isin([i[0] for i in ranks[:k_full_conversations]])].loc[:, ['contactName', 'text']],\
                df[df.conv_id.isin(i[0] for i in ranks[:k_only_message])].loc[0, ['key_msg', 'keyword']]
