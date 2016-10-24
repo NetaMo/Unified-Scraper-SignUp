@@ -619,7 +619,7 @@ class WhatsAppDB:
             ranking_results.append(round(rank, 0))
 
         # TODO delete - for kiulashion
-        with open('csv_folder/interesting_conversations_ranking.csv', 'a', encoding='utf-8') as f:
+        with open('csv_folder/interesting_conversations_ranking_' + str(datetime.now().time()).replace(':','') + '.csv', 'a', encoding='utf-8') as f:
             f.write("\nNEXT CONVERSATION RANKING: " + str(ranking_results) + "\n")
             conv.to_csv(f, encoding='utf-8', header=False, sep='\t')
 
