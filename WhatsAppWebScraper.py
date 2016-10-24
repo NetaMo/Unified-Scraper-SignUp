@@ -398,7 +398,7 @@ class WhatsAppWebScraper:
             name, message = self.browser.execute_script(scrapingScripts.getSingleTextMessageFromSearch())
             duplicate_count += 1
             if duplicate_count > 1:
-                return True, name, message, duplicate_count
+                return True, name, message, duplicate_count, skip_count
         return False, name, message, duplicate_count, skip_count
 
     def _clear_search_bar(self, keyword):          # todo - a more elegant way to clear search bar?
