@@ -318,6 +318,7 @@ class WhatsAppWebScraper:
             actions.send_keys(Keys.ARROW_DOWN)
         actions.perform()
 
+        name_before, msg_before = self.browser.execute_script(scrapingScripts.getSingleTextMessageFromSearch())
         is_conversation = self.browser.execute_script(scrapingScripts.isConversation())
         while not is_conversation:
             ActionChains(self.browser).send_keys(Keys.ARROW_DOWN).perform()

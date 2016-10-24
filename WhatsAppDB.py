@@ -583,31 +583,51 @@ class WhatsAppDB:
         return df.to_json(date_format='iso', double_precision=0, date_unit='s', orient='records')
 
     def _get_conversation_rank(self, conv, keywords):
-        return 1
 
-        # df = pd.DataFrame.from_csv('interesting20.csv')
+        # df = pd.DataFrame.from_csv('all_interesting.csv')
         # print(df)
         interesting_hours = [23, 0, 1, 2, 3, 4]
 
-        keyword_msg = conv[conv.key_msg[0] == conv.text]
+        keyword_msg = conv[
+            str.replace(conv.key_msg[0], '\n', '') == conv.text.apply(lambda x: str.replace(x, '\n', ''))]
         keyword_msg_idx = keyword_msg.index.values[0]
         conv["delta_from_keyword_msg"] = conv.time.apply(
             lambda x: abs(((keyword_msg.time - x) / np.timedelta64(1, 'm'))))
-
         conv_keyword_msg_segment = conv[conv.delta_from_keyword_msg < 120]
 
         conv_keyword_msg_segment_percentage = len(conv_keyword_msg_segment) / len(conv)
 
         average_msgs_len = np.mean(conv_keyword_msg_segment.text.apply(str.split).apply(len))  # average amount of words
 
-        is_interesting_time_frame = 1 if conv.time.iloc[keyword_msg_idx].hour in interesting_hours else 0
+        time_frame = 1 if conv.time.iloc[keyword_msg_idx].hour in interesting_hours else 0
 
         is_old = 1 if abs((conv.time.iloc[keyword_msg_idx] - datetime.now()).days) <= 180 else 0
 
         # intersect with bag of words for conversation ranking - which words the conversation contains
-        keywords_msgs_counter = {}
+        unique_keywords_in_conv = 0
         for k in keywords:
-            keywords_msgs_counter[k] = conv.text.str.contains(k).sum()
+            unique_keywords_in_conv += 1 if conv.text.str.contains(k).sum() != 0 else 0
+
+        # TODO delete - for kiulashion
+        ranking_weights = [[17, 17, 17, 17, 17, 17], [40, 30, 0, 10, 20, 0], [10, 10, 0, 20, 20, 40],
+                           [20, 0, 0, 5, 70, 5], [20, 20, 20, 5, 30, 5]]
+        ranking_results = []
+        for rank_weight in ranking_weights:
+            rank = (rank_weight[0] * conv_keyword_msg_segment_percentage) + \
+                   (min(rank_weight[1], unique_keywords_in_conv * 5)) + \
+                   (rank_weight[2] * conv.is_key_incoming[0]) + \
+                   (rank_weight[3] * time_frame) + \
+                   (rank_weight[4] * is_old) + \
+                   (rank_weight[5] * (1 if average_msgs_len > 5 else 0))
+
+            ranking_results.append(round(rank, 0))
+
+        # TODO delete - for kiulashion
+        with open('csv_folder/interesting_conversations_ranking.csv', 'a', encoding='utf-8') as f:
+            f.write("\n" + str(ranking_results) + "\n")
+            conv.to_csv(f, encoding='utf-8', header=False)
+
+        return ranking_results[4]
 
     def get_k_most_interesting(self, df, keywords,k_full_conversations=3, k_only_message=10):
         # todo implement the shit out of it
@@ -618,8 +638,8 @@ class WhatsAppDB:
 
         ranks = sorted(ranks, key=lambda x: x[1])       # [(conv_id, rank)...(conv_id, rank)]
 
-        # df.to_csv('csv_folder/all_interesting.csv', encoding='utf-16')  # todo remove before presentation
-        # print(ranks)                                                    # todo remove before presentation
+        df.to_csv('csv_folder/all_interesting.csv', encoding='utf-8')  # todo remove before presentation
+        print(ranks)  # todo remove before presentation
 
         return df[df.conv_id.isin([i[0] for i in ranks[:k_full_conversations]])].loc[:, ['contactName', 'text']],\
                df[df.conv_id.isin(i[0] for i in ranks[:k_only_message])].loc[0, ['key_msg', 'keyword']]
@@ -679,10 +699,10 @@ class WhatsAppDB:
             return df.to_json(date_format='iso', double_precision=0, date_unit='s', orient='records')
 
     def create_db_using_search(self, scraper):
-        self.latest_chats = self.get_k_latest_chats(scraper, k=6)
-        self.my_name_messages = self.create_world_df('my_name', scraper, override_keywords=[self.user_nickname, self.user_first_name])
-        self.amphi_data = self.get_k_latest_chats(scraper, k=40, fields=['contactName'])
-        self.good_night_messages = self.create_world_df('good_night', scraper)
-        self.dreams_or_old_messages = self.create_world_df('dreams', scraper)
+        # self.latest_chats = self.get_k_latest_chats(scraper, k=6)
+        # self.my_name_messages = self.create_world_df('my_name', scraper, override_keywords=[self.user_nickname, self.user_first_name])
+        # self.amphi_data = self.get_k_latest_chats(scraper, k=40, fields=['contactName'])
+        # self.good_night_messages = self.create_world_df('good_night', scraper)
+        # self.dreams_or_old_messages = self.create_world_df('dreams', scraper)
         self.most_interesting_full, self.most_interesting_just_msg = self.create_world_df('interesting_chat', scraper)
         # self.love_messages = self.create_world_df('love', scraper)        # not for v.Liege
