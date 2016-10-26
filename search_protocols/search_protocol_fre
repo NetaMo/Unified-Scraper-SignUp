@@ -1,0 +1,10 @@
+
+WORLD-NAME | KEYWORDS | AMOUNT | MIN-MSG-LEN | GET-MSG-ENV | COMPETE | AMOUNT-AFTER (full,just_msg) | INCOMING-ONLY | IS-UNIQUE | CONTACTS-ONLY | ENV-SIZE
+my_name|3|8|Frère,soeur gars,mec,poto|false|false|8,8|true|false|true|0
+good_night|0|7|bonne nuit,fait des bons rêves,dors bien|false|false|7,7|true|false|true|0
+dreams|2|8|je rêve,j'ai rêvé|false|false|8,8|false|false|false|0|0
+interesting_chat|3|10|hôpital,câlin,enceinte,grossesse,cimetière,mariée,enterrement,on a cassée,vexé,le lendemain,se remettre,inquiet,la honte|true|true|3,10|false|false|true|100
+
+love|1|20|je t'aime,aimé,amour|false|false|3,3|false|false
+backup|salut,hello,bye
+
